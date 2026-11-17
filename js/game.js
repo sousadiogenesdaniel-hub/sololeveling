@@ -61,9 +61,10 @@ export function tmb(date = today()) { // Mifflin-St Jeor
   const base = 10 * weightOn(date) + 6.25 * (p.altura || 170) - 5 * age(date);
   return Math.round(base + (p.sexo === "feminino" ? -161 : 5));
 }
-// Gasto do dia = repouso × 1,2 + treino (sem contar o repouso duas vezes)
+// Gasto do dia = repouso × 1,2 + treino + atividades extras (sem contar o repouso duas vezes)
+export const extrasKcal = date => (S.days[date]?.extras || []).reduce((n, e) => n + e.kcal, 0);
 export function spent(date = today()) {
-  return Math.round(tmb(date) * 1.2 + (S.days[date]?.workout?.kcal || 0));
+  return Math.round(tmb(date) * 1.2 + (S.days[date]?.workout?.kcal || 0) + extrasKcal(date));
 }
 export function workoutKcal(date, durMin, indoor) {
   const met = indoor ? 5 : (currentTrack()?.met || 6);

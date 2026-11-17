@@ -3,7 +3,7 @@ import { views } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
 import { header, panel } from "../ui.js";
-import { mealsOf, totals, spent, isRestDay, isObligated, inPenalty, pendingDebts, daysToFriday, monthDebt, weightOn, R } from "../game.js";
+import { mealsOf, totals, spent, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToFriday, monthDebt, weightOn, R } from "../game.js";
 import { workoutFor, currentTrack } from "../tracks.js";
 
 function penaltyBanner() {
@@ -46,7 +46,8 @@ function kcalCard() {
     <div class="tile"><div class="lbl">Gordura</div><div class="val num">${fmt(tot.gord)} g</div></div></div>`;
   const saldo = tot.kcal - gasto;
   const saldoTxt = `<p class="small muted">Gasto estimado hoje: <b class="num">${fmt(gasto)} kcal</b> · saldo
-    <b class="num ${saldo <= 0 ? "ok" : "warn"}">${signed(saldo, 0)} kcal</b></p>`;
+    <b class="num ${saldo <= 0 ? "ok" : "warn"}">${signed(saldo, 0)} kcal</b>${extrasKcal(t) ? ` · inclui ~${fmt(extrasKcal(t))} kcal de extras` : ""}
+    · <a href="#/extras">${S.tracking ? "rastreando atividade…" : "fez algo a mais?"}</a></p>`;
   if (!meta) return panel("Calorias", `<p>Consumido hoje: <b class="num">${fmt(tot.kcal)} kcal</b></p>${saldoTxt}
     <p class="small muted">Defina uma meta de calorias no Perfil para ver quanto ainda pode comer.</p>${macros}`);
   const rest = meta - tot.kcal, pct = Math.min(100, tot.kcal / meta * 100);

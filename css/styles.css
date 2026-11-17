@@ -84,6 +84,7 @@ a { color: var(--glow); }
 .big { font-size: 2.4rem; font-weight: 800; line-height: 1; letter-spacing: .02em; }
 .mid { font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid2 > * { min-width: 0; }
 .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .tile { background: var(--panel2); border: 1px solid var(--line); padding: 10px; }
 .tile .lbl { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }

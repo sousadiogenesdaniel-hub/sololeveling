@@ -10,6 +10,7 @@ import "./views/comida.js";
 import "./views/outros.js";
 import "./views/evolucao.js";
 import "./views/penalidade.js";
+import { startWatch } from "./views/extras.js";
 import { onboarding } from "./views/perfil.js";
 
 const TAB_OF = { inicio: "inicio", treino: "treino", comida: "comida", evolucao: "evolucao" }; // o resto fica em "Mais"
@@ -68,6 +69,7 @@ async function boot() {
   await load();
   if (S.profile) closeDays();
   render();
+  if (S.tracking) startWatch();
   // virou o dia com o app aberto (ou voltou para o app): fecha o dia e atualiza
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && S.profile && closeDays()) render();

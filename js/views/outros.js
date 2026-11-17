@@ -11,6 +11,7 @@ views.mais = () => {
     <a class="grow" href="#/${rota}" style="text-decoration:none;color:inherit"><b>${nome}</b><br><span class="small muted">${desc}</span></a>${extra}<span class="muted">›</span></li>`;
   const pend = pendingDebts().length;
   return `${header()}<div class="stack">${panel("Menu", `<ul class="list">
+    ${item("extras", "🚶", "Atividades extras", "Caminhada, bike, esporte... somam no gasto do dia", S.tracking ? `<span class="chip warn">Ao vivo</span>` : "")}
     ${item("medidas", "📏", "Medidas", "Peso e abdômen diários, medidas semanais")}
     ${item("fotos", "📸", "Fotos", "Registro semanal e antes × depois")}
     ${item("loja", "🛒", "Loja de sexta", "Troque Ouro pelo direito de comer besteira")}
