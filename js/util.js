@@ -56,6 +56,38 @@ export function getPosition() {
   });
 }
 
+// Leitura PRECISA: acompanha o GPS até a precisão ficar boa (ou o tempo acabar) e devolve a melhor leitura.
+// Recusa localização aproximada (o Android entrega um ponto com erro de quilômetros quando a
+// "Localização precisa" está desligada para o navegador).
+export const GPS = { boa: 30, aceitavel: 100 }; // metros
+export function getPreciseFix({ maxWait = 25000, onUpdate } = {}) {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error("Este aparelho não tem GPS disponível no navegador."));
+    let best = null, done = false;
+    const finish = () => {
+      if (done) return; done = true;
+      navigator.geolocation.clearWatch(id); clearTimeout(timer);
+      if (!best) return reject(new Error("Não consegui obter sua localização. Vá para um lugar aberto e tente de novo."));
+      if (best.acc > GPS.aceitavel) {
+        return reject(new Error(best.acc >= 1000
+          ? `O celular entregou só uma localização APROXIMADA (erro de ${(best.acc / 1000).toFixed(1).replace(".", ",")} km). Ative "Localização precisa" para o Chrome: Configurações → Apps → Chrome → Permissões → Local → Usar local preciso.`
+          : `O sinal de GPS está fraco (erro de ${best.acc} m). Vá para um lugar aberto, espere alguns segundos e tente de novo.`));
+      }
+      resolve(best);
+    };
+    const id = navigator.geolocation.watchPosition(p => {
+      const fix = { lat: p.coords.latitude, lon: p.coords.longitude, acc: Math.round(p.coords.accuracy) };
+      if (!best || fix.acc < best.acc) best = fix;
+      onUpdate?.(best);
+      if (best.acc <= GPS.boa) finish();
+    }, e => {
+      if (e.code === 1) { done = true; navigator.geolocation.clearWatch(id); clearTimeout(timer);
+        return reject(new Error("Permissão de localização negada. Libere a localização (precisa) para este app nas configurações do navegador.")); }
+    }, { enableHighAccuracy: true, maximumAge: 0, timeout: maxWait });
+    const timer = setTimeout(finish, maxWait);
+  });
+}
+
 // Reduz uma imagem (File/Blob) para no máximo `max` px e devolve um Blob JPEG
 export async function shrinkImage(file, max = 1600, quality = 0.85) {
   const bmp = await createImageBitmap(file);

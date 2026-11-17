@@ -1,7 +1,7 @@
 // Missão: trilha, treino do dia, ponto por GPS, treino indoor em dia de chuva, Teste de Rank
 import { views, actions, refresh } from "../core.js";
 import { S, day, save, photos } from "../store.js";
-import { today, addDays, esc, fmt, fmtTime, getPosition, distM, shrinkImage, $, num } from "../util.js";
+import { today, addDays, esc, fmt, fmtTime, getPosition, getPreciseFix, distM, shrinkImage, $, num } from "../util.js";
 import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox } from "../ui.js";
 import { completeWorkout, passTest, isRestDay, workoutKcal, R, RANK_TESTS, RANK_ORDER, testsPassed } from "../game.js";
 import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, trackFinished, unitLabel, SESSIONS_PER_STAGE } from "../tracks.js";
@@ -9,8 +9,10 @@ import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, te
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
 const PUNCH_EXPIRES_H = 5;    // ponto de entrada vence depois disso
 
-const minDist = () => S.profile.minDist ?? 300;
-const minMin = () => S.profile.minMin ?? 30;
+// Regras do ponto (pisos fixos: o Perfil pode aumentar, nunca diminuir)
+export const MIN_DIST = 1000, MIN_MIN = 30;
+const minDist = () => Math.max(MIN_DIST, S.profile.minDist ?? MIN_DIST);
+const minMin = () => Math.max(MIN_MIN, S.profile.minMin ?? MIN_MIN);
 const elapsedMin = w => (Date.now() - w.in.t) / 60000;
 
 function chooseTrack() {
@@ -108,7 +110,7 @@ function todayCard() {
         <div class="tile"><div class="lbl">Duração</div><div class="val num">${w.durMin} min</div></div>
         <div class="tile"><div class="lbl">Gasto</div><div class="val num">~${w.kcal} kcal</div></div>
         <div class="tile"><div class="lbl">Séries</div><div class="val">${w.full ? "Todas" : "Parcial"}</div></div></div>
-      <p class="small muted">${w.indoor ? "Treino indoor validado pelo clima." : `Ponto: entrada ${fmtTime(w.in.t)} (${fmt(w.in.dist)} m de casa) · saída ${fmtTime(w.out.t)}`}
+      <p class="small muted">${w.indoor ? "Treino indoor validado pelo clima." : `Ponto: entrada ${fmtTime(w.in.t)} (${fmt(w.in.dist / 1000, 1)} km de casa) · saída ${fmtTime(w.out.t)} (${fmt(w.out.dist / 1000, 1)} km)`}
       ${w.full ? "" : "<br>Como nem todas as séries foram marcadas, este treino não conta para subir a carga."}</p>`, "good");
   }
   if (isRestDay(t) && !S.game.needsWorkout) {
@@ -120,7 +122,7 @@ function todayCard() {
     const plan = cur.plano, need = cur.indoor ? INDOOR_MIN : minMin();
     return panel(plan.titulo, `
       <div class="timer num glow" id="timer">00:00</div>
-      <p class="center small muted">${cur.indoor ? "Dungeon Indoor" : `Entrada às ${fmtTime(cur.in.t)} · ${fmt(cur.in.dist)} m de casa`} · mínimo ${need} min</p>
+      <p class="center small muted">${cur.indoor ? "Dungeon Indoor" : `Entrada às ${fmtTime(cur.in.t)} · ${fmt(cur.in.dist / 1000, 1)} km de casa`} · mínimo ${need} min</p>
       ${exerciseList(cur, plan, true)}
       ${cur.indoor
         ? `<label class="btn primary block" style="margin-top:12px">Concluir: tirar selfie de prova
@@ -132,42 +134,54 @@ function todayCard() {
   const redencao = isRestDay(t) ? `<p class="small warn">Treino de redenção: hoje seria descanso, mas você está na Zona de Penalidade.</p>` : "";
   return panel(plan.titulo, `${redencao}
     ${exerciseList(null, plan, false)}
-    <p class="small muted">Para valer: bata o ponto de entrada a mais de ${minDist()} m de casa, treine pelo menos ${minMin()} min e bata o ponto de saída no local.</p>
+    <p class="small muted">Para valer: bata o ponto de entrada a mais de ${fmt(minDist() / 1000, 1)} km de casa (GPS preciso), treine pelo menos ${minMin()} min e bata o ponto de saída no local.</p>
     <button class="btn primary block" data-act="punchIn">Bater ponto: entrada</button>
     <button class="btn ghost block" style="margin-top:8px" data-act="checkRain">🌧 Chuva forte? Verificar clima</button>`,
     "", `<span class="chip">Etapa ${plan.stage}/${plan.stages}</span>`);
 }
 
+const homeOk = () => !!S.profile.home?.acc; // casas cadastradas antes da checagem de precisão não têm .acc
+
 async function locate() {
-  if (!S.profile.home) {
-    sysMessage("Casa não cadastrada", `<p>Para o ponto funcionar, o Sistema precisa saber onde é sua casa.</p>
+  if (!homeOk()) {
+    sysMessage(S.profile.home ? "Recadastre sua casa" : "Casa não cadastrada", `<p>${S.profile.home
+      ? "O Sistema passou a exigir GPS preciso, e o cadastro antigo da sua casa pode ter sido feito com localização aproximada."
+      : "Para o ponto funcionar, o Sistema precisa saber onde é sua casa."}</p>
+      <p class="small muted">Esteja em casa ao cadastrar.</p>
       <a class="btn block" href="#/perfil" data-close>Cadastrar no Perfil</a>`, { botao: "Fechar" });
     return null;
   }
-  toast("Obtendo localização…", 15000);
+  toast("Verificando sua localização pelo GPS…", 30000);
   try {
-    const pos = await getPosition();
+    const pos = await getPreciseFix({ onUpdate: b => { const t = $("#toast"); if (t) t.textContent = `Verificando sua localização… precisão ±${b.acc} m`; } });
     $("#toast")?.remove();
-    return { ...pos, t: Date.now(), dist: Math.round(distM(pos, S.profile.home)) };
-  } catch (e) { toast(e.message, 5000); return null; }
+    const dist = Math.round(distM(pos, S.profile.home));
+    // conta a favor da regra: a distância só vale descontando o erro do GPS e do cadastro da casa
+    const garantida = Math.max(0, dist - pos.acc - S.profile.home.acc);
+    return { ...pos, t: Date.now(), dist, garantida };
+  } catch (e) { $("#toast")?.remove(); sysMessage("Localização não verificada", `<p>${esc(e.message)}</p>`); return null; }
 }
+
+const posLine = pos => `Você está a <b>${fmt(pos.dist)} m</b> de casa (precisão do GPS ±${pos.acc} m).`;
 
 actions.punchIn = async () => {
   const pos = await locate(); if (!pos) return;
-  if (pos.dist < minDist()) {
-    return sysMessage("Ponto recusado", `<p>Você está a <b>${fmt(pos.dist)} m</b> de casa. O ponto só vale a mais de ${minDist()} m.</p>
-      <p class="small muted">Vá até o local de treino e tente de novo.</p>`);
+  if (pos.garantida < minDist()) {
+    return sysMessage("Ponto recusado", `<p>${posLine(pos)}</p><p>O ponto só vale a mais de <b>${fmt(minDist() / 1000, 1)} km</b> de casa${pos.dist >= minDist() ? ", descontando a margem de erro do GPS" : ""}.</p>
+      <p class="small muted">Vá até o local de treino${pos.dist >= minDist() ? " ou espere o sinal melhorar" : ""} e tente de novo.</p>`);
   }
   day().workout = { trackId: S.track.id, plano: workoutFor(today()), in: pos, sets: {} };
-  save(); refresh(); toast("Ponto de entrada registrado. Bom treino!");
+  save(); refresh();
+  sysMessage("Ponto de entrada registrado", `<p>${posLine(pos)}</p><p class="mid glow">${fmtTime(pos.t)}</p>
+    <p class="small muted">Treine pelo menos ${minMin()} min e bata o ponto de saída ainda no local.</p>`, { botao: "Bom treino" });
 };
 
 actions.punchOut = async () => {
   const w = day().workout, falta = Math.ceil(minMin() - elapsedMin(w));
-  if (falta > 0) return toast(`Ainda faltam ${falta} min para o tempo mínimo de treino.`, 4000);
+  if (falta > 0) return sysMessage("Ainda não", `<p>Faltam <b>${falta} min</b> para o tempo mínimo de ${minMin()} min de treino.</p>`);
   const pos = await locate(); if (!pos) return;
-  if (pos.dist < minDist()) {
-    return sysMessage("Ponto recusado", `<p>Você já está a <b>${fmt(pos.dist)} m</b> de casa. Bata o ponto de saída ainda no local de treino.</p>`);
+  if (pos.garantida < minDist()) {
+    return sysMessage("Ponto recusado", `<p>${posLine(pos)}</p><p>Bata o ponto de saída ainda no local de treino, a mais de ${fmt(minDist() / 1000, 1)} km de casa.</p>`);
   }
   w.out = pos;
   finish(w);

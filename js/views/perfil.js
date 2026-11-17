@@ -1,7 +1,7 @@
 // Perfil: despertar (cadastro), status, ajustes, casa, trilha e backup
 import { views, actions, refresh, go } from "../core.js";
 import { S, save, resetAll, replaceState } from "../store.js";
-import { today, addDays, esc, fmt, num, fmtDate, WEEKDAYS, getPosition, $ } from "../util.js";
+import { today, addDays, esc, fmt, num, fmtDate, WEEKDAYS, getPreciseFix, $ } from "../util.js";
 import { header, panel, toast, sysMessage, confirmBox } from "../ui.js";
 import { levelInfo, nextRank, tmb, weightOn, applyAutoKcal, KCAL_AUTO } from "../game.js";
 import { currentTrack } from "../tracks.js";
@@ -25,8 +25,8 @@ function profileForm(p = {}, first = false) {
         ${WEEKDAYS.map((d, i) => `<option value="${i}" ${(p.restDay ?? 0) === i ? "selected" : ""}>${d}</option>`).join("")}</select></div>
       ${f("pessoas", "Pessoas no grupo do WhatsApp", 'inputmode="numeric"', p.pessoas ?? 3)}
       ${f("multa", "Multa por falta (R$ por pessoa)", 'inputmode="numeric"', p.multa ?? 10)}
-      ${first ? "" : f("minDist", "Distância mínima de casa (m)", 'inputmode="numeric"', p.minDist ?? 300)}
-      ${first ? "" : f("minMin", "Tempo mínimo de treino (min)", 'inputmode="numeric"', p.minMin ?? 30)}
+      ${first ? "" : f("minDist", "Distância mínima de casa (m, mín. 1000)", 'inputmode="numeric"', Math.max(1000, p.minDist ?? 1000))}
+      ${first ? "" : f("minMin", "Tempo mínimo de treino (min, mín. 30)", 'inputmode="numeric"', Math.max(30, p.minMin ?? 30))}
     </div>
     ${first ? "" : `<div class="tile" style="margin-bottom:12px">
       <label class="row" style="text-transform:none;letter-spacing:0;font-size:1rem;color:var(--text);margin:0">
@@ -61,7 +61,7 @@ actions.saveProfile = d => {
     p.kcalPiso = Math.max(1200, Math.round(num(d.kcalPiso) ?? KCAL_AUTO.piso));
   }
   p.pessoas = Math.max(1, Math.round(p.pessoas ?? 3)); p.multa = Math.max(0, Math.round(p.multa ?? 10));
-  p.minDist = Math.max(100, Math.round(p.minDist ?? 300)); p.minMin = Math.max(10, Math.round(p.minMin ?? 30));
+  p.minDist = Math.max(1000, Math.round(p.minDist ?? 1000)); p.minMin = Math.max(30, Math.round(p.minMin ?? 30));
   S.profile = p;
   // ligou o automático ou mudou déficit/piso: aplica na hora, sem limite de passo
   const auto = p.kcalAuto && (!autoAntes || ajusteAntes !== `${p.kcalDeficit}|${p.kcalPiso}`) ? applyAutoKcal(true) : null;
@@ -106,9 +106,10 @@ views.perfil = () => {
         ${nr.teste ? `<div class="small">○ Passar no Teste de Rank da meta de ${nr.teste}</div>` : ""}</div>` : `<p class="glow">Rank máximo alcançado.</p>`}
       <p class="small muted">Ranks B, A e S exigem nível e Teste de Rank (metas de 3 meses, 6 meses e 1 ano), em qualquer trilha.
       <br>Metabolismo de repouso estimado: ${fmt(tmb())} kcal/dia (peso ${fmt(weightOn(), 1)} kg).</p>`)}
-    ${panel("Casa (para o ponto)", `<p>${p.home ? `Casa cadastrada <span class="ok">✔</span> <span class="small muted num">(${p.home.lat.toFixed(4)}, ${p.home.lon.toFixed(4)})</span>` : `<span class="warn">Casa ainda não cadastrada.</span>`}</p>
-      <p class="small muted">Esteja dentro de casa ao tocar no botão. O ponto de treino só vale a mais de ${p.minDist ?? 300} m daqui. A localização fica guardada só neste aparelho.</p>
-      <button class="btn block" data-act="setHome">${p.home ? "Atualizar: estou em casa agora" : "Definir: estou em casa agora"}</button>`)}
+    ${panel("Casa (para o ponto)", `<p>${p.home?.acc ? `Casa cadastrada <span class="ok">✔</span> <span class="small muted num">(precisão ±${p.home.acc} m)</span>`
+      : p.home ? `<span class="warn">Recadastre a casa: o cadastro antigo não tinha checagem de precisão do GPS.</span>` : `<span class="warn">Casa ainda não cadastrada.</span>`}</p>
+      <p class="small muted">Esteja dentro de casa ao tocar no botão. O ponto de treino só vale a mais de ${fmt(Math.max(1000, p.minDist ?? 1000) / 1000, 1)} km daqui. O GPS precisa estar preciso (Android: Chrome com "Usar local preciso" ligado). A localização fica guardada só neste aparelho.</p>
+      <button class="btn block" data-act="setHome">${p.home?.acc ? "Atualizar: estou em casa agora" : "Definir: estou em casa agora"}</button>`)}
     ${panel("Trilha", `<p>${t ? `${t.icone} <b>${t.nome}</b>` : "Nenhuma trilha escolhida."}</p>
       <button class="btn ghost block" data-act="changeTrack">${t ? "Trocar de trilha" : "Escolher trilha"}</button>
       <p class="small muted">Trocar de trilha não mexe em XP, nível, rank, Ouro nem sequência, e o progresso de cada trilha fica guardado. A missão diária continua sendo cobrada enquanto você escolhe a nova.</p>`)}
@@ -121,12 +122,13 @@ views.perfil = () => {
 };
 
 actions.setHome = async () => {
-  toast("Obtendo localização…", 15000);
+  toast("Verificando sua localização pelo GPS…", 30000);
   try {
-    const pos = await getPosition();
-    S.profile.home = { lat: pos.lat, lon: pos.lon };
-    save(); refresh(); toast(`Casa cadastrada (precisão de ${pos.acc} m).`);
-  } catch (e) { toast(e.message, 5000); }
+    const pos = await getPreciseFix({ onUpdate: b => { const t = $("#toast"); if (t) t.textContent = `Verificando sua localização… precisão ±${b.acc} m`; } });
+    S.profile.home = { lat: pos.lat, lon: pos.lon, acc: pos.acc, em: today() };
+    save(); refresh(); $("#toast")?.remove();
+    sysMessage("Casa cadastrada", `<p>Precisão do GPS: <b>±${pos.acc} m</b>.</p><p class="small muted">O ponto de treino só vale a mais de ${fmt(Math.max(1000, S.profile.minDist ?? 1000) / 1000, 1)} km daqui.</p>`);
+  } catch (e) { $("#toast")?.remove(); sysMessage("Casa não cadastrada", `<p>${esc(e.message)}</p>`); }
 };
 
 actions.changeTrack = async () => {

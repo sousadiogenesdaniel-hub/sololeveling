@@ -38,7 +38,8 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 ## Como o treino é verificado
 
 1. Cadastre sua casa no Perfil (uma vez, estando em casa).
-2. No local de treino, toque em **Bater ponto: entrada**. Só vale a mais de 300 m de casa.
+2. No local de treino, toque em **Bater ponto: entrada**. Só vale a mais de 1 km de casa, com GPS preciso
+   (a distância é contada descontando a margem de erro do GPS; localização aproximada é recusada).
 3. Depois de pelo menos 30 min, toque em **Bater ponto: saída**, ainda no local.
 
 **Chuva forte:** o botão "Verificar clima" consulta a previsão (Open-Meteo, com coordenadas arredondadas).

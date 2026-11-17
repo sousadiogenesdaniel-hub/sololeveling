@@ -70,7 +70,7 @@ function reminders() {
   if (!lastW || daysBetween(lastW, t) >= 7) items.push(["Medidas semanais pendentes", `+${R.semanalXp} XP`, "medidas/semanal"]);
   const lastPhoto = S.lastPhoto;
   if (!lastPhoto || daysBetween(lastPhoto, t) >= 7) items.push(["Fotos da semana pendentes", "", "fotos"]);
-  if (!S.profile.home) items.push(["Cadastrar a localização da sua casa (para o ponto)", "", "perfil"]);
+  if (!S.profile.home?.acc) items.push(["Cadastrar a localização da sua casa (para o ponto)", "", "perfil"]);
   if (!items.length) return "";
   return panel("Lembretes", `<ul class="list">${items.map(([txt, bonus, rota]) => `<li>
     <span class="grow">${txt} <span class="small ok">${bonus}</span></span>
