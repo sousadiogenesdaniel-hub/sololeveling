@@ -18,6 +18,7 @@ function profileForm(p = {}, first = false) {
       ${f("altura", "Altura (cm)", 'inputmode="decimal" required')}
       ${f("pesoInicial", "Peso inicial (kg)", 'inputmode="decimal" required')}
       ${f("metaPeso", "Meta de peso (kg)", 'inputmode="decimal"')}
+      ${f("metaMargem", "Margem da meta (± kg)", 'inputmode="decimal"', p.metaMargem ?? "")}
       ${f("metaAbdomen", "Meta de abdômen (cm)", 'inputmode="decimal"')}
       ${f("metaKcal", "Meta de calorias por dia", 'inputmode="numeric"')}
       <div class="field"><label for="pf-rest">Dia de descanso</label><select id="pf-rest" name="restDay">
@@ -40,7 +41,7 @@ export function onboarding() {
 actions.saveProfile = d => {
   const first = !S.profile, p = { ...(S.profile || {}) };
   p.nome = d.nome.trim(); p.nasc = d.nasc; p.sexo = d.sexo;
-  for (const k of ["altura", "pesoInicial", "metaPeso", "metaAbdomen", "metaKcal", "pessoas", "multa", "minDist", "minMin"]) {
+  for (const k of ["altura", "pesoInicial", "metaPeso", "metaMargem", "metaAbdomen", "metaKcal", "pessoas", "multa", "minDist", "minMin"]) {
     if (k in d) p[k] = num(d[k]);
   }
   if (!(p.altura > 100 && p.altura < 250)) return toast("Altura inválida (em cm).");
@@ -60,7 +61,7 @@ actions.saveProfile = d => {
 };
 
 views.perfil = () => {
-  const p = S.profile, li = levelInfo(), nr = nextRank(li.level), t = currentTrack();
+  const p = S.profile, li = levelInfo(), nr = nextRank(li), t = currentTrack();
   const done = Object.values(S.days).filter(d => d.workout?.done);
   const stat = (n, v) => `<div class="tile"><div class="lbl">${n}</div><div class="val num">${v}</div></div>`;
   return `${header()}<div class="stack">
@@ -70,14 +71,17 @@ views.perfil = () => {
       ${stat("Agilidade", done.filter(d => d.trackId === "corrida").length)}
       ${stat("Disciplina", S.game.bestStreak)}</div>
       <p class="small muted">Força = treinos de calistenia · Agilidade = treinos de corrida · Disciplina = maior sequência.
-      ${nr ? `<br>Próximo rank: <b>${nr.rank}</b> no nível ${nr.level}.` : ""}
+      </p>${nr ? `<div class="tile" style="margin-top:8px"><div class="lbl">Para o rank ${nr.rank}</div>
+        <div class="small">${nr.faltaXp ? `○ Nível ${nr.level}: faltam ${fmt(nr.faltaXp)} XP` : `<span class="ok">✔ Nível ${nr.level}</span>`}</div>
+        ${nr.teste ? `<div class="small">○ Passar no Teste de Rank da meta de ${nr.teste}</div>` : ""}</div>` : `<p class="glow">Rank máximo alcançado.</p>`}
+      <p class="small muted">Ranks B, A e S exigem nível e Teste de Rank (metas de 3 meses, 6 meses e 1 ano), em qualquer trilha.
       <br>Metabolismo de repouso estimado: ${fmt(tmb())} kcal/dia (peso ${fmt(weightOn(), 1)} kg).</p>`)}
     ${panel("Casa (para o ponto)", `<p>${p.home ? `Casa cadastrada <span class="ok">✔</span> <span class="small muted num">(${p.home.lat.toFixed(4)}, ${p.home.lon.toFixed(4)})</span>` : `<span class="warn">Casa ainda não cadastrada.</span>`}</p>
       <p class="small muted">Esteja dentro de casa ao tocar no botão. O ponto de treino só vale a mais de ${p.minDist ?? 300} m daqui. A localização fica guardada só neste aparelho.</p>
       <button class="btn block" data-act="setHome">${p.home ? "Atualizar: estou em casa agora" : "Definir: estou em casa agora"}</button>`)}
     ${panel("Trilha", `<p>${t ? `${t.icone} <b>${t.nome}</b>` : "Nenhuma trilha escolhida."}</p>
       <button class="btn ghost block" data-act="changeTrack">${t ? "Trocar de trilha" : "Escolher trilha"}</button>
-      <p class="small muted">O progresso de cada trilha fica guardado se você trocar.</p>`)}
+      <p class="small muted">Trocar de trilha não mexe em XP, nível, rank, Ouro nem sequência, e o progresso de cada trilha fica guardado. A missão diária continua sendo cobrada enquanto você escolhe a nova.</p>`)}
     ${panel("Dados do jogador", profileForm(p))}
     ${panel("Backup", `<p class="small muted" style="margin-top:0">Seus dados ficam só neste aparelho. Baixe um backup de vez em quando (as fotos não entram no arquivo).</p>
       <div class="row"><button class="btn grow" data-act="exportData">Baixar backup</button>

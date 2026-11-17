@@ -54,18 +54,21 @@ export function showEvents(titulo, events, extra = "") {
     return `<li><span class="grow" style="text-align:left">${esc(e.motivo)}</span><span class="num">${parts.join(" ")}</span></li>`;
   }).join("");
   const up = events.filter(e => e.levelUp).pop(), down = events.filter(e => e.levelDown).pop();
-  const lvl = up ? `<p class="mid glow">SUBIU DE NÍVEL! Nível ${up.levelUp}</p>`
-    : down ? `<p class="mid bad">Você caiu para o nível ${down.levelDown}</p>` : "";
+  const rUp = events.filter(e => e.rankUp).pop(), rDown = events.filter(e => e.rankDown).pop();
+  const lvl = (rUp ? `<div class="rank" style="margin:14px auto 18px"><span>${rUp.rankUp}</span></div><p class="mid glow">NOVO RANK: ${rUp.rankUp}</p>` : "")
+    + (rDown ? `<p class="mid bad">Você caiu para o rank ${rDown.rankDown}</p>` : "")
+    + (up ? `<p class="${rUp ? "" : "mid "}glow">SUBIU DE NÍVEL! Nível ${up.levelUp}</p>`
+      : down ? `<p class="${rDown ? "" : "mid "}bad">Você caiu para o nível ${down.levelDown}</p>` : "");
   sysMessage(titulo, `${lvl}<ul class="list">${linhas}</ul>${extra}`);
 }
 
 export function header() {
   const li = levelInfo(), g = S.game;
   return `<header class="topbar">
-    <div class="rank" title="Rank ${li.rank}"><span>${li.rank}</span></div>
+    <div class="rank" title="Rank ${li.rank}${li.travado ? " (próximo rank aguarda o Teste de Rank)" : ""}"><span>${li.rank}</span></div>
     <div class="grow">
       <div class="row between"><h1>${esc(S.profile?.nome || "Jogador")}</h1><span class="gold num" title="Ouro">◆ ${fmt(g.gold)}</span></div>
-      <div class="row between small muted"><span>Nível <b class="glow">${li.level}</b></span><span class="num">${fmt(li.into)} / ${fmt(li.need)} XP</span></div>
+      <div class="row between small muted"><span>Nível <b class="glow">${li.level}</b>${li.travado ? ` · <span class="warn">rank travado</span>` : ""}</span><span class="num">${fmt(li.into)} / ${fmt(li.need)} XP</span></div>
       <div class="xpbar" role="progressbar" aria-valuenow="${Math.round(li.pct)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${li.pct}%"></i></div>
     </div></header>`;
 }

@@ -16,29 +16,54 @@ export const R = {
 };
 
 // ---- nível e rank ------------------------------------------------------------------
-const xpToReach = L => 100 * (L - 1) + 10 * (L - 1) * (L - 2); // XP acumulado para chegar ao nível L
+// XP acumulado para chegar ao nível L. Cada nível pede 34 XP a mais que o anterior.
+// Calibrado para o nível 55 (rank S) exigir ~1 ano de jogo perfeito (~1.060 XP por semana).
+export const xpToReach = L => 150 * (L - 1) + 17 * (L - 1) * (L - 2);
+export const RANK_ORDER = ["E", "D", "C", "B", "A", "S"];
+const RANK_LEVEL = { E: 1, D: 10, C: 20, B: 30, A: 42, S: 55 };
+// Testes de Rank necessários para cada rank (fases concluídas em qualquer trilha)
+export const RANK_TESTS = { E: 0, D: 0, C: 0, B: 1, A: 2, S: 3 };
+const PRAZO = ["", "3 meses", "6 meses", "1 ano"];
+
+export const rankByLevel = L => [...RANK_ORDER].reverse().find(r => L >= RANK_LEVEL[r]);
+// Maior fase concluída em qualquer trilha: trocar de trilha não apaga o que você já provou.
+export const testsPassed = () => Math.min(3, Math.max(0, ...Object.values(S.progress || {}).map(p => p.phase || 0)));
+const maxRankByTests = n => [...RANK_ORDER].reverse().find(r => RANK_TESTS[r] <= n);
+
 export function levelInfo(xp = S.game.xp) {
   let L = 1;
   while (xpToReach(L + 1) <= xp) L++;
   const base = xpToReach(L), next = xpToReach(L + 1);
-  return { level: L, into: xp - base, need: next - base, pct: (xp - base) / (next - base) * 100, rank: rankOf(L) };
+  const porNivel = rankByLevel(L), porTeste = maxRankByTests(testsPassed());
+  const rank = RANK_ORDER[Math.min(RANK_ORDER.indexOf(porNivel), RANK_ORDER.indexOf(porTeste))];
+  return { level: L, into: xp - base, need: next - base, pct: (xp - base) / (next - base) * 100, rank,
+    travado: RANK_ORDER.indexOf(porNivel) > RANK_ORDER.indexOf(rank) }; // nível já basta, falta o teste
 }
-const RANKS = [[55, "S"], [42, "A"], [30, "B"], [20, "C"], [10, "D"], [1, "E"]];
-export const rankOf = L => RANKS.find(([min]) => L >= min)[1];
-export function nextRank(L) {
-  const up = [...RANKS].reverse().find(([min]) => min > L);
-  return up ? { rank: up[1], level: up[0] } : null;
+export const rankOf = L => rankByLevel(L);
+
+// O que falta para o próximo rank: nível e/ou Teste de Rank
+export function nextRank(li = levelInfo()) {
+  const r = RANK_ORDER[RANK_ORDER.indexOf(li.rank) + 1];
+  if (!r) return null;
+  const nivel = RANK_LEVEL[r], testes = RANK_TESTS[r];
+  return { rank: r, level: nivel, faltaXp: Math.max(0, xpToReach(nivel) - S.game.xp),
+    teste: testes > testsPassed() ? PRAZO[testes] : null };
+}
+
+function changes(a, b) {
+  const ia = RANK_ORDER.indexOf(a.rank), ib = RANK_ORDER.indexOf(b.rank);
+  return { levelUp: b.level > a.level ? b.level : null, levelDown: b.level < a.level ? b.level : null,
+    rankUp: ib > ia ? b.rank : null, rankDown: ib < ia ? b.rank : null };
 }
 
 export function grant(xp, gold, motivo, date = today()) {
   const g = S.game;
-  const before = levelInfo().level;
+  const before = levelInfo();
   g.xp = Math.max(0, g.xp + xp);
   g.gold = Math.max(0, g.gold + gold);
   g.log.push({ d: date, xp, gold, motivo });
   if (g.log.length > 400) g.log.splice(0, g.log.length - 400);
-  const after = levelInfo().level;
-  return { xp, gold, motivo, levelUp: after > before ? after : null, levelDown: after < before ? after : null };
+  return { xp, gold, motivo, ...changes(before, levelInfo()) };
 }
 
 // ---- nutrição ------------------------------------------------------------------------
@@ -74,7 +99,8 @@ export function workoutKcal(date, durMin, indoor) {
 // ---- obrigação de treino ---------------------------------------------------------------
 export const isRestDay = date => weekday(date) === (S.profile?.restDay ?? 0);
 export function isObligated(date) {
-  return !!S.track && date >= S.track.startDate && !isRestDay(date) && !trackFinished();
+  const desde = S.trackSince || S.track?.startDate; // vale mesmo no intervalo entre trocar de trilha e escolher outra
+  return !!desde && date >= desde && !isRestDay(date) && !trackFinished();
 }
 export const pendingDebts = () => S.debts.filter(d => d.status !== "validado");
 export const inPenalty = () => S.game.needsWorkout || pendingDebts().length > 0;
@@ -126,11 +152,11 @@ export function completeWorkout(date = today()) {
 }
 
 export function passTest() {
-  const p = progress(), ph = currentPhase();
+  const p = progress(), ph = currentPhase(), before = levelInfo();
   p.phase++; p.week = 1; p.sessions = 0;
   const ev = grant(R.testeXp, R.testeOuro, `Meta de ${ph.prazo} conquistada`);
   save();
-  return ev;
+  return { ...ev, ...changes(before, levelInfo()) }; // o teste pode destravar um rank
 }
 
 // ---- fechamento dos dias passados ----------------------------------------------------------
@@ -161,3 +187,22 @@ export function processDays() {
 
 // Próxima sexta-feira (0 = hoje é sexta)
 export const daysToFriday = (date = today()) => (5 - parseDay(date).getDay() + 7) % 7;
+
+// ---- meta de peso -----------------------------------------------------------------------
+// Faixa aceitável: alvo ± margem (ex.: 63 ± 4 → 59 a 67 kg)
+export function weightGoal() {
+  const p = S.profile || {}; if (!p.metaPeso) return null;
+  const m = p.metaMargem || 0;
+  return { alvo: p.metaPeso, piso: p.metaPeso - m, teto: p.metaPeso + m, margem: m };
+}
+
+// Tendência do peso (kg por semana) por regressão linear dos últimos `dias` dias.
+// Precisa de pelo menos 6 pesagens espalhadas por 10 dias ou mais.
+export function weightTrend(dias = 28, ate = today()) {
+  const de = addDays(ate, -dias + 1);
+  const pts = Object.keys(S.days).filter(d => d >= de && d <= ate && S.days[d].peso).map(d => [daysBetween(de, d), S.days[d].peso]);
+  if (pts.length < 6 || pts[pts.length - 1][0] - pts[0][0] < 10) return null;
+  const n = pts.length, mx = pts.reduce((a, p) => a + p[0], 0) / n, my = pts.reduce((a, p) => a + p[1], 0) / n;
+  const slope = pts.reduce((a, p) => a + (p[0] - mx) * (p[1] - my), 0) / pts.reduce((a, p) => a + (p[0] - mx) ** 2, 0);
+  return { porSemana: slope * 7, atual: my + slope * (daysBetween(de, ate) - mx) };
+}

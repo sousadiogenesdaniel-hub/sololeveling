@@ -3,7 +3,7 @@ import { views } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
 import { header, panel } from "../ui.js";
-import { mealsOf, totals, spent, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToFriday, monthDebt, weightOn, R } from "../game.js";
+import { mealsOf, totals, spent, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToFriday, monthDebt, weightOn, weightGoal, R } from "../game.js";
 import { workoutFor, currentTrack } from "../tracks.js";
 
 function penaltyBanner() {
@@ -82,7 +82,14 @@ function statusTiles() {
   const peso = S.days[t]?.peso ?? weightOn(t);
   const antes = weightOn(addDays(t, -7));
   const delta = peso - antes;
-  const falta = S.profile.metaPeso ? peso - S.profile.metaPeso : null;
+  const goal = weightGoal();
+  let metaVal = "—", metaSub = "Defina no Perfil";
+  if (goal) {
+    const faixa = goal.margem ? `${fmt(goal.piso)}–${fmt(goal.teto)} kg` : `${fmt(goal.alvo, 1)} kg`;
+    if (peso > goal.teto) { metaVal = fmt(peso - goal.teto, 1) + " kg"; metaSub = goal.margem ? `para entrar na faixa (${faixa}) · ${fmt(peso - goal.alvo, 1)} até ${fmt(goal.alvo)}` : `Meta: ${faixa}`; }
+    else if (peso < goal.piso) { metaVal = `<span class="warn">Abaixo</span>`; metaSub = `da faixa ${faixa}`; }
+    else { metaVal = `<span class="ok">Na faixa ✔</span>`; metaSub = `${faixa} · alvo ${fmt(goal.alvo)} kg`; }
+  }
   const pizza = [...S.shop].sort((a, b) => b.custo - a.custo)[0];
   const md = monthDebt();
   return `<div class="grid2">
@@ -91,8 +98,8 @@ function statusTiles() {
       <div class="small muted">${pizza ? `${pizza.icone} ${esc(pizza.nome)}: ${g.gold >= pizza.custo ? "você já pode comprar" : `faltam ${fmt(pizza.custo - g.gold)} de Ouro`}` : ""}</div></div>
     <div class="tile"><div class="lbl">Peso</div><div class="val num">${fmt(peso, 1)} kg</div>
       <div class="small ${delta <= 0 ? "ok" : "warn"}">${signed(delta)} kg em 7 dias</div></div>
-    <div class="tile"><div class="lbl">Até a meta</div><div class="val num">${falta === null ? "—" : falta <= 0 ? "Meta batida" : fmt(falta, 1) + " kg"}</div>
-      <div class="small muted">${S.profile.metaPeso ? `Meta: ${fmt(S.profile.metaPeso, 1)} kg` : "Defina no Perfil"}</div></div>
+    <div class="tile"><div class="lbl">Até a meta</div><div class="val num">${metaVal}</div>
+      <div class="small muted">${metaSub}</div></div>
   </div>${md.faltas ? `<p class="small bad center">Dívida deste mês: ${md.faltas} falta${md.faltas > 1 ? "s" : ""} = R$ ${fmt(md.total)},00</p>` : ""}`;
 }
 

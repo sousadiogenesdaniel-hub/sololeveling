@@ -3,7 +3,7 @@ import { views, actions, refresh } from "../core.js";
 import { S, day, save, photos } from "../store.js";
 import { today, addDays, esc, fmt, fmtTime, getPosition, distM, shrinkImage, $, num } from "../util.js";
 import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox } from "../ui.js";
-import { completeWorkout, passTest, isRestDay, workoutKcal, R } from "../game.js";
+import { completeWorkout, passTest, isRestDay, workoutKcal, R, RANK_TESTS, RANK_ORDER, testsPassed } from "../game.js";
 import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, trackFinished, unitLabel, SESSIONS_PER_STAGE } from "../tracks.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
@@ -25,6 +25,7 @@ function chooseTrack() {
 
 actions.pickTrack = ({ id }) => {
   S.track = { id, startDate: S.game.log.length || Object.keys(S.days).length ? today() : addDays(today(), 1) };
+  S.trackSince ??= S.track.startDate;
   progress(id);
   save();
   const ph = currentPhase();
@@ -32,6 +33,9 @@ actions.pickTrack = ({ id }) => {
     <p>Fase <b>${ph.nome}</b>. Sua primeira meta tem prazo de <b>${ph.prazo}</b>.</p>
     <p class="small muted">6 treinos por semana, 1 dia de descanso. Faltou, pagou.</p>`, { onClose: refresh });
 };
+
+// Rank que passa a ser permitido se você passar no próximo teste (null se já foi liberado em outra trilha)
+const unlocks = () => RANK_ORDER.find(r => RANK_TESTS[r] === progress().phase + 1 && RANK_TESTS[r] > testsPassed()) || null;
 
 function trailCard() {
   const t = currentTrack(), p = progress(), ph = currentPhase();
@@ -46,7 +50,7 @@ function trailCard() {
     <div class="row between small"><span>Etapa <b class="glow">${stage}</b> de ${ph.stages}</span>
       <span class="muted">${p.week > ph.stages ? "Teste de Rank liberado" : `${p.sessions}/${SESSIONS_PER_STAGE} treinos completos para subir a carga`}</span></div>
     <div class="bar" style="margin:6px 0 12px"><i style="width:${p.week > ph.stages ? 100 : pct}%"></i></div>
-    <h3>Meta de ${ph.prazo}</h3>
+    <h3>Meta de ${ph.prazo}${unlocks() ? ` · libera o rank ${unlocks()}` : ""}</h3>
     <p class="small" style="margin:4px 0">${ph.meta}</p>
     <ul class="small" style="margin:4px 0 10px;padding-left:18px">${ph.tests.map(([n, v, un]) => `<li>${n}: <b>${unitLabel(v, un)}</b></li>`).join("")}</ul>
     <ul class="list small">${fases}</ul>`);
@@ -56,6 +60,7 @@ function testCard() {
   const ph = currentPhase();
   return panel("Teste de Rank", `<p>Você concluiu todas as etapas da fase <b>${ph.nome}</b>. Prove que bateu a meta de ${ph.prazo}:
     informe seu melhor resultado em cada prova (faça descansado, de preferência no início do treino).</p>
+    ${unlocks() ? `<p class="small glow">Passar libera o rank ${unlocks()} (quando você também tiver o nível).</p>` : ""}
     <form data-act="submitTest">${ph.tests.map(([n, v, un], i) => `<div class="field">
       <label for="t${i}">${n} (meta: ${unitLabel(v, un)})</label>
       <input id="t${i}" name="t${i}" inputmode="decimal" required></div>`).join("")}

@@ -25,6 +25,10 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 - **Sair da Zona de Penalidade:** enviar no grupo do WhatsApp a mensagem gerada (com o código do dia),
   mandar o print para o app validar, e concluir um treino. Cada dia com comprovante pendente custa 30 XP.
 - **Loja de sexta:** só abre na sexta. Uma semana perfeita (6 treinos = 600 de Ouro) paga exatamente uma pizza.
+- **Nível e rank:** cada nível pede 34 XP a mais que o anterior. Os ranks exigem nível **e** Teste de Rank
+  (em qualquer trilha): D no nível 10, C no 20, B no 30 + meta de 3 meses, A no 42 + meta de 6 meses,
+  S no 55 + meta de 1 ano. Jogando perfeito (~1.060 XP por semana), o S leva cerca de 1 ano.
+- **Trocar de trilha** não mexe em XP, nível, rank, Ouro nem sequência; os testes já passados continuam valendo.
 - **Trilhas:** Calistenia e Corrida, cada uma com 3 fases (metas de 3 meses, 6 meses e 1 ano).
   A carga sobe a cada 6 treinos completos. A meta seguinte só é revelada depois do Teste de Rank da fase atual.
 
