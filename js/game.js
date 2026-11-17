@@ -206,3 +206,64 @@ export function weightTrend(dias = 28, ate = today()) {
   const slope = pts.reduce((a, p) => a + (p[0] - mx) * (p[1] - my), 0) / pts.reduce((a, p) => a + (p[0] - mx) ** 2, 0);
   return { porSemana: slope * 7, atual: my + slope * (daysBetween(de, ate) - mx) };
 }
+
+// ---- meta de calorias automática --------------------------------------------------------
+// meta = gasto diário estimado − déficit. O gasto vem de duas fontes:
+//  1. fórmula: repouso (Mifflin-St Jeor, pelo peso de tendência) × 1,2 + média dos treinos da semana;
+//  2. dados reais (a partir de ~4 semanas): o que você comeu + o que emagreceu (7.700 kcal ≈ 1 kg).
+// Com dados reais suficientes, usa a média das duas (corrige o erro de 10–20% da fórmula).
+// Atividades extras ficam de fora de propósito: elas não viram "crédito" para comer mais.
+export const KCAL_AUTO = { deficit: 500, piso: 1700, passoMax: 100, intervalo: 7 };
+
+export function autoKcal(date = today()) {
+  const p = S.profile, goal = weightGoal();
+  const tr = weightTrend(28, date);
+  const peso = tr?.atual ?? weightOn(date);
+  // repouso pelo peso de tendência (menos sensível a uma pesagem fora da curva)
+  const repouso = Math.round(10 * peso + 6.25 * (p.altura || 170) - 5 * age(date) + (p.sexo === "feminino" ? -161 : 5));
+  const treinos = Object.keys(S.days).filter(d => d < date && S.days[d].workout?.done).sort().slice(-6).map(d => S.days[d].workout.kcal);
+  const porTreino = treinos.length ? treinos.reduce((a, b) => a + b, 0) / treinos.length : (S.track ? workoutKcal(date, 50) : 0);
+  const formula = Math.round(repouso * 1.2 + porTreino * 6 / 7);
+
+  // gasto real: só depois de 2 semanas do início (a perda de água das primeiras semanas engana a conta)
+  let real = null, base = { dias: 0 };
+  const desde = p.criado ? addDays(p.criado, 14) : null;
+  const janela = desde ? Math.min(28, daysBetween(desde, date)) : 0;
+  if (janela >= 21) {
+    const trR = weightTrend(janela, date);
+    const de = addDays(date, -janela);
+    const ingest = Object.keys(S.days).filter(d => d >= de && d < date).map(d => totals(mealsOf(d)).kcal).filter(k => k > 500);
+    if (trR && ingest.length >= janela * 0.7) {
+      const media = ingest.reduce((a, b) => a + b, 0) / ingest.length;
+      real = Math.round(media - trR.porSemana * 7700 / 7);
+      real = Math.round(Math.min(formula * 1.2, Math.max(formula * 0.8, real))); // protege de dados ruins
+      base = { dias: janela, media: Math.round(media), porSemana: trR.porSemana };
+    }
+  }
+  const gasto = real ? Math.round((formula + real) / 2) : formula;
+
+  // perto da meta, o déficit diminui; no alvo, vira manutenção
+  let deficit = p.kcalDeficit ?? KCAL_AUTO.deficit, fase = "emagrecer";
+  if (goal && peso <= goal.alvo) { deficit = 0; fase = "manter"; }
+  else if (goal && peso <= goal.teto) { deficit = Math.round(deficit / 2); fase = "faixa"; }
+  const piso = p.kcalPiso ?? KCAL_AUTO.piso;
+  const meta = Math.max(piso, Math.round((gasto - deficit) / 10) * 10);
+  return { meta, gasto, formula, real, deficit, piso, peso: Math.round(peso * 10) / 10, fase, base };
+}
+
+// Aplica o ajuste no máximo uma vez a cada 7 dias e com passo de até 100 kcal. Devolve a mudança, se houve.
+export function applyAutoKcal(force = false, date = today()) {
+  const p = S.profile;
+  if (!p?.kcalAuto) return null;
+  if (!force && p.kcalAutoEm && daysBetween(p.kcalAutoEm, date) < KCAL_AUTO.intervalo) return null;
+  const calc = autoKcal(date), antes = p.metaKcal;
+  let nova = calc.meta;
+  if (!force && antes) nova = antes + Math.max(-KCAL_AUTO.passoMax, Math.min(KCAL_AUTO.passoMax, nova - antes));
+  p.kcalAutoEm = date;
+  p.kcalAutoCalc = calc;
+  if (nova === antes) { save(); return null; }
+  p.metaKcal = nova;
+  grant(0, 0, `Meta de calorias ajustada: ${antes ? antes + " → " : ""}${nova} kcal`, date);
+  save();
+  return { antes, nova, calc };
+}

@@ -2,8 +2,8 @@
 import { $, $$ } from "./util.js";
 import { S, load } from "./store.js";
 import { actions, views, setRender } from "./core.js";
-import { processDays, inPenalty } from "./game.js";
-import { showEvents } from "./ui.js";
+import { processDays, inPenalty, applyAutoKcal } from "./game.js";
+import { showEvents, toast } from "./ui.js";
 import "./views/home.js";
 import "./views/treino.js";
 import "./views/comida.js";
@@ -58,7 +58,9 @@ window.addEventListener("hashchange", render);
 // Fecha os dias pendentes e mostra o relatório do Sistema
 function closeDays() {
   const report = processDays();
-  if (!report.length) return false;
+  const kcal = applyAutoKcal();
+  if (kcal) setTimeout(() => toast(`Meta de calorias ajustada: ${kcal.antes} → ${kcal.nova} kcal`, 5000), report.length ? 800 : 0);
+  if (!report.length) return !!kcal;
   const falhou = report.some(r => r.falta);
   showEvents(falhou ? "Missão diária falhou" : "Relatório do Sistema", report,
     falhou ? `<p class="bad">Você entrou na <b>Zona de Penalidade</b>.</p><a class="btn primary block" href="#/penalidade" data-close>Resolver agora</a>` : "");
