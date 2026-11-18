@@ -112,23 +112,41 @@ export function isObligated(date) {
 export const pendingDebts = () => S.debts.filter(d => d.status !== "validado");
 export const inPenalty = () => S.game.needsWorkout || pendingDebts().length > 0;
 
-// ---- dívidas / mensagem de WhatsApp ------------------------------------------------------
-// Código só com números: o OCR lê dígitos com muito mais segurança do que letras aleatórias.
+// ---- dívidas -------------------------------------------------------------------------------
+// Código de identificação de cada falta
 export function makeSerial(date) {
   const n = crypto.getRandomValues(new Uint32Array(1))[0] % 1000000;
   return `PEN-${date.slice(2).replace(/-/g, "")}-${String(n).padStart(6, "0")}`;
 }
-export function debtMessage(debt) {
-  const p = S.profile, valor = p.multa ?? 10;
-  return `⚠️ ZONA DE PENALIDADE ⚠️\n` +
-    `Código: ${debt.serial}\n\n` +
-    `Eu, ${p.nome}, NÃO bati minha meta de treino no dia ${fmtDate(debt.date)}.\n` +
-    `Por isso devo R$ ${valor},00 a cada pessoa deste grupo, a ser pago no final do mês.`;
+// ---- dívidas pagas por PIX ----------------------------------------------------------------
+// Cada falta custa a multa para CADA pessoa do grupo. Sai da Zona de Penalidade quando cada uma
+// recebeu pelo menos a multa (soma dos comprovantes de PIX lidos pelo app) e o treino foi cumprido.
+export const grupo = () => (S.grupo ||= []);
+export const debtMembers = debt => debt.membros?.length ? debt.membros : grupo().map(({ id, nome }) => ({ id, nome }));
+export const debtValor = debt => debt.valor ?? S.profile?.multa ?? 10;
+export function debtState(debt) {
+  const valor = debtValor(debt), pags = debt.pagamentos || [];
+  const membros = debtMembers(debt).map(m => {
+    const pago = pags.filter(p => p.membro === m.id).reduce((n, p) => n + p.valor, 0);
+    return { ...m, pago, falta: Math.max(0, valor - pago) };
+  });
+  const total = valor * membros.length, pago = pags.reduce((n, p) => n + p.valor, 0);
+  return { valor, membros, total, pago, ok: membros.length > 0 && membros.every(m => m.falta === 0) };
 }
 export function monthDebt(ym = today().slice(0, 7)) {
-  const n = S.debts.filter(d => d.date.startsWith(ym)).length;
-  const p = S.profile || {};
-  return { faltas: n, total: n * (p.multa ?? 10) * (p.pessoas ?? 1) };
+  const ds = S.debts.filter(d => d.date.startsWith(ym));
+  const st = ds.map(debtState);
+  return { faltas: ds.length, total: st.reduce((n, x) => n + x.total, 0), pago: st.reduce((n, x) => n + x.pago, 0) };
+}
+// Registra um comprovante lido. Devolve o estado atualizado da dívida.
+export function addPayment(debt, pag) {
+  (debt.pagamentos ||= []).push(pag);
+  (S.pixIds ||= []).push(pag.chave, ...(pag.id ? [pag.id] : []));
+  if (!debt.membros?.length) debt.membros = debtMembers(debt); // congela quem estava no grupo
+  const st = debtState(debt);
+  if (st.ok) { debt.status = "validado"; debt.validatedAt = today(); }
+  save();
+  return st;
 }
 
 // ---- conclusão do treino -----------------------------------------------------------------
@@ -183,7 +201,8 @@ export function processDays() {
     if (!rec.meals) rec.meals = JSON.parse(JSON.stringify(S.diet.meals)); // congela a dieta do dia
     if (pendingDebts().length) report.push(grant(R.corrosaoXp, 0, `Dívida sem comprovante em ${fmtDate(d)}`, d));
     if (isObligated(d) && !rec.workout?.done) {
-      S.debts.push({ date: d, serial: makeSerial(d), status: "pendente" });
+      S.debts.push({ date: d, serial: makeSerial(d), status: "pendente", valor: S.profile.multa ?? 10,
+        membros: grupo().map(({ id, nome }) => ({ id, nome })), pagamentos: [] });
       g.needsWorkout = true; g.streak = 0;
       report.push({ ...grant(R.faltaXp, R.faltaOuro, `Missão diária FALHOU em ${fmtDate(d)}`, d), falta: true });
     }

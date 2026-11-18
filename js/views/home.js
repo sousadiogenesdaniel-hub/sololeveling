@@ -10,12 +10,12 @@ function penaltyBanner() {
   if (!inPenalty()) return "";
   const debts = pendingDebts().length;
   const steps = [];
-  if (debts) steps.push(`Enviar ${debts} comprovante${debts > 1 ? "s" : ""} de penalidade no WhatsApp`);
+  if (debts) steps.push(`Pagar a multa por PIX e enviar os comprovantes (${debts} falta${debts > 1 ? "s" : ""})`);
   if (S.game.needsWorkout) steps.push("Concluir um treino para se redimir");
   return panel("Zona de Penalidade", `
     <p>Você falhou na missão diária. O Sistema permanecerá em alerta até você cumprir:</p>
     <ul>${steps.map(s => `<li>${s}</li>`).join("")}</ul>
-    <p class="small muted">Enquanto houver comprovante pendente, você perde ${-R.corrosaoXp} XP por dia e a Loja fica trancada.</p>
+    <p class="small muted">Enquanto houver multa pendente, você perde ${-R.corrosaoXp} XP por dia e a Loja fica trancada.</p>
     <a class="btn primary block" href="#/penalidade">Resolver penalidade</a>`, "alert");
 }
 
@@ -102,7 +102,7 @@ function statusTiles() {
       <div class="small ${delta <= 0 ? "ok" : "warn"}">${signed(delta)} kg em 7 dias</div></div>
     <div class="tile"><div class="lbl">Até a meta</div><div class="val num">${metaVal}</div>
       <div class="small muted">${metaSub}</div></div>
-  </div>${md.faltas ? `<p class="small bad center">Dívida deste mês: ${md.faltas} falta${md.faltas > 1 ? "s" : ""} = R$ ${fmt(md.total)},00</p>` : ""}`;
+  </div>${md.faltas ? `<p class="small bad center">Multas deste mês: ${md.faltas} falta${md.faltas > 1 ? "s" : ""} = R$ ${fmt(md.total, 2)}${md.pago ? ` · pago R$ ${fmt(md.pago, 2)}` : ""}</p>` : ""}`;
 }
 
 views.inicio = () => {

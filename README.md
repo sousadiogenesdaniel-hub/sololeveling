@@ -14,7 +14,7 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 | **Missão** | Treino do dia da trilha escolhida, ponto por GPS (entrada e saída), séries para marcar, treino indoor em dia de chuva forte e Teste de Rank. |
 | **Comida** | **Dieta padrão** que entra sozinha em todos os dias, e **Dia**, onde você altera só aquele dia sem mexer na dieta. Busca na tabela TACO e alimentos próprios pelo rótulo. |
 | **Evolução** | Gráficos de peso, abdômen, calorias consumidas × gastas, medidas semanais e treinos por semana. |
-| **Mais** | Medidas (diárias: peso e abdômen; semanais), Fotos (galeria e antes × depois), Loja de sexta, Penalidades, Registro do Sistema e Perfil. |
+| **Mais** | Atividades extras, Condição (sono, foco, energia e celular na cama, com padrões; sem XP nem penalidade), Medidas (diárias: peso e abdômen; semanais), Fotos (galeria e antes × depois), Loja de sexta, Penalidades, Registro do Sistema e Perfil. |
 
 ## Regras do jogo
 
@@ -22,8 +22,9 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 - **Medidas do dia:** +10 XP. **Medidas semanais:** +30 XP. **Dia dentro da meta de calorias:** +20 XP.
 - **A cada 7 treinos seguidos:** +50 Ouro.
 - **Faltou ao treino:** −150 XP, −50 Ouro e **Zona de Penalidade** (o app fica vermelho e a Loja tranca).
-- **Sair da Zona de Penalidade:** enviar no grupo do WhatsApp a mensagem gerada (com o código do dia),
-  mandar o print para o app validar, e concluir um treino. Cada dia com comprovante pendente custa 30 XP.
+- **Sair da Zona de Penalidade:** pagar a multa por PIX a cada pessoa do grupo (cadastradas em Penalidades),
+  enviar o print de cada comprovante para o app ler (valor, data, hora e recebedor; o mesmo comprovante não vale
+  duas vezes) e concluir um treino. Cada dia com multa pendente custa 30 XP. As imagens não são guardadas.
 - **Loja de sexta:** só abre na sexta. Uma semana perfeita (6 treinos = 600 de Ouro) paga exatamente uma pizza.
 - **Nível e rank:** cada nível pede 34 XP a mais que o anterior. Cada rank exige o nível mínimo **e** o Teste
   de Rank da sua fase (em qualquer trilha); vale o que vier por último. D: nível 18 + teste Despertar (~2 meses),
@@ -89,7 +90,7 @@ js/app.js, core.js                        inicialização, rotas e eventos
 js/store.js                               estado e fotos no IndexedDB
 js/game.js                                XP, nível, rank, Ouro, fechamento dos dias, penalidades
 js/tracks.js                              trilhas, fases, exercícios e progressão de carga
-js/ocr.js                                 leitura do print do WhatsApp (Tesseract.js, no aparelho)
+js/ocr.js                                 leitura dos comprovantes de PIX (Tesseract.js, no aparelho)
 js/views/                                 telas
 data/taco.json                            Tabela TACO (NEPA/UNICAMP)
 vendor/                                   Chart.js e Tesseract.js (embutidos para funcionar offline)

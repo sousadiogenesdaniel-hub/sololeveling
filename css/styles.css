@@ -244,3 +244,9 @@ table.t th { color: var(--muted); font-size: .72rem; letter-spacing: .08em; text
 .as-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .as-legend .as-c { width: 11px; height: 11px; }
 .set.low { border-color: var(--warn); color: var(--warn); background: rgba(255, 200, 87, .1); box-shadow: 0 0 8px rgba(255, 200, 87, .3); }
+.as-warn { background: var(--warn); box-shadow: 0 0 5px rgba(255, 200, 87, .45); }
+/* botões das métricas da Condição: cor do nível quando marcados */
+.btn.cd-ok.on { background: var(--ok); border-color: var(--ok); color: #03101f; }
+.btn.cd-warn.on { background: var(--warn); border-color: var(--warn); color: #1d1300; }
+.btn.cd-bad.on { background: var(--bad); border-color: var(--bad); color: #fff; }
+.chip.cd-ok { color: var(--ok); } .chip.cd-warn { color: var(--warn); } .chip.cd-bad { color: var(--bad); } .chip.cd-none { color: var(--muted); }

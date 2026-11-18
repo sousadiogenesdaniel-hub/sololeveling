@@ -10,6 +10,7 @@ import "./views/comida.js";
 import "./views/outros.js";
 import "./views/evolucao.js";
 import "./views/penalidade.js";
+import "./views/condicao.js";
 import { startWatch } from "./views/extras.js";
 import { onboarding } from "./views/perfil.js";
 

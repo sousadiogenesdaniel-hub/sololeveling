@@ -12,10 +12,11 @@ views.mais = () => {
   const pend = pendingDebts().length;
   return `${header()}<div class="stack">${panel("Menu", `<ul class="list">
     ${item("extras", "🚶", "Atividades extras", "Caminhada, bike, esporte... somam no gasto do dia", S.tracking ? `<span class="chip warn">Ao vivo</span>` : "")}
+    ${item("condicao", "🌙", "Condição", "Sono, foco, energia e celular na cama")}
     ${item("medidas", "📏", "Medidas", "Peso e abdômen diários, medidas semanais")}
     ${item("fotos", "📸", "Fotos", "Registro semanal e antes × depois")}
     ${item("loja", "🛒", "Loja de sexta", "Troque Ouro pelo direito de comer besteira")}
-    ${item("penalidade", "⚠️", "Penalidades", "Comprovantes e dívidas do mês", pend ? `<span class="chip bad">${pend}</span>` : "")}
+    ${item("penalidade", "⚠️", "Penalidades", "Multas por PIX e pessoas do grupo", pend ? `<span class="chip bad">${pend}</span>` : "")}
     ${item("historico", "📜", "Registro do Sistema", "Histórico de XP e Ouro")}
     ${item("perfil", "👤", "Perfil e ajustes", "Status, metas, casa, trilha e backup")}
   </ul>`)}</div>`;

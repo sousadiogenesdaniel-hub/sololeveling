@@ -23,8 +23,7 @@ function profileForm(p = {}, first = false) {
       ${f("metaKcal", "Meta de calorias por dia", `inputmode="numeric" ${p.kcalAuto ? "readonly" : ""}`)}
       <div class="field"><label for="pf-rest">Dia de descanso</label><select id="pf-rest" name="restDay">
         ${WEEKDAYS.map((d, i) => `<option value="${i}" ${(p.restDay ?? 0) === i ? "selected" : ""}>${d}</option>`).join("")}</select></div>
-      ${f("pessoas", "Pessoas no grupo do WhatsApp", 'inputmode="numeric"', p.pessoas ?? 3)}
-      ${f("multa", "Multa por falta (R$ por pessoa)", 'inputmode="numeric"', p.multa ?? 10)}
+      ${f("multa", "Multa por falta (R$ para cada pessoa do grupo)", 'inputmode="numeric"', p.multa ?? 10)}
       ${first ? "" : f("minDist", "Distância mínima de casa (m, mín. 1000)", 'inputmode="numeric"', Math.max(1000, p.minDist ?? 1000))}
       ${first ? "" : f("minMin", "Tempo mínimo de treino (min, mín. 30)", 'inputmode="numeric"', Math.max(30, p.minMin ?? 30))}
     </div>
