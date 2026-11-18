@@ -53,7 +53,8 @@ export function nextRank(li = levelInfo()) {
 function changes(a, b) {
   const ia = RANK_ORDER.indexOf(a.rank), ib = RANK_ORDER.indexOf(b.rank);
   return { levelUp: b.level > a.level ? b.level : null, levelDown: b.level < a.level ? b.level : null,
-    rankUp: ib > ia ? b.rank : null, rankDown: ib < ia ? b.rank : null };
+    rankUp: ib > ia ? b.rank : null, rankDown: ib < ia ? b.rank : null,
+    levelFrom: a.level, levelTo: b.level, rankFrom: a.rank };
 }
 
 export function grant(xp, gold, motivo, date = today()) {

@@ -1,9 +1,9 @@
 // Missão: trilha, treino do dia, ponto por GPS, treino indoor em dia de chuva, Teste de Rank
 import { views, actions, refresh } from "../core.js";
 import { S, day, save, photos } from "../store.js";
-import { today, addDays, esc, fmt, fmtTime, getPosition, getPreciseFix, distM, shrinkImage, $, num } from "../util.js";
+import { today, addDays, esc, fmt, fmtTime, fmtDate, getPosition, getPreciseFix, distM, shrinkImage, uid, $, num } from "../util.js";
 import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox } from "../ui.js";
-import { completeWorkout, passTest, isRestDay, workoutKcal, R, RANK_TESTS, RANK_ORDER, testsPassed } from "../game.js";
+import { completeWorkout, passTest, isRestDay, workoutKcal, grant, R, RANK_TESTS, RANK_ORDER, testsPassed } from "../game.js";
 import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, trackFinished, unitLabel, SESSIONS_PER_STAGE } from "../tracks.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
@@ -14,6 +14,11 @@ export const MIN_DIST = 1000, MIN_MIN = 30;
 const minDist = () => Math.max(MIN_DIST, S.profile.minDist ?? MIN_DIST);
 const minMin = () => Math.max(MIN_MIN, S.profile.minMin ?? MIN_MIN);
 const elapsedMin = w => (Date.now() - w.in.t) / 60000;
+
+// Locais de treino: o ponto só vale dentro do raio de um local cadastrado
+export const SPOT = { raio: 100, folgaMax: 50, max: 3, carenciaDias: 3 };
+const spots = () => (S.spots ||= []);
+const activeSpots = () => spots().filter(s => s.validFrom <= today());
 
 function chooseTrack() {
   return `${header()}<div class="stack">
@@ -122,7 +127,7 @@ function todayCard() {
     const plan = cur.plano, need = cur.indoor ? INDOOR_MIN : minMin();
     return panel(plan.titulo, `
       <div class="timer num glow" id="timer">00:00</div>
-      <p class="center small muted">${cur.indoor ? "Dungeon Indoor" : `Entrada às ${fmtTime(cur.in.t)} · ${fmt(cur.in.dist / 1000, 1)} km de casa`} · mínimo ${need} min</p>
+      <p class="center small muted">${cur.indoor ? "Dungeon Indoor" : `Entrada às ${fmtTime(cur.in.t)} · ${cur.in.spot ? esc(cur.in.spot) : fmt(cur.in.dist / 1000, 1) + " km de casa"}`} · mínimo ${need} min</p>
       ${exerciseList(cur, plan, true)}
       ${cur.indoor
         ? `<label class="btn primary block" style="margin-top:12px">Concluir: tirar selfie de prova
@@ -134,7 +139,7 @@ function todayCard() {
   const redencao = isRestDay(t) ? `<p class="small warn">Treino de redenção: hoje seria descanso, mas você está na Zona de Penalidade.</p>` : "";
   return panel(plan.titulo, `${redencao}
     ${exerciseList(null, plan, false)}
-    <p class="small muted">Para valer: bata o ponto de entrada a mais de ${fmt(minDist() / 1000, 1)} km de casa (GPS preciso), treine pelo menos ${minMin()} min e bata o ponto de saída no local.</p>
+    <p class="small muted">Para valer: bata o ponto de entrada ${activeSpots().length ? "no seu local de treino" : `a mais de ${fmt(minDist() / 1000, 1)} km de casa`} (GPS preciso), treine pelo menos ${minMin()} min e bata o ponto de saída no local.</p>
     <button class="btn primary block" data-act="punchIn">Bater ponto: entrada</button>
     <button class="btn ghost block" style="margin-top:8px" data-act="checkRain">🌧 Chuva forte? Verificar clima</button>`,
     "", `<span class="chip">Etapa ${plan.stage}/${plan.stages}</span>`);
@@ -158,21 +163,38 @@ async function locate() {
     const dist = Math.round(distM(pos, S.profile.home));
     // conta a favor da regra: a distância só vale descontando o erro do GPS e do cadastro da casa
     const garantida = Math.max(0, dist - pos.acc - S.profile.home.acc);
-    return { ...pos, t: Date.now(), dist, garantida };
+    // local de treino mais próximo; a folga cobre o erro do GPS, até 50 m
+    const near = activeSpots().map(sp => ({ sp, d: Math.round(distM(pos, sp)) })).sort((x, y) => x.d - y.d)[0] || null;
+    const raio = near ? SPOT.raio + Math.min(SPOT.folgaMax, pos.acc + near.sp.acc) : 0;
+    return { ...pos, t: Date.now(), dist, garantida, spot: near && near.d <= raio ? near.sp.nome : null, spotDist: near?.d, spotNome: near?.sp.nome, raio };
   } catch (e) { $("#toast")?.remove(); sysMessage("Localização não verificada", `<p>${esc(e.message)}</p>`); return null; }
 }
 
-const posLine = pos => `Você está a <b>${fmt(pos.dist)} m</b> de casa (precisão do GPS ±${pos.acc} m).`;
+const posLine = pos => pos.spot
+  ? `Você está no <b>${esc(pos.spot)}</b> (${fmt(pos.spotDist)} m do ponto cadastrado, GPS ±${pos.acc} m), a ${fmt(pos.dist / 1000, 1)} km de casa.`
+  : `Você está a <b>${fmt(pos.dist)} m</b> de casa (precisão do GPS ±${pos.acc} m).`;
+
+// Devolve o motivo da recusa, ou null se o ponto vale
+function refuse(pos, saida) {
+  if (pos.garantida < minDist()) {
+    return `<p>${posLine(pos)}</p><p>${saida ? "Bata o ponto de saída ainda no local de treino, a" : "O ponto só vale a"} mais de <b>${fmt(minDist() / 1000, 1)} km</b> de casa${pos.dist >= minDist() ? ", descontando a margem de erro do GPS" : ""}.</p>`;
+  }
+  if (!activeSpots().length) return null; // nenhum local ativo ainda: vale só a regra de 1 km
+  if (!pos.spot) {
+    return `<p>Você está a <b>${fmt(pos.spotDist)} m</b> do local de treino mais próximo (${esc(pos.spotNome)}). O ponto só vale num raio de ${pos.raio} m dele.</p>
+      <p class="small muted">GPS ±${pos.acc} m. ${saida ? "Bata o ponto de saída no mesmo lugar onde treinou." : "Vá até o local de treino e tente de novo."}</p>`;
+  }
+  return null;
+}
 
 actions.punchIn = async () => {
   const pos = await locate(); if (!pos) return;
-  if (pos.garantida < minDist()) {
-    return sysMessage("Ponto recusado", `<p>${posLine(pos)}</p><p>O ponto só vale a mais de <b>${fmt(minDist() / 1000, 1)} km</b> de casa${pos.dist >= minDist() ? ", descontando a margem de erro do GPS" : ""}.</p>
-      <p class="small muted">Vá até o local de treino${pos.dist >= minDist() ? " ou espere o sinal melhorar" : ""} e tente de novo.</p>`);
-  }
+  const motivo = refuse(pos, false);
+  if (motivo) return sysMessage("Ponto recusado", motivo);
   day().workout = { trackId: S.track.id, plano: workoutFor(today()), in: pos, sets: {} };
   save(); refresh();
   sysMessage("Ponto de entrada registrado", `<p>${posLine(pos)}</p><p class="mid glow">${fmtTime(pos.t)}</p>
+    ${activeSpots().length ? "" : `<p class="small warn">Cadastre seu local de treino abaixo: depois de ativo, o ponto só vale dentro dele.</p>`}
     <p class="small muted">Treine pelo menos ${minMin()} min e bata o ponto de saída ainda no local.</p>`, { botao: "Bom treino" });
 };
 
@@ -180,11 +202,65 @@ actions.punchOut = async () => {
   const w = day().workout, falta = Math.ceil(minMin() - elapsedMin(w));
   if (falta > 0) return sysMessage("Ainda não", `<p>Faltam <b>${falta} min</b> para o tempo mínimo de ${minMin()} min de treino.</p>`);
   const pos = await locate(); if (!pos) return;
-  if (pos.garantida < minDist()) {
-    return sysMessage("Ponto recusado", `<p>${posLine(pos)}</p><p>Bata o ponto de saída ainda no local de treino, a mais de ${fmt(minDist() / 1000, 1)} km de casa.</p>`);
-  }
+  const motivo = refuse(pos, true);
+  if (motivo) return sysMessage("Ponto recusado", motivo);
   w.out = pos;
   finish(w);
+};
+
+// ---- cadastro de locais de treino ------------------------------------------------------
+function spotsCard() {
+  const list = spots();
+  const item = sp => {
+    const ativo = sp.validFrom <= today();
+    return `<li><span style="font-size:1.3rem">📍</span><span class="grow"><b>${esc(sp.nome)}</b><br>
+      <span class="small ${ativo ? "ok" : "warn"}">${ativo ? "Ativo" : `Passa a valer em ${fmtDate(sp.validFrom)}`}</span>
+      <span class="small muted"> · GPS ±${sp.acc} m</span></span>
+      <button class="btn sm danger" data-act="delSpot" data-id="${sp.id}" aria-label="Remover ${esc(sp.nome)}">✕</button></li>`;
+  };
+  return panel("Locais de treino", `
+    ${list.length ? `<ul class="list">${list.map(item).join("")}</ul>` : `<p class="warn small">Nenhum local cadastrado. Enquanto isso, o ponto vale em qualquer lugar a mais de 1 km de casa.</p>`}
+    <p class="small muted">O ponto de entrada e o de saída só valem num raio de ${SPOT.raio} m do local (+ até ${SPOT.folgaMax} m de margem do GPS).
+      Cadastre estando no ponto exato onde treina (ex.: nas barras). ${list.length || S.spotsEver ? `Local novo só passa a valer depois de ${SPOT.carenciaDias} dias.` : "O primeiro local vale na hora; os seguintes, só depois de " + SPOT.carenciaDias + " dias."} Máximo de ${SPOT.max}.</p>
+    <button class="btn block" data-act="addSpot" ${list.length >= SPOT.max ? "disabled" : ""}>${list.length >= SPOT.max ? "Limite de 3 locais" : "📍 Cadastrar: estou no local de treino"}</button>`,
+    "", `<span class="small muted">${list.length}/${SPOT.max}</span>`);
+}
+
+actions.addSpot = () => {
+  if (spots().length >= SPOT.max) return;
+  const o = modal(`<div class="ptitle"><h2>Novo local de treino</h2></div>
+    <form id="spf"><div class="field"><label for="spn">Nome</label><input id="spn" name="nome" required maxlength="30" placeholder="ex.: Parque — barras"></div>
+    <p class="small muted">Esteja agora no ponto exato onde você treina. O Sistema vai ler seu GPS.</p>
+    <div class="row"><button type="button" class="btn ghost grow" data-close>Cancelar</button><button class="btn primary grow">Cadastrar aqui</button></div></form>`);
+  $("#spf", o).onsubmit = async e => {
+    e.preventDefault();
+    const nome = e.target.nome.value.trim(); closeModal();
+    if (!homeOk()) return locate(); // mostra o aviso de casa não cadastrada
+    toast("Verificando sua localização pelo GPS…", 30000);
+    let pos;
+    try { pos = await getPreciseFix({ onUpdate: b => { const t = $("#toast"); if (t) t.textContent = `Verificando sua localização… precisão ±${b.acc} m`; } }); }
+    catch (err) { $("#toast")?.remove(); return sysMessage("Local não cadastrado", `<p>${esc(err.message)}</p>`); }
+    $("#toast")?.remove();
+    const dist = Math.round(distM(pos, S.profile.home));
+    if (dist - pos.acc - S.profile.home.acc < minDist()) {
+      return sysMessage("Local recusado", `<p>Este lugar fica a <b>${fmt(dist)} m</b> de casa (GPS ±${pos.acc} m). O local de treino precisa estar a mais de ${fmt(minDist() / 1000, 1)} km de casa.</p>`);
+    }
+    const primeiro = !S.spotsEver && !spots().length;
+    const sp = { id: uid(), nome, lat: pos.lat, lon: pos.lon, acc: pos.acc, criado: today(), validFrom: primeiro ? today() : addDays(today(), SPOT.carenciaDias) };
+    spots().push(sp); S.spotsEver = true;
+    grant(0, 0, `Local de treino cadastrado: ${nome}${primeiro ? "" : ` (vale a partir de ${fmtDate(sp.validFrom)})`}`);
+    save(); refresh();
+    sysMessage("Local cadastrado", `<p class="mid glow">📍 ${esc(nome)}</p><p>${fmt(dist / 1000, 1)} km de casa · GPS ±${pos.acc} m</p>
+      <p class="${primeiro ? "ok" : "warn"}">${primeiro ? "Já vale a partir de agora." : `Passa a valer em ${fmtDate(sp.validFrom)}.`}</p>`);
+  };
+};
+
+actions.delSpot = async ({ id }) => {
+  const sp = spots().find(x => x.id === id);
+  if (!await confirmBox("Remover local", `Remover "${sp.nome}"? Um local novo só passa a valer depois de ${SPOT.carenciaDias} dias.`, "Remover")) return;
+  S.spots = spots().filter(x => x.id !== id);
+  grant(0, 0, `Local de treino removido: ${sp.nome}`);
+  save(); refresh();
 };
 
 function finish(w) {
@@ -262,7 +338,7 @@ views.treino = () => {
     return `${header()}<div class="stack">${panel("Trilha concluída", `<p class="mid glow">Você chegou ao topo desta trilha.</p>
       <p>Escolha uma nova trilha no Perfil para continuar evoluindo.</p>`, "good")}</div>`;
   }
-  return `${header()}<div class="stack">${testUnlocked() ? testCard() : ""}${todayCard()}${trailCard()}</div>`;
+  return `${header()}<div class="stack">${testUnlocked() ? testCard() : ""}${todayCard()}${spotsCard()}${trailCard()}</div>`;
 };
 
 let tick = null;

@@ -31,6 +31,7 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 - **Meta de calorias automática** (opcional, no Perfil): toda semana recalcula gasto − déficit pelo peso de tendência;
   depois de ~5 semanas, também pelo que você comeu e emagreceu de fato. Muda no máximo 100 kcal por semana,
   respeita um piso e, perto da meta, reduz o déficit até virar manutenção.
+- **Comemorações:** subir de nível tem uma animação curta e subir de rank, uma mais longa, com som (desligável no Perfil).
 - **Trocar de trilha** não mexe em XP, nível, rank, Ouro nem sequência; os testes já passados continuam valendo.
 - **Trilhas:** Calistenia e Corrida, cada uma com 3 fases (metas de 3 meses, 6 meses e 1 ano).
   A carga sobe a cada 6 treinos completos. A meta seguinte só é revelada depois do Teste de Rank da fase atual.
@@ -40,6 +41,8 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 1. Cadastre sua casa no Perfil (uma vez, estando em casa).
 2. No local de treino, toque em **Bater ponto: entrada**. Só vale a mais de 1 km de casa, com GPS preciso
    (a distância é contada descontando a margem de erro do GPS; localização aproximada é recusada).
+   Com **locais de treino** cadastrados (até 3, na tela Missão), entrada e saída só valem num raio de 100 m
+   de um deles (+ até 50 m de margem do GPS). O primeiro local vale na hora; os seguintes, só 3 dias depois.
 3. Depois de pelo menos 30 min, toque em **Bater ponto: saída**, ainda no local.
 
 **Chuva forte:** o botão "Verificar clima" consulta a previsão (Open-Meteo, com coordenadas arredondadas).

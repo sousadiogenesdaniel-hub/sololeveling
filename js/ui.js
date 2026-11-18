@@ -2,6 +2,7 @@
 import { $, esc, fmt } from "./util.js";
 import { S } from "./store.js";
 import { levelInfo } from "./game.js";
+import { celebrate, RANK_COLORS } from "./fx.js";
 
 export function toast(msg, ms = 2600) {
   let t = $("#toast"); if (t) t.remove();
@@ -55,11 +56,12 @@ export function showEvents(titulo, events, extra = "") {
   }).join("");
   const up = events.filter(e => e.levelUp).pop(), down = events.filter(e => e.levelDown).pop();
   const rUp = events.filter(e => e.rankUp).pop(), rDown = events.filter(e => e.rankDown).pop();
-  const lvl = (rUp ? `<div class="rank" style="margin:14px auto 18px"><span>${rUp.rankUp}</span></div><p class="mid glow">NOVO RANK: ${rUp.rankUp}</p>` : "")
+  const lvl = (rUp ? `<div class="rank" style="margin:14px auto 18px;border-color:${RANK_COLORS[rUp.rankUp]};color:${RANK_COLORS[rUp.rankUp]}"><span>${rUp.rankUp}</span></div><p class="mid glow">NOVO RANK: ${rUp.rankUp}</p>` : "")
     + (rDown ? `<p class="mid bad">Você caiu para o rank ${rDown.rankDown}</p>` : "")
     + (up ? `<p class="${rUp ? "" : "mid "}glow">SUBIU DE NÍVEL! Nível ${up.levelUp}</p>`
       : down ? `<p class="${rDown ? "" : "mid "}bad">Você caiu para o nível ${down.levelDown}</p>` : "");
-  sysMessage(titulo, `${lvl}<ul class="list">${linhas}</ul>${extra}`);
+  // comemoração antes da janela do Sistema (só para subir; cair não tem festa)
+  celebrate(events).then(() => sysMessage(titulo, `${lvl}<ul class="list">${linhas}</ul>${extra}`));
 }
 
 export function header() {

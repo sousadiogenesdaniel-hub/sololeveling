@@ -35,6 +35,8 @@ function profileForm(p = {}, first = false) {
         ${f("kcalDeficit", "Déficit diário (kcal)", 'inputmode="numeric"', p.kcalDeficit ?? KCAL_AUTO.deficit)}
         ${f("kcalPiso", "Nunca abaixo de (kcal)", 'inputmode="numeric"', p.kcalPiso ?? KCAL_AUTO.piso)}</div>
       <p class="small muted" style="margin:0">Recalcula toda semana pelo seu peso e, depois de ~5 semanas, também pelo quanto você realmente emagreceu comendo o que registrou.</p></div>`}
+    ${first ? "" : `<label class="row" style="text-transform:none;letter-spacing:0;font-size:1rem;color:var(--text);margin:0 0 12px">
+      <input type="checkbox" name="som" ${p.som !== false ? "checked" : ""}> Sons nas comemorações de nível e rank</label>`}
     <button class="btn primary block">${first ? "Despertar" : "Salvar perfil"}</button></form>`;
 }
 
@@ -57,6 +59,7 @@ actions.saveProfile = d => {
   const autoAntes = !!p.kcalAuto, ajusteAntes = `${p.kcalDeficit}|${p.kcalPiso}`;
   if (!first) {
     p.kcalAuto = d.kcalAuto === "on";
+    p.som = d.som === "on";
     p.kcalDeficit = Math.min(1000, Math.max(0, Math.round(num(d.kcalDeficit) ?? KCAL_AUTO.deficit)));
     p.kcalPiso = Math.max(1200, Math.round(num(d.kcalPiso) ?? KCAL_AUTO.piso));
   }
