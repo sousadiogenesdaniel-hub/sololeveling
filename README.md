@@ -26,8 +26,9 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   mandar o print para o app validar, e concluir um treino. Cada dia com comprovante pendente custa 30 XP.
 - **Loja de sexta:** só abre na sexta. Uma semana perfeita (6 treinos = 600 de Ouro) paga exatamente uma pizza.
 - **Nível e rank:** cada nível pede 34 XP a mais que o anterior. Cada rank exige o nível mínimo **e** o Teste
-  de Rank da sua fase (em qualquer trilha); vale o que vier por último. D: nível 10 + teste Despertar (~2 meses),
-  C: 20 + Fundação (~4 meses), B: 30 + Ascensão (~7 meses), A: 42 + Elite (~1 ano), S: 55 + Monarca (~20 meses).
+  de Rank da sua fase (em qualquer trilha); vale o que vier por último. D: nível 18 + teste Despertar (~2 meses),
+  C: 28 + Fundação (~4 meses), B: 40 + Ascensão (~7 meses), A: 52 + Elite (~1 ano), S: 68 + Monarca (~20 meses).
+  O nível chega poucas semanas antes do teste; o nível não tem teto.
 - **Meta de calorias automática** (opcional, no Perfil): toda semana recalcula gasto − déficit pelo peso de tendência;
   depois de ~5 semanas, também pelo que você comeu e emagreceu de fato. Muda no máximo 100 kcal por semana,
   respeita um piso e, perto da meta, reduz o déficit até virar manutenção.

@@ -22,10 +22,12 @@ export const R = {
 
 // ---- nível e rank ------------------------------------------------------------------
 // XP acumulado para chegar ao nível L. Cada nível pede 34 XP a mais que o anterior.
-// Calibrado para o nível 55 (rank S) exigir ~1 ano de jogo perfeito (~1.060 XP por semana).
+// O nível mínimo de cada rank chega algumas semanas ANTES do Teste de Rank jogando perfeito (~1.060 XP/semana),
+// para o teste ser o portão normal e o XP só segurar quem falta muito.
+// Perfeito: D ~1,6 mês · C ~3,5 · B ~6,7 · A ~11 · S ~18,5 (testes: 2, 4, 7, 12 e ~20 meses).
 export const xpToReach = L => 150 * (L - 1) + 17 * (L - 1) * (L - 2);
 export const RANK_ORDER = ["E", "D", "C", "B", "A", "S"];
-const RANK_LEVEL = { E: 1, D: 10, C: 20, B: 30, A: 42, S: 55 };
+const RANK_LEVEL = { E: 1, D: 18, C: 28, B: 40, A: 52, S: 68 };
 // Testes de Rank necessários para cada rank (fases concluídas em qualquer trilha): um teste por rank
 export const RANK_TESTS = { E: 0, D: 1, C: 2, B: 3, A: 4, S: 5 };
 
