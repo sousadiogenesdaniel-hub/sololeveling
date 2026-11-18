@@ -5,6 +5,7 @@ import { today, addDays, fmt, fmtShort, fmtDate, signed, daysBetween, $ } from "
 import { header, panel } from "../ui.js";
 import { totals, spent, mealsOf, weightGoal, weightTrend } from "../game.js";
 import { WEEKLY } from "./outros.js";
+import { attendanceBoard } from "./assiduidade.js";
 
 let period = 90, charts = [];
 const PERIODS = [[30, "30 d"], [90, "90 d"], [180, "6 m"], [0, "Tudo"]];
@@ -58,6 +59,7 @@ views.evolucao = () => {
     <div class="stack">
     ${panel("Resumo", `<table class="t"><tr><th></th><th>Início</th><th>Atual</th><th>Variação</th><th>Meta</th></tr>
       ${row("Peso", ini, atual, p.metaPeso, p.metaMargem ? `± ${fmt(p.metaMargem)} kg` : "kg")}${row("Abdômen", abdIni, abdAt, p.metaAbdomen, "cm")}</table>`)}
+    ${attendanceBoard()}
     ${forecast(atual)}
     ${panel("Peso (kg)", box("c-peso"))}
     ${panel("Abdômen (cm)", box("c-abd"))}

@@ -225,3 +225,21 @@ table.t th { color: var(--muted); font-size: .72rem; letter-spacing: .08em; text
   .fx *, .fx *::before { animation-duration: .01s !important; animation-delay: 0s !important; }
   .fx-old, .fx-wave, .fx-flash, .fx .pt { display: none; }
 }
+
+/* ---- quadro de assiduidade ---- */
+.as { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 10px; }
+@media (min-width: 520px) { .as { grid-template-columns: repeat(4, 1fr); } }
+.as-name { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+.as-g { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.as-g b { font-size: .55rem; color: var(--muted); text-align: center; font-weight: 600; }
+.as-c, .as-e { display: block; aspect-ratio: 1; }
+.as-c { border-radius: 2px; background: rgba(127, 149, 187, .1); }
+.as-ok { background: var(--ok); box-shadow: 0 0 5px rgba(61, 255, 181, .45); }
+.as-bad { background: var(--bad); box-shadow: 0 0 5px rgba(255, 77, 99, .5); }
+.as-rest { background: rgba(127, 149, 187, .28); }
+.as-hoje { background: transparent; box-shadow: inset 0 0 0 1.5px var(--glow); }
+.as-fut, .as-none { background: rgba(127, 149, 187, .07); }
+.as-today { outline: 1px solid var(--text); outline-offset: 1px; }
+.as-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; }
+.as-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.as-legend .as-c { width: 11px; height: 11px; }

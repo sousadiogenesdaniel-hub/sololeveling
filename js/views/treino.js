@@ -60,7 +60,8 @@ function trailCard() {
     <h3>Meta de ${ph.prazo}${unlocks() ? ` · libera o rank ${unlocks()}` : ""}</h3>
     <p class="small" style="margin:4px 0">${ph.meta}</p>
     <ul class="small" style="margin:4px 0 10px;padding-left:18px">${ph.tests.map(([n, v, un]) => `<li>${n}: <b>${unitLabel(v, un)}</b></li>`).join("")}</ul>
-    <ul class="list small">${fases}</ul>`);
+    <ul class="list small">${fases}</ul>
+    <a class="btn sm ghost block" style="margin-top:8px" href="#/evolucao">Ver quadro de assiduidade</a>`);
 }
 
 function testCard() {
