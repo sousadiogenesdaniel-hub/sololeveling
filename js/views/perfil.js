@@ -106,8 +106,8 @@ views.perfil = () => {
       <p class="small muted">Força = treinos de calistenia · Agilidade = treinos de corrida · Disciplina = maior sequência.
       </p>${nr ? `<div class="tile" style="margin-top:8px"><div class="lbl">Para o rank ${nr.rank}</div>
         <div class="small">${nr.faltaXp ? `○ Nível ${nr.level}: faltam ${fmt(nr.faltaXp)} XP` : `<span class="ok">✔ Nível ${nr.level}</span>`}</div>
-        ${nr.teste ? `<div class="small">○ Passar no Teste de Rank da meta de ${nr.teste}</div>` : ""}</div>` : `<p class="glow">Rank máximo alcançado.</p>`}
-      <p class="small muted">Ranks B, A e S exigem nível e Teste de Rank (metas de 3 meses, 6 meses e 1 ano), em qualquer trilha.
+        ${nr.teste ? `<div class="small">○ Passar no Teste do rank ${nr.rank}</div>` : `<div class="small ok">✔ Teste do rank ${nr.rank}</div>`}</div>` : `<p class="glow">Rank máximo alcançado.</p>`}
+      <p class="small muted">Cada rank exige o nível mínimo e o Teste de Rank da fase (em qualquer trilha): vale o que vier por último.
       <br>Metabolismo de repouso estimado: ${fmt(tmb())} kcal/dia (peso ${fmt(weightOn(), 1)} kg).</p>`)}
     ${panel("Casa (para o ponto)", `<p>${p.home?.acc ? `Casa cadastrada <span class="ok">✔</span> <span class="small muted num">(precisão ±${p.home.acc} m)</span>`
       : p.home ? `<span class="warn">Recadastre a casa: o cadastro antigo não tinha checagem de precisão do GPS.</span>` : `<span class="warn">Casa ainda não cadastrada.</span>`}</p>

@@ -25,16 +25,20 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 - **Sair da Zona de Penalidade:** enviar no grupo do WhatsApp a mensagem gerada (com o código do dia),
   mandar o print para o app validar, e concluir um treino. Cada dia com comprovante pendente custa 30 XP.
 - **Loja de sexta:** só abre na sexta. Uma semana perfeita (6 treinos = 600 de Ouro) paga exatamente uma pizza.
-- **Nível e rank:** cada nível pede 34 XP a mais que o anterior. Os ranks exigem nível **e** Teste de Rank
-  (em qualquer trilha): D no nível 10, C no 20, B no 30 + meta de 3 meses, A no 42 + meta de 6 meses,
-  S no 55 + meta de 1 ano. Jogando perfeito (~1.060 XP por semana), o S leva cerca de 1 ano.
+- **Nível e rank:** cada nível pede 34 XP a mais que o anterior. Cada rank exige o nível mínimo **e** o Teste
+  de Rank da sua fase (em qualquer trilha); vale o que vier por último. D: nível 10 + teste Despertar (~2 meses),
+  C: 20 + Fundação (~4 meses), B: 30 + Ascensão (~7 meses), A: 42 + Elite (~1 ano), S: 55 + Monarca (~20 meses).
 - **Meta de calorias automática** (opcional, no Perfil): toda semana recalcula gasto − déficit pelo peso de tendência;
   depois de ~5 semanas, também pelo que você comeu e emagreceu de fato. Muda no máximo 100 kcal por semana,
   respeita um piso e, perto da meta, reduz o déficit até virar manutenção.
 - **Comemorações:** subir de nível tem uma animação curta e subir de rank, uma mais longa, com som (desligável no Perfil).
 - **Trocar de trilha** não mexe em XP, nível, rank, Ouro nem sequência; os testes já passados continuam valendo.
-- **Trilhas:** Calistenia e Corrida, cada uma com 3 fases (metas de 3 meses, 6 meses e 1 ano).
-  A carga sobe a cada 6 treinos completos. A meta seguinte só é revelada depois do Teste de Rank da fase atual.
+- **Trilhas:** Calistenia e Corrida, cada uma com 5 fases (uma por rank). O S da calistenia exige 100 flexões,
+  50 mergulhos, 30 barras, 300 agachamentos e 300 abdominais seguidos; o da corrida, uma maratona. Barra fixa só
+  entra a partir do rank D. O volume sobe a cada 6 treinos com todas as séries no alvo (série tocada 2× = abaixo
+  do alvo, não sobe a carga), com semana leve a cada 4 etapas. Só a meta atual fica visível.
+- **Dieta (conferida no dia seguinte, sem Zona de Penalidade):** até 100 kcal acima da meta, nada; acima disso,
+  −10 XP e −10 Ouro a cada 100 kcal (máx. −150 XP e −100 Ouro por dia). Compra na Loja libera 2 kcal por Ouro gasto.
 
 ## Como o treino é verificado
 

@@ -243,3 +243,4 @@ table.t th { color: var(--muted); font-size: .72rem; letter-spacing: .08em; text
 .as-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; }
 .as-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .as-legend .as-c { width: 11px; height: 11px; }
+.set.low { border-color: var(--warn); color: var(--warn); background: rgba(255, 200, 87, .1); box-shadow: 0 0 8px rgba(255, 200, 87, .3); }

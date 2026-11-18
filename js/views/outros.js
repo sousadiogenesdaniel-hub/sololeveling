@@ -152,7 +152,8 @@ views.loja = () => {
       : `<p class="muted">A Loja abre na sexta-feira (em ${dias} ${dias === 1 ? "dia" : "dias"}).</p>`;
   const compras = [...S.purchases].reverse().slice(0, 10);
   return `${header()}<div class="stack">
-    ${panel("Loja de sexta", `${status}<p class="small muted">Cada treino rende ${R.treinoOuro} de Ouro. Uma semana perfeita (6 treinos) paga exatamente uma pizza.</p>
+    ${panel("Loja de sexta", `${status}<p class="small muted">Cada treino rende ${R.treinoOuro} de Ouro. Uma semana perfeita (6 treinos) paga exatamente uma pizza.
+      Cada compra libera uma cota de ${R.cotaPorOuro} kcal por Ouro gasto naquele dia (pizza = ${fmt(600 * R.cotaPorOuro)} kcal), sem penalidade na dieta.</p>
       <ul class="list">${S.shop.map(i => `<li><span style="font-size:1.5rem">${i.icone}</span>
         <button class="item" data-act="editShop" data-id="${i.id}"><b>${esc(i.nome)}</b><br><span class="small gold num">◆ ${fmt(i.custo)}</span></button>
         <button class="btn sm primary" data-act="buy" data-id="${i.id}" ${!sexta || pen || g < i.custo ? "disabled" : ""}>Comprar</button></li>`).join("")}</ul>
@@ -169,7 +170,8 @@ actions.buy = async ({ id }) => {
   S.purchases.push({ date: today(), nome: i.nome, icone: i.icone, custo: i.custo });
   save(); refresh();
   sysMessage("Recompensa adquirida", `<p style="font-size:3rem;margin:0">${i.icone}</p><p class="mid glow">${esc(i.nome)}</p>
-    <p class="small muted">Aproveite sem culpa: você pagou por isso. Lembre de lançar em Comida para as calorias do dia baterem.</p>`);
+    <p>Cota liberada hoje: <b class="gold">+${fmt(i.custo * R.cotaPorOuro)} kcal</b> acima da meta, sem penalidade.</p>
+    <p class="small muted">Aproveite sem culpa: você pagou por isso. Lance em Comida o que comer, para as calorias do dia baterem.</p>`);
 };
 
 actions.editShop = ({ id }) => {

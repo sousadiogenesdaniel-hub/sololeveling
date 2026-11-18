@@ -13,6 +13,11 @@ export const R = {
   faltaXp: -150, faltaOuro: -50,       // não treinou
   corrosaoXp: -30,                     // por dia com dívida não comprovada
   testeXp: 500, testeOuro: 300,        // passou no Teste de Rank
+  // dieta (avaliada no fechamento do dia, não entra na Zona de Penalidade)
+  dietaTolerancia: 100,                // kcal acima da meta sem punição (erro de registro)
+  dietaPor100: 10,                     // −XP e −Ouro a cada 100 kcal acima da meta
+  dietaXpMax: 150, dietaOuroMax: 100,  // limite por dia
+  cotaPorOuro: 2,                      // compra na Loja libera 2 kcal por Ouro gasto naquele dia
 };
 
 // ---- nível e rank ------------------------------------------------------------------
@@ -21,13 +26,12 @@ export const R = {
 export const xpToReach = L => 150 * (L - 1) + 17 * (L - 1) * (L - 2);
 export const RANK_ORDER = ["E", "D", "C", "B", "A", "S"];
 const RANK_LEVEL = { E: 1, D: 10, C: 20, B: 30, A: 42, S: 55 };
-// Testes de Rank necessários para cada rank (fases concluídas em qualquer trilha)
-export const RANK_TESTS = { E: 0, D: 0, C: 0, B: 1, A: 2, S: 3 };
-const PRAZO = ["", "3 meses", "6 meses", "1 ano"];
+// Testes de Rank necessários para cada rank (fases concluídas em qualquer trilha): um teste por rank
+export const RANK_TESTS = { E: 0, D: 1, C: 2, B: 3, A: 4, S: 5 };
 
 export const rankByLevel = L => [...RANK_ORDER].reverse().find(r => L >= RANK_LEVEL[r]);
 // Maior fase concluída em qualquer trilha: trocar de trilha não apaga o que você já provou.
-export const testsPassed = () => Math.min(3, Math.max(0, ...Object.values(S.progress || {}).map(p => p.phase || 0)));
+export const testsPassed = () => Math.min(5, Math.max(0, ...Object.values(S.progress || {}).map(p => p.phase || 0)));
 const maxRankByTests = n => [...RANK_ORDER].reverse().find(r => RANK_TESTS[r] <= n);
 
 export function levelInfo(xp = S.game.xp) {
@@ -47,7 +51,7 @@ export function nextRank(li = levelInfo()) {
   if (!r) return null;
   const nivel = RANK_LEVEL[r], testes = RANK_TESTS[r];
   return { rank: r, level: nivel, faltaXp: Math.max(0, xpToReach(nivel) - S.game.xp),
-    teste: testes > testsPassed() ? PRAZO[testes] : null };
+    teste: testes > testsPassed() };
 }
 
 function changes(a, b) {
@@ -130,15 +134,18 @@ export function completeWorkout(date = today()) {
   const d = day(date), w = d.workout, events = [];
   w.done = true;
   const totalSets = w.plano.itens.reduce((n, i) => n + i.series, 0);
-  const doneSets = Object.values(w.sets || {}).reduce((n, arr) => n + arr.filter(Boolean).length, 0);
-  w.full = doneSets >= totalSets;
+  const marks = Object.values(w.sets || {}).flat();
+  const doneSets = marks.filter(Boolean).length, lowSets = marks.filter(m => m === "low").length;
+  w.full = doneSets >= totalSets;          // todas as séries feitas (mesmo abaixo do alvo)
+  w.hit = w.full && lowSets === 0;         // todas no alvo: conta para subir a carga
   events.push(grant(R.treinoXp, R.treinoOuro, "Missão diária concluída", date));
   if (w.full) events.push(grant(R.completoXp, 0, "Todas as séries concluídas", date));
   const g = S.game;
   g.streak++; g.bestStreak = Math.max(g.bestStreak, g.streak);
   if (g.streak % 7 === 0) events.push(grant(0, R.streakOuro, `Sequência de ${g.streak} treinos`, date));
   if (g.needsWorkout) { g.needsWorkout = false; events.push({ motivo: "Treino de redenção cumprido", xp: 0, gold: 0 }); }
-  if (w.full && !trackFinished()) {
+  if (w.full && !w.hit) events.push({ motivo: `${lowSets} série${lowSets > 1 ? "s" : ""} abaixo do alvo: a carga não sobe neste treino`, xp: 0, gold: 0 });
+  if (w.hit && !trackFinished()) {
     const p = progress(), ph = currentPhase();
     if (p.week <= ph.stages) {
       p.sessions++;
@@ -155,7 +162,7 @@ export function completeWorkout(date = today()) {
 export function passTest() {
   const p = progress(), ph = currentPhase(), before = levelInfo();
   p.phase++; p.week = 1; p.sessions = 0;
-  const ev = grant(R.testeXp, R.testeOuro, `Meta de ${ph.prazo} conquistada`);
+  const ev = grant(R.testeXp, R.testeOuro, `Teste do rank ${ph.rank} superado (fase ${ph.nome})`);
   save();
   return { ...ev, ...changes(before, levelInfo()) }; // o teste pode destravar um rank
 }
@@ -176,8 +183,8 @@ export function processDays() {
       g.needsWorkout = true; g.streak = 0;
       report.push({ ...grant(R.faltaXp, R.faltaOuro, `Missão diária FALHOU em ${fmtDate(d)}`, d), falta: true });
     }
-    const meta = S.profile.metaKcal, kcal = totals(rec.meals).kcal;
-    if (meta && kcal > 0 && kcal <= meta) report.push(grant(R.kcalXp, 0, `Dentro da meta de calorias em ${fmtDate(d)}`, d));
+    const dieta = dietVerdict(d, rec);
+    if (dieta) report.push(grant(dieta.xp, dieta.gold, dieta.motivo, d));
     rec.closed = true;
     g.lastProcessed = d;
     d = addDays(d, 1);
@@ -267,4 +274,20 @@ export function applyAutoKcal(force = false, date = today()) {
   grant(0, 0, `Meta de calorias ajustada: ${antes ? antes + " → " : ""}${nova} kcal`, date);
   save();
   return { antes, nova, calc };
+}
+
+// ---- dieta: cota da Loja e veredito do dia ------------------------------------------------
+export const cotaKcal = date => (S.purchases || []).filter(p => p.date === date).reduce((n, p) => n + p.custo, 0) * R.cotaPorOuro;
+
+// Avaliado só no fechamento do dia (no dia seguinte): durante o dia a dieta padrão já vem
+// lançada e o total pode passar da meta só momentaneamente.
+export function dietVerdict(d, rec = S.days[d]) {
+  const meta = S.profile?.metaKcal, kcal = Math.round(totals(rec?.meals || mealsOf(d)).kcal);
+  if (!meta || kcal <= 0) return null;
+  if (kcal <= meta) return { xp: R.kcalXp, gold: 0, motivo: `Dentro da meta de calorias em ${fmtDate(d)}` };
+  const limite = meta + cotaKcal(d), acima = kcal - limite;
+  if (acima <= R.dietaTolerancia) return null; // dentro da tolerância ou da cota da Loja
+  const n = Math.round(acima / 100) * R.dietaPor100;
+  return { xp: -Math.min(R.dietaXpMax, n), gold: -Math.min(R.dietaOuroMax, n),
+    motivo: `Passou ${acima} kcal da meta${cotaKcal(d) ? " (já contando a cota da Loja)" : ""} em ${fmtDate(d)}` };
 }

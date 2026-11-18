@@ -3,7 +3,7 @@ import { views } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
 import { header, panel } from "../ui.js";
-import { mealsOf, totals, spent, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToFriday, monthDebt, weightOn, weightGoal, R } from "../game.js";
+import { mealsOf, totals, spent, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToFriday, monthDebt, weightOn, weightGoal, cotaKcal, R } from "../game.js";
 import { workoutFor, currentTrack } from "../tracks.js";
 
 function penaltyBanner() {
@@ -50,17 +50,19 @@ function kcalCard() {
     · <a href="#/extras">${S.tracking ? "rastreando atividade…" : "fez algo a mais?"}</a></p>`;
   if (!meta) return panel("Calorias", `<p>Consumido hoje: <b class="num">${fmt(tot.kcal)} kcal</b></p>${saldoTxt}
     <p class="small muted">Defina uma meta de calorias no Perfil para ver quanto ainda pode comer.</p>${macros}`);
-  const rest = meta - tot.kcal, pct = Math.min(100, tot.kcal / meta * 100);
+  const cota = cotaKcal(t), limite = meta + cota;
+  const rest = limite - tot.kcal, pct = Math.min(100, tot.kcal / limite * 100);
   return panel("Calorias", `<div class="row">
     <div class="ring ${rest < 0 ? "over" : ""}" style="--p:${pct}"><div><div>
       <div class="mid num ${rest < 0 ? "bad" : "glow"}">${fmt(Math.abs(rest))}</div>
       <div class="small muted">${rest < 0 ? "kcal acima" : "kcal restantes"}</div></div></div></div>
     <div class="grow">
       <p style="margin:0 0 6px">${rest >= 0 ? `Você ainda pode consumir <b class="glow num">${fmt(rest)} kcal</b> hoje.` : `Você passou <b class="bad num">${fmt(-rest)} kcal</b> da meta.`}</p>
-      <p class="small muted" style="margin:0">Consumido <b class="num">${fmt(tot.kcal)}</b> de <b class="num">${fmt(meta)}</b> kcal</p>
+      <p class="small muted" style="margin:0">Consumido <b class="num">${fmt(tot.kcal)}</b> de <b class="num">${fmt(limite)}</b> kcal${cota ? ` <span class="gold">(inclui ${fmt(cota)} da Loja)</span>` : ""}</p>
       ${saldoTxt}
     </div></div>${macros}
-    <p class="small muted" style="margin-bottom:0">Conta a dieta padrão inteira do dia. Comeu diferente? <a href="#/comida">Ajuste em Comida</a>.</p>`);
+    <p class="small muted" style="margin-bottom:0">Conta a dieta padrão inteira do dia. Comeu diferente? <a href="#/comida">Ajuste em Comida</a>.
+      O Sistema confere no dia seguinte: dentro da meta +${R.kcalXp} XP; mais de ${R.dietaTolerancia} kcal acima, −${R.dietaPor100} XP e −${R.dietaPor100} Ouro a cada 100 kcal.</p>`);
 }
 
 function reminders() {

@@ -57,7 +57,7 @@ function trailCard() {
     <div class="row between small"><span>Etapa <b class="glow">${stage}</b> de ${ph.stages}</span>
       <span class="muted">${p.week > ph.stages ? "Teste de Rank liberado" : `${p.sessions}/${SESSIONS_PER_STAGE} treinos completos para subir a carga`}</span></div>
     <div class="bar" style="margin:6px 0 12px"><i style="width:${p.week > ph.stages ? 100 : pct}%"></i></div>
-    <h3>Meta de ${ph.prazo}${unlocks() ? ` · libera o rank ${unlocks()}` : ""}</h3>
+    <h3>Teste do rank ${ph.rank} · ~${ph.prazo.replace("~", "")} de jogo perfeito</h3>
     <p class="small" style="margin:4px 0">${ph.meta}</p>
     <ul class="small" style="margin:4px 0 10px;padding-left:18px">${ph.tests.map(([n, v, un]) => `<li>${n}: <b>${unitLabel(v, un)}</b></li>`).join("")}</ul>
     <ul class="list small">${fases}</ul>
@@ -66,9 +66,9 @@ function trailCard() {
 
 function testCard() {
   const ph = currentPhase();
-  return panel("Teste de Rank", `<p>Você concluiu todas as etapas da fase <b>${ph.nome}</b>. Prove que bateu a meta de ${ph.prazo}:
+  return panel("Teste de Rank", `<p>Você concluiu todas as etapas da fase <b>${ph.nome}</b>. Prove que está pronto para o rank <b>${ph.rank}</b>:
     informe seu melhor resultado em cada prova (faça descansado, de preferência no início do treino).</p>
-    ${unlocks() ? `<p class="small glow">Passar libera o rank ${unlocks()} (quando você também tiver o nível).</p>` : ""}
+    <p class="small glow">Passar libera o rank ${ph.rank}${unlocks() ? "" : " (já liberado em outra trilha)"} quando você também tiver o nível, e revela a próxima meta.</p>
     <form data-act="submitTest">${ph.tests.map(([n, v, un], i) => `<div class="field">
       <label for="t${i}">${n} (meta: ${unitLabel(v, un)})</label>
       <input id="t${i}" name="t${i}" inputmode="decimal" required></div>`).join("")}
@@ -94,16 +94,20 @@ function exerciseList(w, plan, active) {
   return `<ul class="list">${plan.itens.map((it, e) => `<li style="display:block">
     <div class="row between"><b>${esc(it.nome)}</b><span class="chip">${it.series} × ${unitLabel(it.alvo, it.un)}</span></div>
     <div class="small muted">${esc(it.dica)}</div>
-    <div class="sets">${Array.from({ length: it.series }, (_, i) => `<button class="set ${w?.sets?.[e]?.[i] ? "on" : ""}"
+    <div class="sets">${Array.from({ length: it.series }, (_, i) => `<button class="set ${w?.sets?.[e]?.[i] === true ? "on" : w?.sets?.[e]?.[i] === "low" ? "low" : ""}"
       ${active ? "" : "disabled"} data-act="toggleSet" data-e="${e}" data-i="${i}" aria-pressed="${!!w?.sets?.[e]?.[i]}" aria-label="Série ${i + 1} de ${esc(it.nome)}">${i + 1}</button>`).join("")}</div>
   </li>`).join("")}</ul>`;
 }
 
+// 1º toque: série no alvo (verde) · 2º: feita abaixo do alvo (amarelo) · 3º: desmarca
 actions.toggleSet = ({ e, i }, el) => {
   const w = day().workout; if (!w || w.done) return;
   w.sets ??= {}; w.sets[e] ??= [];
-  w.sets[e][i] = !w.sets[e][i];
-  el.classList.toggle("on", w.sets[e][i]); el.setAttribute("aria-pressed", w.sets[e][i]);
+  const cur = w.sets[e][i];
+  w.sets[e][i] = !cur ? true : cur === true ? "low" : false;
+  el.classList.toggle("on", w.sets[e][i] === true); el.classList.toggle("low", w.sets[e][i] === "low");
+  el.setAttribute("aria-pressed", !!w.sets[e][i]);
+  el.setAttribute("aria-label", el.getAttribute("aria-label").replace(/( —.*)?$/, w.sets[e][i] === "low" ? " — abaixo do alvo" : w.sets[e][i] ? " — no alvo" : ""));
   save();
 };
 
@@ -115,9 +119,9 @@ function todayCard() {
       <div class="grid3">
         <div class="tile"><div class="lbl">Duração</div><div class="val num">${w.durMin} min</div></div>
         <div class="tile"><div class="lbl">Gasto</div><div class="val num">~${w.kcal} kcal</div></div>
-        <div class="tile"><div class="lbl">Séries</div><div class="val">${w.full ? "Todas" : "Parcial"}</div></div></div>
+        <div class="tile"><div class="lbl">Séries</div><div class="val">${w.hit ? "No alvo" : w.full ? "Abaixo" : "Parcial"}</div></div></div>
       <p class="small muted">${w.indoor ? "Treino indoor validado pelo clima." : `Ponto: entrada ${fmtTime(w.in.t)} (${fmt(w.in.dist / 1000, 1)} km de casa) · saída ${fmtTime(w.out.t)} (${fmt(w.out.dist / 1000, 1)} km)`}
-      ${w.full ? "" : "<br>Como nem todas as séries foram marcadas, este treino não conta para subir a carga."}</p>`, "good");
+      ${w.hit ? "" : w.full ? "<br>Algumas séries ficaram abaixo do alvo: a carga se mantém e esse treino não conta para a etapa." : "<br>Como nem todas as séries foram marcadas, este treino não conta para subir a carga."}</p>`, "good");
   }
   if (isRestDay(t) && !S.game.needsWorkout) {
     return panel("Missão de hoje", `<p class="mid">Dia de descanso</p><p class="muted">Sem missão hoje. Durma bem e coma direito.</p>`);
@@ -129,6 +133,7 @@ function todayCard() {
     return panel(plan.titulo, `
       <div class="timer num glow" id="timer">00:00</div>
       <p class="center small muted">${cur.indoor ? "Dungeon Indoor" : `Entrada às ${fmtTime(cur.in.t)} · ${cur.in.spot ? esc(cur.in.spot) : fmt(cur.in.dist / 1000, 1) + " km de casa"}`} · mínimo ${need} min</p>
+      <p class="small muted center">Toque 1× na série = no alvo · 2× = abaixo do alvo (a carga não sobe) · 3× = desmarca</p>
       ${exerciseList(cur, plan, true)}
       ${cur.indoor
         ? `<label class="btn primary block" style="margin-top:12px">Concluir: tirar selfie de prova
@@ -138,12 +143,13 @@ function todayCard() {
   }
   const plan = workoutFor(t);
   const redencao = isRestDay(t) ? `<p class="small warn">Treino de redenção: hoje seria descanso, mas você está na Zona de Penalidade.</p>` : "";
-  return panel(plan.titulo, `${redencao}
+  const leve = plan.leve ? `<p class="small ok">Semana leve: volume 30% menor para o corpo se recuperar. Faz parte do plano.</p>` : "";
+  return panel(plan.titulo, `${redencao}${leve}
     ${exerciseList(null, plan, false)}
     <p class="small muted">Para valer: bata o ponto de entrada ${activeSpots().length ? "no seu local de treino" : `a mais de ${fmt(minDist() / 1000, 1)} km de casa`} (GPS preciso), treine pelo menos ${minMin()} min e bata o ponto de saída no local.</p>
     <button class="btn primary block" data-act="punchIn">Bater ponto: entrada</button>
     <button class="btn ghost block" style="margin-top:8px" data-act="checkRain">🌧 Chuva forte? Verificar clima</button>`,
-    "", `<span class="chip">Etapa ${plan.stage}/${plan.stages}</span>`);
+    "", `<span class="chip ${plan.leve ? "ok" : ""}">${plan.leve ? "Semana leve · " : ""}Etapa ${plan.stage}/${plan.stages}</span>`);
 }
 
 const homeOk = () => !!S.profile.home?.acc; // casas cadastradas antes da checagem de precisão não têm .acc
