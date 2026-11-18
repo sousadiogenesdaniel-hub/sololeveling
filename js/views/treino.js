@@ -357,7 +357,9 @@ views.treino = () => {
     return `${header()}<div class="stack">${panel("Trilha concluída", `<p class="mid glow">Você chegou ao topo desta trilha.</p>
       <p>Escolha uma nova trilha no Perfil para continuar evoluindo.</p>`, "good")}</div>`;
   }
-  return `${header()}<div class="stack">${testUnlocked() ? testCard() : ""}${todayCard()}${spotsCard()}${trailCard()}</div>`;
+  // Teste do fim da fase fica no topo; o antecipado (e o aviso de espera) fica abaixo da missão de hoje
+  const st = testStatus(), topo = st && !st.early && !st.nextTry;
+  return `${header()}<div class="stack">${topo ? testCard() : ""}${todayCard()}${st && !topo ? testCard() : ""}${spotsCard()}${trailCard()}</div>`;
 };
 
 let tick = null;
