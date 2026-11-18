@@ -1,7 +1,7 @@
 // Regras do Sistema: XP, nível, rank, Ouro, fechamento dos dias, Zona de Penalidade.
 import { S, day, save } from "./store.js";
 import { today, addDays, weekday, daysBetween, fmtDate, parseDay } from "./util.js";
-import { progress, currentPhase, currentTrack, trackFinished, SESSIONS_PER_STAGE } from "./tracks.js";
+import { progress, currentPhase, currentTrack, trackFinished, earlyFrom, SESSIONS_PER_STAGE } from "./tracks.js";
 
 export const R = {
   treinoXp: 100, treinoOuro: 100,      // treino do dia concluído
@@ -154,6 +154,7 @@ export function completeWorkout(date = today()) {
       if (p.sessions >= SESSIONS_PER_STAGE) {
         p.sessions = 0; p.week++;
         events.push({ motivo: p.week > ph.stages ? "Etapa final concluída: Teste de Rank liberado!" : `Avançou para a etapa ${p.week}: cargas aumentadas`, xp: 0, gold: 0 });
+        if (p.week === earlyFrom(ph)) events.push({ motivo: `Metade da fase concluída: Teste antecipado do rank ${ph.rank} liberado (opcional)`, xp: 0, gold: 0 });
       }
     }
   }
@@ -161,10 +162,11 @@ export function completeWorkout(date = today()) {
   return events;
 }
 
-export function passTest() {
+// Passar no teste dá só o bônus de XP (no máximo ~2 níveis): nunca pula direto para o nível do rank.
+export function passTest(antecipado = false) {
   const p = progress(), ph = currentPhase(), before = levelInfo();
-  p.phase++; p.week = 1; p.sessions = 0;
-  const ev = grant(R.testeXp, R.testeOuro, `Teste do rank ${ph.rank} superado (fase ${ph.nome})`);
+  p.phase++; p.week = 1; p.sessions = 0; p.lastTestTry = null;
+  const ev = grant(R.testeXp, R.testeOuro, `Teste do rank ${ph.rank} superado${antecipado ? " antecipadamente" : ""} (fase ${ph.nome})`);
   save();
   return { ...ev, ...changes(before, levelInfo()) }; // o teste pode destravar um rank
 }

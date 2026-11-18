@@ -4,7 +4,7 @@
 // uma série nova, as reps se redistribuem (sem salto de volume). A cada 4 etapas há uma semana leve (−30%).
 // No fim da fase, o Teste de Rank libera o rank seguinte e revela a próxima meta.
 import { S } from "./store.js";
-import { weekday } from "./util.js";
+import { weekday, today, addDays } from "./util.js";
 
 export const SESSIONS_PER_STAGE = 6;
 export const DELOAD_EVERY = 4, DELOAD_FACTOR = 0.7;
@@ -401,10 +401,19 @@ export function currentPhase() {
 }
 export const trackFinished = () => { const t = currentTrack(); return !!t && progress().phase >= t.phases.length; };
 // A etapa final da fase foi concluída: libera o Teste de Rank.
-export function testUnlocked() {
-  const ph = currentPhase(); const p = progress();
-  return !!ph && !trackFinished() && p.week > ph.stages;
+// Teste antecipado: liberado a partir da metade das etapas da fase (ex.: etapa 5 de 8).
+// Uma tentativa a cada 7 dias (o teste é autodeclarado; evita "chutar até passar").
+export const TEST_COOLDOWN = 7;
+export const earlyFrom = ph => Math.ceil(ph.stages / 2) + 1;
+export function testStatus() {
+  const ph = currentPhase(), p = progress();
+  if (!ph || trackFinished()) return null;
+  const full = p.week > ph.stages, early = !full && p.week >= earlyFrom(ph);
+  if (!full && !early) return null;
+  const next = p.lastTestTry ? addDays(p.lastTestTry, TEST_COOLDOWN) : null;
+  return { early, nextTry: next && next > today() ? next : null };
 }
+export const testUnlocked = () => !!testStatus();
 
 const lerp = (a, b, k) => a + (b - a) * k;
 

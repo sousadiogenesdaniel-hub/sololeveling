@@ -4,7 +4,7 @@ import { S, day, save, photos } from "../store.js";
 import { today, addDays, esc, fmt, fmtTime, fmtDate, getPosition, getPreciseFix, distM, shrinkImage, uid, $, num } from "../util.js";
 import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox } from "../ui.js";
 import { completeWorkout, passTest, isRestDay, workoutKcal, grant, R, RANK_TESTS, RANK_ORDER, testsPassed } from "../game.js";
-import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, trackFinished, unitLabel, SESSIONS_PER_STAGE } from "../tracks.js";
+import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, testStatus, TEST_COOLDOWN, trackFinished, unitLabel, SESSIONS_PER_STAGE } from "../tracks.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
 const PUNCH_EXPIRES_H = 5;    // ponto de entrada vence depois disso
@@ -56,6 +56,7 @@ function trailCard() {
   return panel(`Trilha: ${t.nome}`, `
     <div class="row between small"><span>Etapa <b class="glow">${stage}</b> de ${ph.stages}</span>
       <span class="muted">${p.week > ph.stages ? "Teste de Rank liberado" : `${p.sessions}/${SESSIONS_PER_STAGE} treinos completos para subir a carga`}</span></div>
+    ${p.week < Math.ceil(ph.stages / 2) + 1 ? `<p class="small muted" style="margin:4px 0 0">Teste antecipado a partir da etapa ${Math.ceil(ph.stages / 2) + 1}.</p>` : ""}
     <div class="bar" style="margin:6px 0 12px"><i style="width:${p.week > ph.stages ? 100 : pct}%"></i></div>
     <h3>Teste do rank ${ph.rank} · ~${ph.prazo.replace("~", "")} de jogo perfeito</h3>
     <p class="small" style="margin:4px 0">${ph.meta}</p>
@@ -65,28 +66,39 @@ function trailCard() {
 }
 
 function testCard() {
-  const ph = currentPhase();
-  return panel("Teste de Rank", `<p>Você concluiu todas as etapas da fase <b>${ph.nome}</b>. Prove que está pronto para o rank <b>${ph.rank}</b>:
-    informe seu melhor resultado em cada prova (faça descansado, de preferência no início do treino).</p>
-    <p class="small glow">Passar libera o rank ${ph.rank}${unlocks() ? "" : " (já liberado em outra trilha)"} quando você também tiver o nível, e revela a próxima meta.</p>
-    <form data-act="submitTest">${ph.tests.map(([n, v, un], i) => `<div class="field">
+  const ph = currentPhase(), st = testStatus();
+  if (st.nextTry) {
+    return panel("Teste de Rank", `<p>Próxima tentativa do teste do rank <b>${ph.rank}</b> em <b>${fmtDate(st.nextTry)}</b>.</p>
+      <p class="small muted">Uma tentativa a cada ${TEST_COOLDOWN} dias. Enquanto isso, siga a fase normalmente.</p>`);
+  }
+  const form = `<form data-act="submitTest"><input type="hidden" name="early" value="${st.early ? 1 : ""}">${ph.tests.map(([n, v, un], i) => `<div class="field">
       <label for="t${i}">${n} (meta: ${unitLabel(v, un)})</label>
       <input id="t${i}" name="t${i}" inputmode="decimal" required></div>`).join("")}
-      <button class="btn primary block">Enviar resultado</button></form>`, "good");
+      <button class="btn primary block">Enviar resultado</button></form>`;
+  const sobre = `<p class="small glow">Passar libera o rank ${ph.rank}${unlocks() ? "" : " (já liberado em outra trilha)"} quando você também tiver o nível, revela a próxima meta e dá +${R.testeXp} XP e +${R.testeOuro} Ouro.</p>`;
+  if (st.early) {
+    return panel("Teste antecipado", `<p>Você já completou metade da fase <b>${ph.nome}</b>. Se já consegue as metas do rank <b>${ph.rank}</b>, prove agora e pule direto para a próxima fase.</p>
+      ${sobre}<p class="small muted">Se não passar, nada perde: continua a fase normalmente e pode tentar de novo em ${TEST_COOLDOWN} dias. Faça descansado, no início do treino.</p>
+      <details><summary class="btn block" style="list-style:none">Fazer o teste agora</summary><div style="margin-top:12px">${form}</div></details>`);
+  }
+  return panel("Teste de Rank", `<p>Você concluiu todas as etapas da fase <b>${ph.nome}</b>. Prove que está pronto para o rank <b>${ph.rank}</b>:
+    informe seu melhor resultado em cada prova (faça descansado, de preferência no início do treino).</p>
+    ${sobre}${form}`, "good");
 }
 
 actions.submitTest = data => {
-  const ph = currentPhase();
+  const ph = currentPhase(), early = !!data.early;
   const falhas = ph.tests.filter(([, v], i) => (num(data["t" + i]) ?? 0) < v);
   if (falhas.length) {
+    progress().lastTestTry = today(); save(); refresh();
     return sysMessage("Teste não superado", `<p>Ainda falta em: <b>${falhas.map(f => f[0]).join(", ")}</b>.</p>
-      <p class="small muted">Continue treinando na etapa final e tente de novo quando estiver pronto.</p>`);
+      <p class="small muted">${early ? "Sem problema: continue a fase normalmente." : "Continue treinando na etapa final."} Próxima tentativa em ${fmtDate(addDays(today(), TEST_COOLDOWN))}.</p>`);
   }
-  const ev = passTest();
+  const ev = passTest(early);
   const acabou = trackFinished();
   showEvents("Meta conquistada", [ev], acabou
     ? `<p class="glow">Você concluiu a trilha inteira. O Sistema reconhece um Monarca.</p>`
-    : `<p>Uma nova meta foi revelada: <b class="glow">${currentPhase().nome}</b> (${currentPhase().prazo}).</p>`);
+    : `<p>Uma nova meta foi revelada: <b class="glow">${currentPhase().nome}</b>, rumo ao rank ${currentPhase().rank}.</p>`);
   refresh();
 };
 
