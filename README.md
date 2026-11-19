@@ -10,11 +10,11 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 
 | Tela | Conteúdo |
 |---|---|
-| **Início** | Resumo do dia: missão diária, quantas calorias ainda pode consumir, macros, lembretes (com atalho para registrar), sequência, contagem para a Loja de sexta, peso e dívida do mês. |
+| **Início** | Resumo do dia: missão diária, quantas calorias ainda pode consumir, macros, lembretes (com atalho para registrar), sequência, contagem para a Loja, peso e dívida do mês. |
 | **Missão** | Treino do dia da trilha escolhida, ponto por GPS (entrada e saída), séries para marcar, treino indoor em dia de chuva forte e Teste de Rank. |
 | **Comida** | **Dieta padrão** que entra sozinha em todos os dias, e **Dia**, onde você altera só aquele dia sem mexer na dieta. Busca na tabela TACO e alimentos próprios pelo rótulo. |
 | **Evolução** | Gráficos de peso, abdômen, calorias consumidas × gastas, medidas semanais e treinos por semana. |
-| **Mais** | Atividades extras, Condição (sono, foco, energia e celular na cama, com padrões; sem XP nem penalidade), Medidas (diárias: peso e abdômen; semanais), Fotos (galeria e antes × depois), Loja de sexta, Penalidades, Registro do Sistema e Perfil. |
+| **Mais** | Atividades extras, Condição (sono, foco, energia e celular na cama, com padrões; sem XP nem penalidade), Medidas (diárias: peso e abdômen; semanais), Fotos (galeria e antes × depois), Loja, Penalidades, Registro do Sistema e Perfil. |
 
 ## Regras do jogo
 
@@ -25,7 +25,7 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 - **Sair da Zona de Penalidade:** pagar a multa por PIX a cada pessoa do grupo (cadastradas em Penalidades),
   enviar o print de cada comprovante para o app ler (valor, data, hora e recebedor; o mesmo comprovante não vale
   duas vezes) e concluir um treino. Cada dia com multa pendente custa 30 XP. As imagens não são guardadas.
-- **Loja de sexta:** só abre na sexta. Uma semana perfeita (6 treinos = 600 de Ouro) paga exatamente uma pizza.
+- **Loja:** só abre na sexta e no sábado. Uma semana perfeita (6 treinos = 600 de Ouro) paga exatamente uma pizza.
 - **Nível e rank:** cada nível pede 34 XP a mais que o anterior. Cada rank exige o nível mínimo **e** o Teste
   de Rank da sua fase (em qualquer trilha); vale o que vier por último. D: nível 18 + teste Despertar (~2 meses),
   C: 28 + Fundação (~4 meses), B: 40 + Ascensão (~7 meses), A: 52 + Elite (~1 ano), S: 68 + Monarca (~20 meses).

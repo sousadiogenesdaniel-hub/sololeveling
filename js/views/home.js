@@ -3,7 +3,7 @@ import { views } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
 import { header, panel } from "../ui.js";
-import { mealsOf, totals, spent, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToFriday, monthDebt, weightOn, weightGoal, cotaKcal, R } from "../game.js";
+import { mealsOf, totals, spent, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToShop, monthDebt, weightOn, weightGoal, cotaKcal, R } from "../game.js";
 import { workoutFor, currentTrack } from "../tracks.js";
 
 function penaltyBanner() {
@@ -80,7 +80,7 @@ function reminders() {
 }
 
 function statusTiles() {
-  const t = today(), g = S.game, dias = daysToFriday(t);
+  const t = today(), g = S.game, dias = daysToShop(t);
   const peso = S.days[t]?.peso ?? weightOn(t);
   const antes = weightOn(addDays(t, -7));
   const delta = peso - antes;
@@ -96,7 +96,7 @@ function statusTiles() {
   const md = monthDebt();
   return `<div class="grid2">
     <div class="tile"><div class="lbl">Sequência</div><div class="val num">🔥 ${g.streak} ${g.streak === 1 ? "treino" : "treinos"}</div><div class="small muted">Recorde: ${g.bestStreak}</div></div>
-    <div class="tile"><div class="lbl">Loja de sexta</div><div class="val">${dias === 0 ? `<span class="ok">Aberta hoje</span>` : `em ${dias} ${dias === 1 ? "dia" : "dias"}`}</div>
+    <div class="tile"><div class="lbl">Loja (sex e sáb)</div><div class="val">${dias === 0 ? `<span class="ok">Aberta hoje</span>` : `abre em ${dias} ${dias === 1 ? "dia" : "dias"}`}</div>
       <div class="small muted">${pizza ? `${pizza.icone} ${esc(pizza.nome)}: ${g.gold >= pizza.custo ? "você já pode comprar" : `faltam ${fmt(pizza.custo - g.gold)} de Ouro`}` : ""}</div></div>
     <div class="tile"><div class="lbl">Peso</div><div class="val num">${fmt(peso, 1)} kg</div>
       <div class="small ${delta <= 0 ? "ok" : "warn"}">${signed(delta)} kg em 7 dias</div></div>

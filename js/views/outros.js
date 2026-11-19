@@ -3,7 +3,7 @@ import { views, actions, refresh } from "../core.js";
 import { S, day, save, photos } from "../store.js";
 import { today, esc, fmt, num, fmtDate, fmtShort, signed, shrinkImage, uid, $ } from "../util.js";
 import { header, panel, modal, closeModal, toast, showEvents, confirmBox, sysMessage } from "../ui.js";
-import { grant, R, inPenalty, daysToFriday, pendingDebts, monthDebt } from "../game.js";
+import { grant, R, inPenalty, daysToShop, pendingDebts, monthDebt } from "../game.js";
 
 // ---- Mais -----------------------------------------------------------------------
 views.mais = () => {
@@ -15,7 +15,7 @@ views.mais = () => {
     ${item("condicao", "🌙", "Condição", "Sono, foco, energia e celular na cama")}
     ${item("medidas", "📏", "Medidas", "Peso e abdômen diários, medidas semanais")}
     ${item("fotos", "📸", "Fotos", "Registro semanal e antes × depois")}
-    ${item("loja", "🛒", "Loja de sexta", "Troque Ouro pelo direito de comer besteira")}
+    ${item("loja", "🛒", "Loja", "Sexta e sábado: troque Ouro pelo direito de comer besteira")}
     ${item("penalidade", "⚠️", "Penalidades", "Multas por PIX e pessoas do grupo", pend ? `<span class="chip bad">${pend}</span>` : "")}
     ${item("historico", "📜", "Registro do Sistema", "Histórico de XP e Ouro")}
     ${item("perfil", "👤", "Perfil e ajustes", "Status, metas, casa, trilha e backup")}
@@ -147,17 +147,17 @@ actions.delPhoto = async ({ id }) => {
 
 // ---- Loja -------------------------------------------------------------------------
 views.loja = () => {
-  const sexta = daysToFriday() === 0, pen = inPenalty(), g = S.game.gold, dias = daysToFriday();
+  const dias = daysToShop(), aberta = dias === 0, pen = inPenalty(), g = S.game.gold;
   const status = pen ? `<p class="bad">Loja trancada: você está na Zona de Penalidade.</p>`
-    : sexta ? `<p class="ok">Hoje é sexta. A Loja está aberta.</p>`
-      : `<p class="muted">A Loja abre na sexta-feira (em ${dias} ${dias === 1 ? "dia" : "dias"}).</p>`;
+    : aberta ? `<p class="ok">A Loja está aberta hoje.</p>`
+      : `<p class="muted">A Loja abre na sexta e no sábado (próxima abertura em ${dias} ${dias === 1 ? "dia" : "dias"}).</p>`;
   const compras = [...S.purchases].reverse().slice(0, 10);
   return `${header()}<div class="stack">
-    ${panel("Loja de sexta", `${status}<p class="small muted">Cada treino rende ${R.treinoOuro} de Ouro. Uma semana perfeita (6 treinos) paga exatamente uma pizza.
+    ${panel("Loja", `${status}<p class="small muted">Cada treino rende ${R.treinoOuro} de Ouro. Uma semana perfeita (6 treinos) paga exatamente uma pizza.
       Cada compra libera uma cota de ${R.cotaPorOuro} kcal por Ouro gasto naquele dia (pizza = ${fmt(600 * R.cotaPorOuro)} kcal), sem penalidade na dieta.</p>
       <ul class="list">${S.shop.map(i => `<li><span style="font-size:1.5rem">${i.icone}</span>
         <button class="item" data-act="editShop" data-id="${i.id}"><b>${esc(i.nome)}</b><br><span class="small gold num">◆ ${fmt(i.custo)}</span></button>
-        <button class="btn sm primary" data-act="buy" data-id="${i.id}" ${!sexta || pen || g < i.custo ? "disabled" : ""}>Comprar</button></li>`).join("")}</ul>
+        <button class="btn sm primary" data-act="buy" data-id="${i.id}" ${!aberta || pen || g < i.custo ? "disabled" : ""}>Comprar</button></li>`).join("")}</ul>
       <button class="btn ghost sm block" data-act="editShop" data-id="">+ Novo item</button>`, "", `<span class="gold num">◆ ${fmt(g)}</span>`)}
     ${panel("Compras", compras.length ? `<ul class="list small">${compras.map(c => `<li><span class="muted num">${fmtShort(c.date)}</span>
       <span class="grow">${c.icone} ${esc(c.nome)}</span><span class="gold num">−${fmt(c.custo)} ◆</span></li>`).join("")}</ul>` : `<p class="muted">Nenhuma compra ainda.</p>`)}</div>`;
@@ -165,7 +165,7 @@ views.loja = () => {
 
 actions.buy = async ({ id }) => {
   const i = S.shop.find(x => x.id === id);
-  if (daysToFriday() !== 0 || inPenalty() || S.game.gold < i.custo) return;
+  if (daysToShop() !== 0 || inPenalty() || S.game.gold < i.custo) return;
   if (!await confirmBox("Confirmar compra", `Trocar ${i.custo} de Ouro por: ${i.nome}?`, "Comprar")) return;
   grant(0, -i.custo, `Loja: ${i.nome}`);
   S.purchases.push({ date: today(), nome: i.nome, icone: i.icone, custo: i.custo });

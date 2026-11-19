@@ -217,8 +217,10 @@ export function processDays() {
   return report;
 }
 
-// Próxima sexta-feira (0 = hoje é sexta)
-export const daysToFriday = (date = today()) => (5 - parseDay(date).getDay() + 7) % 7;
+// Loja aberta na sexta e no sábado. daysToShop: 0 = aberta hoje; senão, dias até a próxima sexta.
+export const SHOP_DAYS = [5, 6];
+export const shopOpen = (date = today()) => SHOP_DAYS.includes(parseDay(date).getDay());
+export const daysToShop = (date = today()) => shopOpen(date) ? 0 : (5 - parseDay(date).getDay() + 7) % 7;
 
 // ---- meta de peso -----------------------------------------------------------------------
 // Faixa aceitável: alvo ± margem (ex.: 63 ± 4 → 59 a 67 kg)
