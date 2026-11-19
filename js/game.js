@@ -1,7 +1,7 @@
 // Regras do Sistema: XP, nível, rank, Ouro, fechamento dos dias, Zona de Penalidade.
 import { S, day, save } from "./store.js";
 import { today, addDays, weekday, daysBetween, fmtDate, parseDay } from "./util.js";
-import { progress, currentPhase, currentTrack, trackFinished, earlyFrom, SESSIONS_PER_STAGE } from "./tracks.js";
+import { progress, currentPhase, currentTrack, trackFinished, earlyFrom, advanceQueue, SESSIONS_PER_STAGE } from "./tracks.js";
 
 export const R = {
   treinoXp: 100, treinoOuro: 100,      // treino do dia concluído
@@ -153,6 +153,7 @@ export function addPayment(debt, pag) {
 export function completeWorkout(date = today()) {
   const d = day(date), w = d.workout, events = [];
   w.done = true;
+  advanceQueue(w);
   const totalSets = w.plano.itens.reduce((n, i) => n + i.series, 0);
   const marks = Object.values(w.sets || {}).flat();
   const doneSets = marks.filter(Boolean).length, lowSets = marks.filter(m => m === "low").length;

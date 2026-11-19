@@ -39,6 +39,8 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   50 mergulhos, 30 barras, 300 agachamentos e 300 abdominais seguidos; o da corrida, uma maratona. Barra fixa só
   entra a partir do rank D. O volume sobe a cada 6 treinos com todas as séries no alvo (série tocada 2× = abaixo
   do alvo, não sobe a carga), com semana leve a cada 4 etapas. Só a meta atual fica visível.
+- **Fila de treinos:** os 6 treinos da semana seguem em fila, não pelo dia da semana. O próximo é sempre o que
+  vem depois do último concluído; faltou, o mesmo treino fica para o dia seguinte e é ele que tira da penalidade.
 - **Teste antecipado:** a partir da metade das etapas da fase dá para tentar o Teste de Rank (1 tentativa a cada
   7 dias; falhar não pune). Passou: pula para a próxima fase e ganha +500 XP e +300 Ouro, sem pular níveis.
 - **Dieta (conferida no dia seguinte, sem Zona de Penalidade):** até 100 kcal acima da meta, nada; acima disso,

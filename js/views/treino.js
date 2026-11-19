@@ -154,7 +154,7 @@ function todayCard() {
       <button class="btn ghost sm block" style="margin-top:8px" data-act="cancelWorkout">Cancelar este treino</button>`, "", `<span class="chip warn">Em andamento</span>`);
   }
   const plan = workoutFor(t);
-  const redencao = isRestDay(t) ? `<p class="small warn">Treino de redenção: hoje seria descanso, mas você está na Zona de Penalidade.</p>` : "";
+  const redencao = S.game.needsWorkout ? `<p class="small warn">Treino de redenção: é o treino que ficou pendente${isRestDay(t) ? ". Hoje seria descanso, mas você está na Zona de Penalidade" : ""}.</p>` : "";
   const leve = plan.leve ? `<p class="small ok">Semana leve: volume 30% menor para o corpo se recuperar. Faz parte do plano.</p>` : "";
   return panel(plan.titulo, `${redencao}${leve}
     ${exerciseList(null, plan, false)}

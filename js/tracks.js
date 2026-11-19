@@ -4,7 +4,7 @@
 // uma série nova, as reps se redistribuem (sem salto de volume). A cada 4 etapas há uma semana leve (−30%).
 // No fim da fase, o Teste de Rank libera o rank seguinte e revela a próxima meta.
 import { S } from "./store.js";
-import { weekday, today, addDays } from "./util.js";
+import { today, addDays } from "./util.js";
 
 export const SESSIONS_PER_STAGE = 6;
 export const DELOAD_EVERY = 4, DELOAD_FACTOR = 0.7;
@@ -417,12 +417,22 @@ export const testUnlocked = () => !!testStatus();
 
 const lerp = (a, b, k) => a + (b - a) * k;
 
-// Posição do dia entre os 6 dias de treino da semana (pulando o dia de descanso).
-export function workoutIndex(date) {
-  const rest = S.profile?.restDay ?? 0;
-  const wd = weekday(date);
-  if (wd === rest) return Object.values(S.days).filter(d => d.workout?.done).length % 6;
-  return ((wd - rest + 7) % 7) - 1;
+// Fila de treinos: o próximo é sempre o seguinte ao último CONCLUÍDO nesta trilha, independente do dia
+// da semana. Faltou, o mesmo treino fica para o dia seguinte (e é ele que paga a penalidade).
+export const DAYS_PER_CYCLE = 6;
+export function workoutIndex() {
+  const p = progress();
+  if (p.nextIdx == null) { // migração: antes o treino era escolhido pelo dia da semana
+    const last = Object.keys(S.days).sort().reverse().map(d => S.days[d].workout)
+      .find(w => w?.done && w.trackId === S.track?.id && w.plano?.idx != null && !w.indoor);
+    p.nextIdx = last ? (last.plano.idx + 1) % DAYS_PER_CYCLE : 0;
+  }
+  return p.nextIdx;
+}
+// Chamado ao concluir um treino: avança a fila
+export function advanceQueue(w) {
+  if (w.trackId !== S.track?.id || w.plano?.idx == null) return;
+  progress().nextIdx = (w.plano.idx + 1) % DAYS_PER_CYCLE;
 }
 
 // Semana leve: a cada 4 etapas, menos na última etapa da fase (véspera do teste)
@@ -444,7 +454,7 @@ export function workoutFor(date, indoor = false) {
   const stage = Math.min(p.week, ph.stages);
   const k = ph.stages > 1 ? (stage - 1) / (ph.stages - 1) : 1;
   const leve = isDeload(stage, ph.stages);
-  const idx = workoutIndex(date);
+  const idx = workoutIndex();
   const [titulo, exs] = indoor && t.id === "corrida" ? runIndoor : ph.days[idx];
   return {
     idx, titulo, stage, stages: ph.stages, leve,
