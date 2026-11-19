@@ -3,7 +3,7 @@ import { views, actions, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { esc, fmt, fmtDate, today, uid, $ } from "../util.js";
 import { header, panel, toast, sysMessage, modal, closeModal, confirmBox } from "../ui.js";
-import { pendingDebts, monthDebt, inPenalty, grupo, debtState, debtMembers, addPayment, R } from "../game.js";
+import { pendingDebts, monthDebt, inPenalty, grupo, debtState, debtMembers, addPayment, revalidateDebts, grant, R } from "../game.js";
 import { readText, parsePix, checkPix } from "../ocr.js";
 
 const brl = v => "R$ " + fmt(v, 2);
@@ -55,7 +55,7 @@ views.penalidade = () => {
       <div class="tile"><div class="lbl">Faltas</div><div class="val num">${md.faltas}</div></div>
       <div class="tile"><div class="lbl">Total</div><div class="val num ${md.total ? "bad" : ""}">${brl(md.total)}</div></div>
       <div class="tile"><div class="lbl">Pago</div><div class="val num ok">${brl(md.pago)}</div></div></div>
-      <p class="small muted">${brl(p.multa ?? 10)} por falta para cada pessoa do grupo, pago na hora por PIX. O valor da multa fica no Perfil.</p>`)}
+      <p class="small muted">${brl(p.multa ?? 10)} por falta para cada pessoa do grupo, pago na hora por PIX. O valor da multa fica no Perfil; mudar o valor ou as pessoas vale também para as multas ainda não pagas.</p>`)}
     ${grupoPanel}
     ${feitas.length ? panel("Multas pagas", `<ul class="list small">${feitas.map(d => `<li><span class="grow">${fmtDate(d.date)}</span>
       <span class="num">${brl(debtState(d).pago)}</span><span class="ok">✔</span></li>`).join("")}</ul>`) : ""}</div>`;
@@ -73,11 +73,12 @@ actions.editMember = ({ id }) => {
     const nome = e.target.nome.value.trim().replace(/\s+/g, " "), chave = e.target.chave.value.trim();
     if (nome.split(" ").length < 2) return toast("Coloque nome e sobrenome, como aparece no comprovante.");
     if (m) Object.assign(m, { nome, chave }); else grupo().push({ id: uid(), nome, chave });
-    save(); closeModal(); refresh();
+    revalidateDebts(); save(); closeModal(); refresh();
   };
   if (m) $("#mdel", o).onclick = async () => {
-    if (!await confirmBox("Remover pessoa", `Remover ${m.nome}? Faltas já registradas continuam com quem estava no grupo na época.`, "Remover")) return;
-    S.grupo = grupo().filter(x => x.id !== id); save(); refresh();
+    if (!await confirmBox("Remover pessoa", `Remover ${m.nome}? As multas pendentes deixam de incluir essa pessoa; as já pagas ficam como estão.`, "Remover")) return;
+    if (pendingDebts().length) grant(0, 0, `${m.nome} removido do grupo com penalidade pendente`);
+    S.grupo = grupo().filter(x => x.id !== id); revalidateDebts(); save(); refresh();
   };
 };
 

@@ -3,7 +3,7 @@ import { views, actions, refresh, go } from "../core.js";
 import { S, save, resetAll, replaceState } from "../store.js";
 import { today, addDays, esc, fmt, num, fmtDate, WEEKDAYS, getPreciseFix, $ } from "../util.js";
 import { header, panel, toast, sysMessage, confirmBox } from "../ui.js";
-import { levelInfo, nextRank, tmb, weightOn, applyAutoKcal, KCAL_AUTO } from "../game.js";
+import { levelInfo, nextRank, tmb, weightOn, applyAutoKcal, KCAL_AUTO, pendingDebts, revalidateDebts, grant } from "../game.js";
 import { currentTrack } from "../tracks.js";
 
 function profileForm(p = {}, first = false) {
@@ -62,9 +62,13 @@ actions.saveProfile = d => {
     p.kcalDeficit = Math.min(1000, Math.max(0, Math.round(num(d.kcalDeficit) ?? KCAL_AUTO.deficit)));
     p.kcalPiso = Math.max(1200, Math.round(num(d.kcalPiso) ?? KCAL_AUTO.piso));
   }
-  p.pessoas = Math.max(1, Math.round(p.pessoas ?? 3)); p.multa = Math.max(0, Math.round(p.multa ?? 10));
+  p.pessoas = Math.max(1, Math.round(p.pessoas ?? 3)); p.multa = Math.max(1, Math.round(p.multa ?? 10));
   p.minDist = Math.max(1000, Math.round(p.minDist ?? 1000)); p.minMin = Math.max(30, Math.round(p.minMin ?? 30));
+  // multa mudou com penalidade pendente: vale para as pendentes, e fica registrado
+  const multaAntes = S.profile?.multa ?? 10;
+  if (!first && p.multa !== multaAntes && pendingDebts().length) grant(0, 0, `Multa alterada de R$ ${multaAntes} para R$ ${p.multa} com penalidade pendente`);
   S.profile = p;
+  revalidateDebts();
   // ligou o automático ou mudou déficit/piso: aplica na hora, sem limite de passo
   const auto = p.kcalAuto && (!autoAntes || ajusteAntes !== `${p.kcalDeficit}|${p.kcalPiso}`) ? applyAutoKcal(true) : null;
   if (first) { S.game.lastProcessed = addDays(today(), -1); S.profile.criado = today(); }

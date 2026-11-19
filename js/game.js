@@ -122,8 +122,11 @@ export function makeSerial(date) {
 // Cada falta custa a multa para CADA pessoa do grupo. Sai da Zona de Penalidade quando cada uma
 // recebeu pelo menos a multa (soma dos comprovantes de PIX lidos pelo app) e o treino foi cumprido.
 export const grupo = () => (S.grupo ||= []);
-export const debtMembers = debt => debt.membros?.length ? debt.membros : grupo().map(({ id, nome }) => ({ id, nome }));
-export const debtValor = debt => debt.valor ?? S.profile?.multa ?? 10;
+// Multa PENDENTE segue o valor e as pessoas atuais (Perfil e Penalidades); multa PAGA guarda o que
+// valia quando foi quitada.
+const pago = debt => debt.status === "validado";
+export const debtMembers = debt => pago(debt) && debt.membros?.length ? debt.membros : grupo().map(({ id, nome }) => ({ id, nome }));
+export const debtValor = debt => pago(debt) && debt.valor != null ? debt.valor : S.profile?.multa ?? 10;
 export function debtState(debt) {
   const valor = debtValor(debt), pags = debt.pagamentos || [];
   const membros = debtMembers(debt).map(m => {
@@ -142,11 +145,22 @@ export function monthDebt(ym = today().slice(0, 7)) {
 export function addPayment(debt, pag) {
   (debt.pagamentos ||= []).push(pag);
   (S.pixIds ||= []).push(pag.chave, ...(pag.id ? [pag.id] : []));
-  if (!debt.membros?.length) debt.membros = debtMembers(debt); // congela quem estava no grupo
   const st = debtState(debt);
-  if (st.ok) { debt.status = "validado"; debt.validatedAt = today(); }
+  if (st.ok) settle(debt, st);
   save();
   return st;
+}
+// Quita: congela valor e pessoas da época
+function settle(debt, st) {
+  debt.status = "validado"; debt.validatedAt = today();
+  debt.valor = st.valor; debt.membros = st.membros.map(({ id, nome }) => ({ id, nome }));
+}
+// Depois de mudar a multa ou o grupo: reconfere as pendentes (ex.: removeu a única pessoa que faltava pagar)
+export function revalidateDebts() {
+  const quitadas = [];
+  for (const d of pendingDebts()) { const st = debtState(d); if (st.ok) { settle(d, st); quitadas.push(d.date); } }
+  if (quitadas.length) save();
+  return quitadas;
 }
 
 // ---- conclusão do treino -----------------------------------------------------------------
@@ -204,8 +218,7 @@ export function processDays() {
     if (!rec.meals) rec.meals = JSON.parse(JSON.stringify(S.diet.meals)); // congela a dieta do dia
     if (pendingDebts().length) report.push(grant(R.corrosaoXp, 0, `Dívida sem comprovante em ${fmtDate(d)}`, d));
     if (isObligated(d) && !rec.workout?.done) {
-      S.debts.push({ date: d, serial: makeSerial(d), status: "pendente", valor: S.profile.multa ?? 10,
-        membros: grupo().map(({ id, nome }) => ({ id, nome })), pagamentos: [] });
+      S.debts.push({ date: d, serial: makeSerial(d), status: "pendente", pagamentos: [] });
       g.needsWorkout = true; g.streak = 0;
       report.push({ ...grant(R.faltaXp, R.faltaOuro, `Missão diária FALHOU em ${fmtDate(d)}`, d), falta: true });
     }
