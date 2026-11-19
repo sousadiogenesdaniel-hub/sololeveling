@@ -3,7 +3,7 @@ import { views, actions, refresh } from "../core.js";
 import { S, day, save, photos } from "../store.js";
 import { today, esc, fmt, num, fmtDate, fmtShort, signed, shrinkImage, uid, $ } from "../util.js";
 import { header, panel, modal, closeModal, toast, showEvents, confirmBox, sysMessage } from "../ui.js";
-import { grant, R, inPenalty, daysToShop, pendingDebts, monthDebt } from "../game.js";
+import { grant, R, inPenalty, daysToShop, pendingDebts, monthDebt, BONUS, bonusWeek, cleanWeek, dietWeek, weekStart, weekEnd } from "../game.js";
 
 // ---- Mais -----------------------------------------------------------------------
 views.mais = () => {
@@ -159,6 +159,15 @@ views.loja = () => {
         <button class="item" data-act="editShop" data-id="${i.id}"><b>${esc(i.nome)}</b><br><span class="small gold num">◆ ${fmt(i.custo)}</span></button>
         <button class="btn sm primary" data-act="buy" data-id="${i.id}" ${!aberta || pen || g < i.custo ? "disabled" : ""}>Comprar</button></li>`).join("")}</ul>
       <button class="btn ghost sm block" data-act="editShop" data-id="">+ Novo item</button>`, "", `<span class="gold num">◆ ${fmt(g)}</span>`)}
+    ${panel("Missões bônus", (() => {
+      const dw = dietWeek(), feitos = dw.filter(Boolean).length, passados = dw.filter(x => x !== null).length, limpa = cleanWeek();
+      return `<p class="small muted" style="margin-top:0">Ouro extra para quem já está cumprindo as missões. Semana do jogo: ${fmtDate(weekStart(), { day: "2-digit", month: "2-digit" })} a ${fmtDate(weekEnd(), { day: "2-digit", month: "2-digit" })}. Só valem em semana sem falta, até ${BONUS.teto} de Ouro por semana.</p>
+      <ul class="list small">
+        <li><span class="grow">Atividade de ${BONUS.km.caminhada} km+ rastreada por GPS (bike ${BONUS.km.bike} km), depois da missão</span><b class="gold">+${BONUS.gpsOuro}</b></li>
+        <li><span class="grow">Semana inteira dentro da meta de calorias <span class="muted">(${passados ? `${feitos} de ${passados} dia${passados > 1 ? "s" : ""} fechado${passados > 1 ? "s" : ""}${feitos < passados ? ": esta semana já não vale" : ""}` : "começa a contar amanhã"})</span></span><b class="gold">+${BONUS.dietaOuro}</b></li></ul>
+      <div class="row between small"><span class="${limpa ? "ok" : "bad"}">${limpa ? "Semana limpa ✔" : "Semana com falta: bônus bloqueados"}</span><b class="gold num">${bonusWeek()}/${BONUS.teto}</b></div>
+      <a class="btn sm ghost block" style="margin-top:8px" href="#/extras">Rastrear atividade</a>`;
+    })())}
     ${panel("Compras", compras.length ? `<ul class="list small">${compras.map(c => `<li><span class="muted num">${fmtShort(c.date)}</span>
       <span class="grow">${c.icone} ${esc(c.nome)}</span><span class="gold num">−${fmt(c.custo)} ◆</span></li>`).join("")}</ul>` : `<p class="muted">Nenhuma compra ainda.</p>`)}</div>`;
 };

@@ -1,6 +1,6 @@
 // Regras do Sistema: XP, nível, rank, Ouro, fechamento dos dias, Zona de Penalidade.
 import { S, day, save } from "./store.js";
-import { today, addDays, weekday, daysBetween, fmtDate, parseDay } from "./util.js";
+import { today, addDays, weekday, daysBetween, fmt, fmtDate, parseDay } from "./util.js";
 import { progress, currentPhase, currentTrack, trackFinished, earlyFrom, advanceQueue, SESSIONS_PER_STAGE } from "./tracks.js";
 
 export const R = {
@@ -165,6 +165,8 @@ export function completeWorkout(date = today()) {
   g.streak++; g.bestStreak = Math.max(g.bestStreak, g.streak);
   if (g.streak % 7 === 0) events.push(grant(0, R.streakOuro, `Sequência de ${g.streak} treinos`, date));
   if (g.needsWorkout) { g.needsWorkout = false; events.push({ motivo: "Treino de redenção cumprido", xp: 0, gold: 0 }); }
+  const bonus = checkGpsBonus(date); // atividade longa feita antes da missão: o bônus entra agora
+  if (bonus) events.push(bonus);
   if (w.full && !w.hit) events.push({ motivo: `${lowSets} série${lowSets > 1 ? "s" : ""} abaixo do alvo: a carga não sobe neste treino`, xp: 0, gold: 0 });
   if (w.hit && !trackFinished()) {
     const p = progress(), ph = currentPhase();
@@ -209,6 +211,11 @@ export function processDays() {
     }
     const dieta = dietVerdict(d, rec);
     if (dieta) report.push(grant(dieta.xp, dieta.gold, dieta.motivo, d));
+    // fim da semana do jogo: bônus da semana inteira dentro da meta de calorias
+    if (d === weekEnd(d) && dietWeek(d, true).every(Boolean) && cleanWeek(d)) {
+      const ev = payBonus(d, "dieta", BONUS.dietaOuro, "Missão bônus: semana inteira dentro da meta de calorias");
+      if (ev) report.push(ev);
+    }
     rec.closed = true;
     g.lastProcessed = d;
     d = addDays(d, 1);
@@ -316,4 +323,59 @@ export function dietVerdict(d, rec = S.days[d]) {
   const n = Math.round(acima / 100) * R.dietaPor100;
   return { xp: -Math.min(R.dietaXpMax, n), gold: -Math.min(R.dietaOuroMax, n),
     motivo: `Passou ${acima} kcal da meta${cotaKcal(d) ? " (já contando a cota da Loja)" : ""} em ${fmtDate(d)}` };
+}
+
+// ---- semana do jogo e missões bônus -----------------------------------------------------
+// A semana do jogo começa no dia seguinte ao descanso (descanso na sexta → semana de sábado a sexta).
+// Missões bônus dão só Ouro (nunca XP), nunca substituem a missão do dia, só valem em semana limpa
+// e têm teto semanal.
+export const BONUS = { gpsOuro: 75, dietaOuro: 150, teto: 300, km: { caminhada: 5, corrida: 5, trilha: 5, bike: 15 } };
+export function weekStart(date = today()) {
+  const ini = ((S.profile?.restDay ?? 0) + 1) % 7;
+  let d = date; while (weekday(d) !== ini) d = addDays(d, -1);
+  return d;
+}
+export const weekEnd = (date = today()) => addDays(weekStart(date), 6);
+const bonusLog = () => (S.bonus ||= []);
+export const bonusWeek = (date = today()) => bonusLog().filter(b => weekStart(b.date) === weekStart(date)).reduce((n, b) => n + b.ouro, 0);
+// Semana limpa: nenhuma falta desde o início da semana do jogo e fora da Zona de Penalidade
+export const cleanWeek = (date = today()) => !S.debts.some(d => d.date >= weekStart(date) && d.date <= date) && !pendingDebts().length;
+
+function payBonus(date, tipo, ouro, motivo) {
+  const v = Math.min(ouro, BONUS.teto - bonusWeek(date));
+  if (v <= 0) return null;
+  bonusLog().push({ date, tipo, ouro: v });
+  return grant(0, v, motivo + (v < ouro ? " (limite semanal)" : ""), date);
+}
+
+// Por que a missão bônus de exercício está (ou não) disponível no dia
+export function gpsBonusStatus(date = today()) {
+  if (isRestDay(date)) return { ok: false, motivo: "Dia de descanso não tem missão bônus de exercício: descansar faz parte do treino." };
+  if (!cleanWeek(date)) return { ok: false, motivo: `Semana com falta ou na Zona de Penalidade: bônus bloqueados até ${fmtDate(addDays(weekEnd(date), 1))}.` };
+  if (bonusLog().some(b => b.date === date && b.tipo === "gps")) return { ok: false, feito: true, motivo: "Missão bônus de hoje cumprida." };
+  if (bonusWeek(date) >= BONUS.teto) return { ok: false, motivo: `Limite de ${BONUS.teto} de Ouro em bônus nesta semana atingido.` };
+  if (!S.days[date]?.workout?.done) return { ok: false, pendente: true, motivo: "Libera quando a missão do dia for concluída (pode fazer a atividade antes; o bônus entra ao concluir a missão)." };
+  return { ok: true, motivo: "Disponível hoje." };
+}
+
+// Paga o bônus se houver no dia uma atividade rastreada por GPS longa o bastante (chamado ao salvar
+// a atividade e ao concluir a missão)
+export function checkGpsBonus(date = today()) {
+  if (!gpsBonusStatus(date).ok) return null;
+  const ex = (S.days[date]?.extras || []).find(e => e.gps && e.gps.km >= (BONUS.km[e.gps.tipo] ?? Infinity));
+  if (!ex) return null;
+  const ev = payBonus(date, "gps", BONUS.gpsOuro, `Missão bônus: ${fmt(ex.gps.km, 1)} km rastreados por GPS`);
+  if (ev) save();
+  return ev;
+}
+
+// Dias da semana do jogo dentro da meta de calorias (contando a cota da Loja). Na tela, só os dias já
+// fechados contam (incluirDia = false); no fechamento do último dia da semana, ele entra.
+export function dietWeek(date = today(), incluirDia = false) {
+  const ini = weekStart(date), meta = S.profile?.metaKcal;
+  return Array.from({ length: 7 }, (_, i) => addDays(ini, i)).map(d => {
+    if (d > date || (d === date && !incluirDia)) return null;
+    const kcal = totals(S.days[d]?.meals || mealsOf(d)).kcal;
+    return !!meta && kcal > 0 && kcal <= meta + cotaKcal(d) && d >= (S.profile?.criado || d);
+  });
 }

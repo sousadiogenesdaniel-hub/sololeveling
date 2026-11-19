@@ -4,7 +4,7 @@ import { views, actions, refresh } from "../core.js";
 import { S, day, save } from "../store.js";
 import { today, esc, fmt, num, uid, fmtDate, fmtShort, addDays, distM, $ } from "../util.js";
 import { header, panel, modal, closeModal, toast, confirmBox, showEvents } from "../ui.js";
-import { tmb, weightOn, grant, extrasKcal } from "../game.js";
+import { tmb, weightOn, grant, extrasKcal, BONUS, gpsBonusStatus, checkGpsBonus, bonusWeek, weekStart, weekEnd } from "../game.js";
 
 export const EXTRA_XP = 10; // uma vez por dia, só pelo hábito de se mexer
 
@@ -76,13 +76,25 @@ views.extras = () => {
       A primeira atividade de cada dia vale +${EXTRA_XP} XP. Não substitui a missão.</p>
       <button class="btn primary block" data-act="newExtra">+ Registrar atividade</button>
       ${tr ? "" : `<button class="btn block" style="margin-top:8px" data-act="startTrack">📍 Rastrear agora com GPS</button>`}`)}
+    ${bonusPanel()}
     ${panel("Hoje", hoje.length ? `<ul class="list">${hoje.map(e => item(t, e)).join("")}</ul>` : `<p class="muted small">Nenhuma atividade extra hoje.</p>`,
       "", hoje.length ? `<span class="num small muted">~${fmt(extrasKcal(t))} kcal</span>` : "")}
     ${recentes.length ? panel("Últimos 30 dias", `<ul class="list">${recentes.map(([d, e]) => item(d, e)).join("")}</ul>`) : ""}</div>`;
 };
 
+// ---- missão bônus ----------------------------------------------------------------
+export function bonusPanel() {
+  const st = gpsBonusStatus(), usado = bonusWeek();
+  return panel("Missão bônus", `<p style="margin-top:0">Caminhada, corrida ou trilha de <b>${BONUS.km.caminhada} km ou mais</b> (bike: ${BONUS.km.bike} km), <b>rastreada pelo GPS</b>: <b class="gold">+${BONUS.gpsOuro} Ouro</b>. Uma por dia, só Ouro.</p>
+    <p class="small ${st.ok ? "ok" : st.feito ? "ok" : "warn"}">${st.ok ? "✔ " : st.feito ? "✔ " : ""}${st.motivo}</p>
+    <div class="row between small"><span class="muted">Bônus da semana (${fmtDate(weekStart(), { day: "2-digit", month: "2-digit" })} a ${fmtDate(weekEnd(), { day: "2-digit", month: "2-digit" })})</span><b class="gold num">${usado}/${BONUS.teto}</b></div>
+    <div class="bar" style="margin-top:4px"><i style="width:${Math.min(100, usado / BONUS.teto * 100)}%;background:var(--gold);box-shadow:0 0 8px var(--gold)"></i></div>
+    <p class="small muted" style="margin-bottom:0">Registro manual não conta para o bônus: só a distância medida pelo rastreamento.</p>`, "", `<span class="gold">◆</span>`);
+}
+
 // ---- formulário -----------------------------------------------------------------
-function form({ date = today(), tipo = "caminhada", dados = {}, intensidade = "moderada", id = "" } = {}) {
+// gps: { km, tipo } do rastreamento (fica guardado mesmo se você editar a distância: é o que vale para o bônus)
+function form({ date = today(), tipo = "caminhada", dados = {}, intensidade = "moderada", id = "", gps = null } = {}) {
   const o = modal(`<div class="ptitle"><h2>${id ? "Editar atividade" : "Nova atividade"}</h2><button class="btn sm ghost" data-close aria-label="Fechar">✕</button></div>
     <form id="xf"><div class="field"><label for="xt">Atividade</label><select id="xt" name="tipo">
       ${TYPES.map(t => `<option value="${t.id}" ${t.id === tipo ? "selected" : ""}>${t.icone} ${t.nome}</option>`).join("")}</select></div>
@@ -119,11 +131,12 @@ function form({ date = today(), tipo = "caminhada", dados = {}, intensidade = "m
     if (!d.tempo) return toast("Informe o tempo da atividade.");
     if (d.tempo > 600 || (d.dist ?? 0) > 300 || (d.elev ?? 0) > 5000) return toast("Algum valor está fora do esperado.");
     const est = estimate(f.tipo.value, d, f.intensidade.value, date);
-    const rec = { id: id || uid(), tipo: f.tipo.value, dados: d, intensidade: f.intensidade.value, ...est };
+    const rec = { id: id || uid(), tipo: f.tipo.value, dados: d, intensidade: f.intensidade.value, ...est, ...(gps ? { gps } : {}) };
     if (id) removeExtra(dateOf(id), id);
     const dd = day(date); (dd.extras ??= []).push(rec);
     const ev = [];
     if (!dd.extraXp) { dd.extraXp = true; ev.push(grant(EXTRA_XP, 0, "Atividade extra registrada", date)); }
+    const bonus = checkGpsBonus(date); if (bonus) ev.push(bonus);
     save(); closeModal(); refresh();
     ev.length ? showEvents("Atividade registrada", ev, `<p class="small muted">~${fmt(est.kcal)} kcal somadas ao gasto de ${date === today() ? "hoje" : fmtDate(date)}.</p>`)
       : toast(`Atividade salva: ~${fmt(est.kcal)} kcal.`);
@@ -140,7 +153,7 @@ function removeExtra(date, id) { const d = S.days[date]; d.extras = d.extras.fil
 actions.newExtra = () => form();
 actions.editExtra = ({ date, id }) => {
   const e = extrasOf(date).find(x => x.id === id);
-  form({ date, tipo: e.tipo, dados: e.dados, intensidade: e.intensidade, id });
+  form({ date, tipo: e.tipo, dados: e.dados, intensidade: e.intensidade, id, gps: e.gps || null });
 };
 
 // ---- rastreamento por GPS -----------------------------------------------------------
@@ -172,7 +185,8 @@ actions.stopTrack = () => {
   const tr = S.tracking; stopWatch();
   delete S.tracking; save(); refresh();
   const tempo = Math.max(1, Math.round((Date.now() - tr.start) / 60000));
-  form({ date: tr.date, tipo: tr.tipo, dados: { dist: tr.dist >= 50 ? Math.round(tr.dist / 10) / 100 : "", tempo, elev: tr.elev >= 5 ? Math.round(tr.elev) : "" } });
+  form({ date: tr.date, tipo: tr.tipo, gps: { km: Math.round(tr.dist / 10) / 100, tipo: tr.tipo },
+    dados: { dist: tr.dist >= 50 ? Math.round(tr.dist / 10) / 100 : "", tempo, elev: tr.elev >= 5 ? Math.round(tr.elev) : "" } });
 };
 
 export function startWatch() {
