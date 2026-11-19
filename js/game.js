@@ -126,7 +126,9 @@ export const grupo = () => (S.grupo ||= []);
 // valia quando foi quitada.
 const pago = debt => debt.status === "validado";
 export const debtMembers = debt => pago(debt) && debt.membros?.length ? debt.membros : grupo().map(({ id, nome }) => ({ id, nome }));
-export const debtValor = debt => pago(debt) && debt.valor != null ? debt.valor : S.profile?.multa ?? 10;
+export const MULTA_MIN = 5;
+export const multaAtual = () => Math.max(MULTA_MIN, S.profile?.multa ?? 10);
+export const debtValor = debt => pago(debt) && debt.valor != null ? debt.valor : multaAtual();
 export function debtState(debt) {
   const valor = debtValor(debt), pags = debt.pagamentos || [];
   const membros = debtMembers(debt).map(m => {

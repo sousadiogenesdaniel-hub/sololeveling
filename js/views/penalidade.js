@@ -3,7 +3,7 @@ import { views, actions, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { esc, fmt, fmtDate, today, uid, $ } from "../util.js";
 import { header, panel, toast, sysMessage, modal, closeModal, confirmBox } from "../ui.js";
-import { pendingDebts, monthDebt, inPenalty, grupo, debtState, debtMembers, addPayment, revalidateDebts, grant, R } from "../game.js";
+import { pendingDebts, monthDebt, inPenalty, grupo, debtState, debtMembers, addPayment, revalidateDebts, grant, multaAtual, R } from "../game.js";
 import { readText, parsePix, checkPix } from "../ocr.js";
 
 const brl = v => "R$ " + fmt(v, 2);
@@ -55,7 +55,7 @@ views.penalidade = () => {
       <div class="tile"><div class="lbl">Faltas</div><div class="val num">${md.faltas}</div></div>
       <div class="tile"><div class="lbl">Total</div><div class="val num ${md.total ? "bad" : ""}">${brl(md.total)}</div></div>
       <div class="tile"><div class="lbl">Pago</div><div class="val num ok">${brl(md.pago)}</div></div></div>
-      <p class="small muted">${brl(p.multa ?? 10)} por falta para cada pessoa do grupo, pago na hora por PIX. O valor da multa fica no Perfil; mudar o valor ou as pessoas vale também para as multas ainda não pagas.</p>`)}
+      <p class="small muted">${brl(multaAtual())} por falta para cada pessoa do grupo, pago na hora por PIX. O valor da multa fica no Perfil; mudar o valor ou as pessoas vale também para as multas ainda não pagas.</p>`)}
     ${grupoPanel}
     ${feitas.length ? panel("Multas pagas", `<ul class="list small">${feitas.map(d => `<li><span class="grow">${fmtDate(d.date)}</span>
       <span class="num">${brl(debtState(d).pago)}</span><span class="ok">✔</span></li>`).join("")}</ul>`) : ""}</div>`;

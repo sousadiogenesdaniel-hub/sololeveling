@@ -3,7 +3,7 @@ import { views, actions, refresh, go } from "../core.js";
 import { S, save, resetAll, replaceState } from "../store.js";
 import { today, addDays, esc, fmt, num, fmtDate, WEEKDAYS, getPreciseFix, $ } from "../util.js";
 import { header, panel, toast, sysMessage, confirmBox } from "../ui.js";
-import { levelInfo, nextRank, tmb, weightOn, applyAutoKcal, KCAL_AUTO, pendingDebts, revalidateDebts, grant } from "../game.js";
+import { levelInfo, nextRank, tmb, weightOn, applyAutoKcal, KCAL_AUTO, pendingDebts, revalidateDebts, grant, MULTA_MIN } from "../game.js";
 import { currentTrack } from "../tracks.js";
 
 function profileForm(p = {}, first = false) {
@@ -23,7 +23,7 @@ function profileForm(p = {}, first = false) {
       ${f("metaKcal", "Meta de calorias por dia", `inputmode="numeric" ${p.kcalAuto ? "readonly" : ""}`)}
       <div class="field"><label for="pf-rest">Dia de descanso</label><select id="pf-rest" name="restDay">
         ${WEEKDAYS.map((d, i) => `<option value="${i}" ${(p.restDay ?? 0) === i ? "selected" : ""}>${d}</option>`).join("")}</select></div>
-      ${f("multa", "Multa por falta (R$ para cada pessoa do grupo)", 'inputmode="numeric"', p.multa ?? 10)}
+      ${f("multa", `Multa por falta (R$ por pessoa, mín. ${MULTA_MIN})`, 'inputmode="numeric"', Math.max(MULTA_MIN, p.multa ?? 10))}
       ${first ? "" : f("minDist", "Distância mínima de casa (m, mín. 1000)", 'inputmode="numeric"', Math.max(1000, p.minDist ?? 1000))}
       ${first ? "" : f("minMin", "Tempo mínimo de treino (min, mín. 30)", 'inputmode="numeric"', Math.max(30, p.minMin ?? 30))}
     </div>
@@ -62,7 +62,7 @@ actions.saveProfile = d => {
     p.kcalDeficit = Math.min(1000, Math.max(0, Math.round(num(d.kcalDeficit) ?? KCAL_AUTO.deficit)));
     p.kcalPiso = Math.max(1200, Math.round(num(d.kcalPiso) ?? KCAL_AUTO.piso));
   }
-  p.pessoas = Math.max(1, Math.round(p.pessoas ?? 3)); p.multa = Math.max(1, Math.round(p.multa ?? 10));
+  p.pessoas = Math.max(1, Math.round(p.pessoas ?? 3)); const multaDigitada = Math.round(p.multa ?? 10); p.multa = Math.max(MULTA_MIN, multaDigitada);
   p.minDist = Math.max(1000, Math.round(p.minDist ?? 1000)); p.minMin = Math.max(30, Math.round(p.minMin ?? 30));
   // multa mudou com penalidade pendente: vale para as pendentes, e fica registrado
   const multaAntes = S.profile?.multa ?? 10;
@@ -78,7 +78,10 @@ actions.saveProfile = d => {
     sysMessage("Você despertou", `<p class="mid glow">Bem-vindo, ${esc(p.nome)}.</p>
       <p>Rank <b>E</b> · Nível 1. Escolha uma trilha, cumpra as missões diárias e evolua.</p>
       <p class="small muted">Próximos passos: escolher a trilha, montar a Dieta padrão em Comida e cadastrar sua casa no Perfil.</p>`);
-  } else { toast(auto ? `Perfil salvo. Meta de calorias: ${auto.nova} kcal.` : "Perfil salvo."); refresh(); }
+  } else {
+    toast(multaDigitada < MULTA_MIN ? `Perfil salvo. A multa mínima é R$ ${MULTA_MIN}.` : auto ? `Perfil salvo. Meta de calorias: ${auto.nova} kcal.` : "Perfil salvo.", 4000);
+    refresh();
+  }
 };
 
 function kcalPanel(c, em) {
