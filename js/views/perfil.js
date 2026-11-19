@@ -1,4 +1,5 @@
 // Perfil: despertar (cadastro), status, ajustes, casa, trilha e backup
+import { nativo, saveFile } from "../native.js";
 import { views, actions, refresh, go } from "../core.js";
 import { S, save, resetAll, replaceState } from "../store.js";
 import { today, addDays, esc, fmt, num, fmtDate, WEEKDAYS, getPreciseFix, $ } from "../util.js";
@@ -43,7 +44,9 @@ export function onboarding() {
   return `<div class="stack" style="margin-top:24px">
     <div class="center"><div class="rank" style="margin:10px auto 22px"><span>E</span></div>
       <h1 class="glow">O Sistema</h1><p class="muted">Você foi escolhido como Jogador. Preencha seus dados para despertar.</p></div>
-    ${panel("Despertar", profileForm({}, true))}</div>`;
+    ${panel("Despertar", profileForm({}, true))}
+    ${panel("Já tenho um backup", `<p class="small muted" style="margin-top:0">Vindo do navegador ou de outro celular? Restaure o arquivo de backup (Perfil → Baixar backup) e continue de onde parou.</p>
+      <label class="btn block">Restaurar backup<input type="file" accept="application/json,.json" class="hidden" data-chg="importData"></label>`)}</div>`;
 }
 
 actions.saveProfile = d => {
@@ -146,10 +149,8 @@ actions.changeTrack = async () => {
 };
 
 actions.exportData = () => {
-  const blob = new Blob([JSON.stringify(S)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = `sistema-backup-${today()}.json`;
-  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  const ok = saveFile(`sistema-backup-${today()}.json`, JSON.stringify(S));
+  if (nativo) toast(ok ? "Backup salvo na pasta Downloads." : "Não consegui salvar o backup.", 4000);
 };
 
 actions.importData = async (_, el) => {
@@ -157,8 +158,9 @@ actions.importData = async (_, el) => {
   try {
     const obj = JSON.parse(await file.text());
     if (!obj.profile || !obj.game) throw new Error();
-    if (!await confirmBox("Restaurar backup", "Os dados atuais deste aparelho serão substituídos pelos do arquivo.", "Restaurar")) return;
-    await replaceState(obj); go("inicio"); toast("Backup restaurado.");
+    if (S.profile && !await confirmBox("Restaurar backup", "Os dados atuais deste aparelho serão substituídos pelos do arquivo.", "Restaurar")) return;
+    await replaceState(obj);
+    location.hash = "#/inicio"; location.reload(); // reabre do zero: fecha os dias que passaram desde o backup
   } catch { toast("Arquivo de backup inválido."); }
 };
 

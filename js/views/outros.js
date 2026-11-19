@@ -3,6 +3,7 @@ import { views, actions, refresh } from "../core.js";
 import { S, day, save, photos } from "../store.js";
 import { today, esc, fmt, num, fmtDate, fmtShort, signed, shrinkImage, uid, $ } from "../util.js";
 import { header, panel, modal, closeModal, toast, showEvents, confirmBox, sysMessage } from "../ui.js";
+import { nativo } from "../native.js";
 import { grant, R, inPenalty, daysToShop, pendingDebts, monthDebt, BONUS, bonusWeek, cleanWeek, dietWeek, weekStart, weekEnd } from "../game.js";
 
 // ---- Mais -----------------------------------------------------------------------
@@ -18,6 +19,7 @@ views.mais = () => {
     ${item("loja", "🛒", "Loja", "Sexta e sábado: troque Ouro pelo direito de comer besteira")}
     ${item("penalidade", "⚠️", "Penalidades", "Multas por PIX e pessoas do grupo", pend ? `<span class="chip bad">${pend}</span>` : "")}
     ${item("historico", "📜", "Registro do Sistema", "Histórico de XP e Ouro")}
+    ${item("bloqueio", "🔒", nativo ? "Bloqueio de apps" : "App Android", nativo ? "WhatsApp e Gmail bloqueados na Zona de Penalidade" : "Bloqueio de apps na Zona de Penalidade e lembretes")}
     ${item("perfil", "👤", "Perfil e ajustes", "Status, metas, casa, trilha e backup")}
   </ul>`)}</div>`;
 };

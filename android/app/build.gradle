@@ -1,0 +1,47 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'app.osistema'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'app.osistema'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+
+    // A chave de assinatura NÃO fica neste repositório (que é público). O build lê o caminho e a
+    // senha de variáveis de ambiente: SISTEMA_KEYSTORE e SISTEMA_KS_PASS.
+    signingConfigs {
+        release {
+            def ks = System.getenv('SISTEMA_KEYSTORE')
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv('SISTEMA_KS_PASS')
+                keyAlias 'sistema'
+                keyPassword System.getenv('SISTEMA_KS_PASS')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // só para os testes automáticos (não entra no app)
+    testImplementation 'junit:junit:4.13.2'
+}

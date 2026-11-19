@@ -11,6 +11,8 @@ import "./views/outros.js";
 import "./views/evolucao.js";
 import "./views/penalidade.js";
 import "./views/condicao.js";
+import "./views/bloqueio.js";
+import { syncNative, keepScreenOn } from "./native.js";
 import { startWatch } from "./views/extras.js";
 import { onboarding } from "./views/perfil.js";
 
@@ -35,6 +37,7 @@ function render() {
     if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
   view.after?.();
+  syncNative(); // app Android: informa o estado da Zona de Penalidade
 }
 setRender(render);
 
@@ -72,7 +75,9 @@ async function boot() {
   await load();
   if (S.profile) closeDays();
   render();
-  if (S.tracking) startWatch();
+  if (S.tracking) { startWatch(); keepScreenOn(true); }
+  // app Android: ao voltar dos Ajustes (permissões), fecha dias e atualiza a tela
+  window.__nativeResume = () => { if (S.profile) closeDays(); render(); };
   // virou o dia com o app aberto (ou voltou para o app): fecha o dia e atualiza
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && S.profile && closeDays()) render();

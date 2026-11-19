@@ -1,4 +1,5 @@
 // Zona de Penalidade: cada falta é paga por PIX a cada pessoa do grupo, e o app lê os comprovantes
+import { copyText } from "../native.js";
 import { views, actions, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { esc, fmt, fmtDate, today, uid, $ } from "../util.js";
@@ -84,8 +85,7 @@ actions.editMember = ({ id }) => {
 
 actions.copyKey = async ({ id }) => {
   const m = grupo().find(x => x.id === id);
-  try { await navigator.clipboard.writeText(m.chave); toast(`Chave PIX de ${m.nome.split(" ")[0]} copiada.`); }
-  catch { toast("Não consegui copiar. Selecione a chave e copie manualmente."); }
+  toast(await copyText(m.chave) ? `Chave PIX de ${m.nome.split(" ")[0]} copiada.` : "Não consegui copiar. Selecione a chave e copie manualmente.");
 };
 
 // ---- comprovante -------------------------------------------------------------------

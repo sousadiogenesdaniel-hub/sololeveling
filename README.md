@@ -82,6 +82,13 @@ python3 -m http.server 8000
 
 Depois abra `http://localhost:8000`.
 
+## App Android (opcional)
+
+Em **Mais → App Android** há o instalador (`download/o-sistema.apk`, menos de 1 MB, fora da Play Store).
+É o mesmo app, com o **bloqueio de WhatsApp e Gmail na Zona de Penalidade** (mesmo sem abrir o app),
+lembrete da missão e dados a salvo de "limpar dados do navegador". Detalhes, permissões e build em
+[`android/README.md`](android/README.md).
+
 ## Backup
 
 Os dados ficam só no aparelho. Em **Perfil → Baixar backup** sai um arquivo `.json` com tudo, menos as fotos.

@@ -1,5 +1,6 @@
 // Atividades extras: tudo o que você faz além da missão diária (caminhada, bike, futebol...).
 // Entra no gasto calórico do dia. Pode ser lançada à mão ou rastreada por GPS com o app aberto.
+import { keepScreenOn } from "../native.js";
 import { views, actions, refresh } from "../core.js";
 import { S, day, save } from "../store.js";
 import { today, esc, fmt, num, uid, fmtDate, fmtShort, addDays, distM, $ } from "../util.js";
@@ -167,6 +168,7 @@ actions.startTrack = () => {
     <button class="btn ghost block" style="margin-top:10px" data-close>Cancelar</button>`);
   o.querySelectorAll("[data-tipo]").forEach(b => b.onclick = () => {
     S.tracking = { tipo: b.dataset.tipo, start: Date.now(), date: today(), dist: 0, last: null };
+    keepScreenOn(true);
     save(); closeModal(); refresh();
   });
 };
@@ -178,11 +180,11 @@ function stopWatch() {
 
 actions.cancelTrack = async () => {
   if (!await confirmBox("Descartar", "O percurso rastreado será descartado.", "Descartar")) return;
-  stopWatch(); delete S.tracking; save(); refresh();
+  stopWatch(); keepScreenOn(false); delete S.tracking; save(); refresh();
 };
 
 actions.stopTrack = () => {
-  const tr = S.tracking; stopWatch();
+  const tr = S.tracking; stopWatch(); keepScreenOn(false);
   delete S.tracking; save(); refresh();
   const tempo = Math.max(1, Math.round((Date.now() - tr.start) / 60000));
   form({ date: tr.date, tipo: tr.tipo, gps: { km: Math.round(tr.dist / 10) / 100, tipo: tr.tipo },

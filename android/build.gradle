@@ -1,0 +1,5 @@
+// Casca Android do Sistema: abre o app web publicado e adiciona o que o navegador não faz
+// (bloqueio de apps na Zona de Penalidade, lembretes). Sem bibliotecas de terceiros.
+plugins {
+    id 'com.android.application' version '8.7.3' apply false
+}

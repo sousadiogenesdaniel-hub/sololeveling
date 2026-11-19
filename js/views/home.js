@@ -1,4 +1,5 @@
 // Início: resumo rápido do dia
+import { nativeStatus } from "../native.js";
 import { views } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
@@ -16,6 +17,10 @@ function penaltyBanner() {
     <p>Você falhou na missão diária. O Sistema permanecerá em alerta até você cumprir:</p>
     <ul>${steps.map(s => `<li>${s}</li>`).join("")}</ul>
     <p class="small muted">Enquanto houver multa pendente, você perde ${-R.corrosaoXp} XP por dia e a Loja fica trancada.</p>
+    ${(() => { const st = nativeStatus(); if (!st) return "";
+      if (!st.blockingEnabled) return `<p class="small warn">⚠ O bloqueio de apps está desligado.</p>`;
+      if (!st.usageAccess || !st.overlay) return `<p class="small warn">⚠ O bloqueio de apps está sem permissão. <a href="#/bloqueio">Resolver</a></p>`;
+      return st.unlockUntil > Date.now() ? "" : `<p class="small bad">🔒 Apps bloqueados até você resolver.</p>`; })()}
     <a class="btn primary block" href="#/penalidade">Resolver penalidade</a>`, "alert");
 }
 
