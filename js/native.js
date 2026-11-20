@@ -7,6 +7,12 @@ import { trackFinished } from "./tracks.js";
 
 export const nativo = window.SistemaNative || null;
 
+// TESTE DO BLOQUEIO pedido pelo jogador em 20/11/2026: liga a Zona de Penalidade SÓ no Android até o horário
+// abaixo, para conferir que o WhatsApp é bloqueado. Não mexe no jogo (sem falta, multa, XP ou Ouro).
+// Expira sozinho; depois do horário, abrir o app desliga o bloqueio. Remover depois do teste.
+export const TESTE_BLOQUEIO_ATE = Date.parse("2026-11-20T21:00:00Z"); // 18:00 em Brasília
+export const testeBloqueio = () => !!nativo && Date.now() < TESTE_BLOQUEIO_ATE;
+
 export function nativeStatus() {
   if (!nativo) return null;
   try { return JSON.parse(nativo.status()); } catch { return null; }
@@ -23,7 +29,7 @@ export function syncNative() {
   if (!nativo || !S.profile) return;
   const cfg = S.nativeCfg || {};
   const payload = {
-    penalty: inPenalty(),
+    penalty: inPenalty() || testeBloqueio(),
     restDay: S.profile.restDay ?? 0,
     obligatedFrom: trackFinished() ? "" : (S.trackSince || S.track?.startDate || ""),
     lastDone: lastDone(),
