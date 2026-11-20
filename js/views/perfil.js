@@ -1,9 +1,9 @@
 // Perfil: despertar (cadastro), status, ajustes, casa, trilha e backup
-import { nativo, saveFile } from "../native.js";
+import { nativo, saveFile, copyText } from "../native.js";
 import { views, actions, refresh, go } from "../core.js";
 import { S, save, resetAll, replaceState } from "../store.js";
 import { today, addDays, esc, fmt, num, fmtDate, WEEKDAYS, getPreciseFix, $ } from "../util.js";
-import { header, panel, toast, sysMessage, confirmBox } from "../ui.js";
+import { header, panel, toast, sysMessage, confirmBox, modal, closeModal } from "../ui.js";
 import { levelInfo, nextRank, tmb, weightOn, applyAutoKcal, KCAL_AUTO, pendingDebts, revalidateDebts, grant, MULTA_MIN } from "../game.js";
 import { currentTrack } from "../tracks.js";
 
@@ -45,8 +45,11 @@ export function onboarding() {
     <div class="center"><div class="rank" style="margin:10px auto 22px"><span>E</span></div>
       <h1 class="glow">O Sistema</h1><p class="muted">Você foi escolhido como Jogador. Preencha seus dados para despertar.</p></div>
     ${panel("Despertar", profileForm({}, true))}
-    ${panel("Já tenho um backup", `<p class="small muted" style="margin-top:0">Vindo do navegador ou de outro celular? Restaure o arquivo de backup (Perfil → Baixar backup) e continue de onde parou.</p>
-      <label class="btn block">Restaurar backup<input type="file" accept="application/json,.json" class="hidden" data-chg="importData"></label>`)}</div>`;
+    ${panel("Já tenho um backup", `<p class="small muted" style="margin-top:0">Vindo do navegador ou de outro celular? Continue de onde parou:</p>
+      <p class="small" style="margin:0 0 6px"><b>Pela área de transferência</b> (mais fácil): no app antigo, Perfil → <b>Copiar backup</b>; aqui, toque em Colar backup.</p>
+      <button class="btn primary block" data-act="pasteBackup">Colar backup</button>
+      <p class="small" style="margin:12px 0 6px"><b>Pelo arquivo</b>: no app antigo, Perfil → Baixar backup; aqui, escolha o arquivo.</p>
+      <label class="btn block">Restaurar do arquivo<input type="file" accept="application/json,.json,text/plain,*/*" class="hidden" data-chg="importData"></label>`)}</div>`;
 }
 
 actions.saveProfile = d => {
@@ -129,7 +132,9 @@ views.perfil = () => {
     ${panel("Dados do jogador", profileForm(p))}
     ${panel("Backup", `<p class="small muted" style="margin-top:0">Seus dados ficam só neste aparelho. Baixe um backup de vez em quando (as fotos não entram no arquivo).</p>
       <div class="row"><button class="btn grow" data-act="exportData">Baixar backup</button>
-      <label class="btn ghost grow">Restaurar<input type="file" accept="application/json,.json" class="hidden" data-chg="importData"></label></div>
+      <button class="btn grow" data-act="copyBackup">Copiar backup</button></div>
+      <div class="row" style="margin-top:8px"><label class="btn ghost grow">Restaurar do arquivo<input type="file" accept="application/json,.json,text/plain,*/*" class="hidden" data-chg="importData"></label>
+      <button class="btn ghost grow" data-act="pasteBackup">Colar backup</button></div>
       <button class="btn danger block sm" style="margin-top:10px" data-act="wipe">Apagar tudo e recomeçar</button>`)}</div>`;
 };
 
@@ -153,15 +158,38 @@ actions.exportData = () => {
   if (nativo) toast(ok ? "Backup salvo na pasta Downloads." : "Não consegui salvar o backup.", 4000);
 };
 
+// Restaura a partir do texto do backup (arquivo ou área de transferência)
+async function restoreFromText(text) {
+  let obj;
+  try { obj = JSON.parse(String(text).trim()); } catch { return sysMessage("Backup inválido", "<p>O conteúdo não é um backup do Sistema (não consegui ler o JSON). Copie ou baixe o backup de novo.</p>"); }
+  if (!obj?.profile || !obj?.game) return sysMessage("Backup inválido", "<p>O conteúdo não tem os dados do jogador. Confira se é o backup do Sistema.</p>");
+  if (S.profile && !await confirmBox("Restaurar backup", "Os dados atuais deste aparelho serão substituídos pelos do backup.", "Restaurar")) return;
+  toast("Restaurando…");
+  await replaceState(obj);
+  location.hash = "#/inicio"; location.reload(); // reabre do zero: fecha os dias que passaram desde o backup
+}
+
 actions.importData = async (_, el) => {
-  const file = el.files[0]; el.value = ""; if (!file) return;
-  try {
-    const obj = JSON.parse(await file.text());
-    if (!obj.profile || !obj.game) throw new Error();
-    if (S.profile && !await confirmBox("Restaurar backup", "Os dados atuais deste aparelho serão substituídos pelos do arquivo.", "Restaurar")) return;
-    await replaceState(obj);
-    location.hash = "#/inicio"; location.reload(); // reabre do zero: fecha os dias que passaram desde o backup
-  } catch { toast("Arquivo de backup inválido."); }
+  const file = el.files?.[0]; el.value = "";
+  if (!file) return toast("Nenhum arquivo chegou do seletor. Tente “Colar backup”.", 5000);
+  toast(`Lendo ${file.name}…`);
+  let text;
+  try { text = await file.text(); } catch { return sysMessage("Não consegui abrir o arquivo", `<p>${esc(file.name)} não pôde ser lido. Tente “Colar backup”.</p>`); }
+  restoreFromText(text);
+};
+
+actions.copyBackup = async () => {
+  const ok = await copyText(JSON.stringify(S));
+  ok ? sysMessage("Backup copiado", `<p>O backup está na área de transferência.</p><p class="small muted">Agora abra o outro app (ex.: o app Android), toque em <b>Colar backup</b> e cole.</p>`)
+    : toast("Não consegui copiar. Use “Baixar backup”.", 5000);
+};
+
+actions.pasteBackup = () => {
+  const o = modal(`<div class="ptitle"><h2>Colar backup</h2><button class="btn sm ghost" data-close aria-label="Fechar">✕</button></div>
+    <p class="small muted" style="margin-top:0">Toque e segure dentro do campo e escolha <b>Colar</b>.</p>
+    <textarea id="bk-txt" rows="6" placeholder='{"v":1,"profile":…' style="font-size:.8rem"></textarea>
+    <button class="btn primary block" style="margin-top:10px" id="bk-ok">Restaurar</button>`);
+  $("#bk-ok", o).onclick = () => { const t = $("#bk-txt", o).value; if (!t.trim()) return toast("Cole o backup no campo."); closeModal(); restoreFromText(t); };
 };
 
 actions.wipe = async () => {

@@ -71,13 +71,26 @@ function closeDays() {
   return true;
 }
 
+// Marca quando o usuário abre o seletor de arquivos (no app Android ele sai do app e volta)
+let escolhendoArquivo = false;
+document.addEventListener("click", e => {
+  const t = e.target;
+  if (t.matches?.("input[type=file]") || t.closest?.("label")?.querySelector("input[type=file]")) escolhendoArquivo = true;
+}, true);
+
 async function boot() {
   await load();
   if (S.profile) closeDays();
   render();
   if (S.tracking) { startWatch(); keepScreenOn(true); }
   // app Android: ao voltar dos Ajustes (permissões), fecha dias e atualiza a tela
-  window.__nativeResume = () => { if (S.profile) closeDays(); render(); };
+  window.__nativeResume = () => {
+    // voltou do seletor de arquivos: NÃO redesenhar, senão o campo que está recebendo o arquivo é trocado
+    // e o arquivo escolhido se perde (backup, foto, comprovante PIX)
+    if (escolhendoArquivo) { escolhendoArquivo = false; return; }
+    if (S.profile) closeDays();
+    render();
+  };
   // virou o dia com o app aberto (ou voltou para o app): fecha o dia e atualiza
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && S.profile && closeDays()) render();
