@@ -1,6 +1,6 @@
 // Service worker: deixa o app funcionar offline.
 // Estratégia: responde do cache e atualiza em segundo plano (a versão nova aparece na próxima abertura).
-const CACHE = "sistema-v21";
+const CACHE = "sistema-v22";
 const SHELL = [
   "./", "index.html", "manifest.webmanifest", "css/styles.css", "vendor/chart.umd.js", "data/taco.json",
   "icons/icon.svg", "icons/icon-192.png",
@@ -10,7 +10,8 @@ const SHELL = [
 ];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: "reload" = baixa da rede, sem pegar cópia antiga do cache HTTP do navegador
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))

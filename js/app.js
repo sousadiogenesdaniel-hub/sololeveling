@@ -71,6 +71,11 @@ function closeDays() {
   return true;
 }
 
+// Faixa atrás da barra de status (criada aqui também, caso o index.html em cache seja de uma versão antiga)
+if (!document.getElementById("statusbar")) {
+  const sb = document.createElement("div"); sb.id = "statusbar"; document.body.prepend(sb);
+}
+
 // Marca quando o usuário abre o seletor de arquivos (no app Android ele sai do app e volta)
 let escolhendoArquivo = false;
 document.addEventListener("click", e => {
@@ -95,7 +100,15 @@ async function boot() {
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && S.profile && closeDays()) render();
   });
-  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    // Versão nova instalada: recarrega UMA vez para já abrir atualizado (sem precisar abrir o app duas vezes)
+    const eraAtualizacao = !!navigator.serviceWorker.controller;
+    let recarregou = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (eraAtualizacao && !recarregou) { recarregou = true; location.reload(); }
+    });
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
   navigator.storage?.persist?.();
 }
 boot();
