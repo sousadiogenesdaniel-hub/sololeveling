@@ -10,7 +10,7 @@ export const nativo = window.SistemaNative || null;
 // TESTE DO BLOQUEIO pedido pelo jogador em 21/11/2026: liga a Zona de Penalidade SÓ no Android até o horário
 // abaixo, para conferir que o WhatsApp é bloqueado. Não mexe no jogo (sem falta, multa, XP ou Ouro).
 // Expira sozinho; depois do horário, abrir o app desliga o bloqueio. Remover depois do teste.
-export const TESTE_BLOQUEIO_ATE = Date.parse("2026-11-21T17:30:00Z"); // 14:30 em Brasília
+export const TESTE_BLOQUEIO_ATE = Date.parse("2026-11-21T19:40:00Z"); // 16:40 em Brasília
 export const testeBloqueio = () => !!nativo && Date.now() < TESTE_BLOQUEIO_ATE;
 export let ultimoSync = null; // diagnóstico: o que foi enviado ao Android por último
 
