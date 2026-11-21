@@ -12,6 +12,7 @@ import "./views/evolucao.js";
 import "./views/penalidade.js";
 import "./views/condicao.js";
 import "./views/bloqueio.js";
+import "./views/avaliacao.js";
 import { syncNative, keepScreenOn } from "./native.js";
 import { startWatch } from "./views/extras.js";
 import { onboarding } from "./views/perfil.js";

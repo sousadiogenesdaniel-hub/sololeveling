@@ -45,6 +45,12 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   do alvo, não sobe a carga), com semana leve a cada 4 etapas. Só a meta atual fica visível.
 - **Fila de treinos:** os 6 treinos da semana seguem em fila, não pelo dia da semana. O próximo é sempre o que
   vem depois do último concluído; faltou, o mesmo treino fica para o dia seguinte e é ele que tira da penalidade.
+- **Teste de Avaliação e treino calibrado:** o jogador registra o seu máximo em cada prova do Teste de Rank
+  (1 vez por semana; tentativas de Teste de Rank também atualizam). Os números aparecem como Status na trilha
+  (máximo / meta) e ajustam os treinos: séries de ~70% a ~85% do máximo e série longa de ~90% a ~115%,
+  nunca abaixo da tabela. Testes: D 25 flexões, 12 mergulhos, 18 remadas, 75 agachamentos, 60 abdominais,
+  15 elevações de joelhos, 90 s de prancha; C 40/18/5 barras/120/100/20/2 min; B 55/25/12/160/160.
+  O modelo anterior está salvo no branch `modelo-anterior-ranks`.
 - **Teste antecipado:** a partir da metade das etapas da fase dá para tentar o Teste de Rank (1 tentativa a cada
   7 dias; falhar não pune). Passou: pula para a próxima fase e ganha +500 XP e +300 Ouro, sem pular níveis.
 - **Dieta (conferida no dia seguinte, sem Zona de Penalidade):** até 100 kcal acima da meta, nada; acima disso,

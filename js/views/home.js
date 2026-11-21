@@ -1,5 +1,5 @@
 // Início: resumo rápido do dia
-import { nativeStatus, testeBloqueio } from "../native.js";
+import { nativeStatus } from "../native.js";
 import { views } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
@@ -78,6 +78,7 @@ function reminders() {
   const lastPhoto = S.lastPhoto;
   if (!lastPhoto || daysBetween(lastPhoto, t) >= 7) items.push(["Fotos da semana pendentes", "", "fotos"]);
   if (!S.profile.home?.acc) items.push(["Cadastrar a localização da sua casa (para o ponto)", "", "perfil"]);
+  if (S.track && !(S.pr && Object.keys(S.pr).length)) items.push(["Fazer o Teste de Avaliação: seus máximos ajustam os treinos", "", "avaliacao"]);
   if (!items.length) return "";
   return panel("Lembretes", `<ul class="list">${items.map(([txt, bonus, rota]) => `<li>
     <span class="grow">${txt} <span class="small ok">${bonus}</span></span>
@@ -114,6 +115,5 @@ views.inicio = () => {
   const t = today();
   return `${header()}
     <p class="small muted" style="margin-top:-6px">${WEEKDAYS[new Date(t + "T12:00").getDay()]}, ${fmtDate(t, { day: "numeric", month: "long" })}</p>
-    <div class="stack">${testeBloqueio() ? panel("Teste do bloqueio", `<p style="margin-top:0">Até as <b>18:00</b>, a Zona de Penalidade está ligada <b>só no Android</b>, para testar: abra o WhatsApp e veja a tela vermelha.</p>
-      <p class="small muted" style="margin-bottom:0">Nada muda no jogo: sem falta, sem multa, sem perder XP ou Ouro. Depois das 18:00, abra O Sistema e o bloqueio sai sozinho.</p>`, "alert") : ""}${penaltyBanner()}${questCard()}${kcalCard()}${reminders()}${statusTiles()}</div>`;
+    <div class="stack">${penaltyBanner()}${questCard()}${kcalCard()}${reminders()}${statusTiles()}</div>`;
 };

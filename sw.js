@@ -1,12 +1,12 @@
 // Service worker: deixa o app funcionar offline.
 // Estratégia: responde do cache e atualiza em segundo plano (a versão nova aparece na próxima abertura).
-const CACHE = "sistema-v23";
+const CACHE = "sistema-v24";
 const SHELL = [
   "./", "index.html", "manifest.webmanifest", "css/styles.css", "vendor/chart.umd.js", "data/taco.json",
   "icons/icon.svg", "icons/icon-192.png",
   "js/app.js", "js/core.js", "js/util.js", "js/store.js", "js/game.js", "js/tracks.js", "js/ui.js", "js/ocr.js", "js/fx.js", "js/native.js",
   "js/views/home.js", "js/views/treino.js", "js/views/comida.js", "js/views/outros.js",
-  "js/views/evolucao.js", "js/views/assiduidade.js", "js/views/condicao.js", "js/views/bloqueio.js", "js/views/extras.js", "js/views/penalidade.js", "js/views/perfil.js",
+  "js/views/evolucao.js", "js/views/assiduidade.js", "js/views/condicao.js", "js/views/bloqueio.js", "js/views/avaliacao.js", "js/views/extras.js", "js/views/penalidade.js", "js/views/perfil.js",
 ];
 
 self.addEventListener("install", e => {

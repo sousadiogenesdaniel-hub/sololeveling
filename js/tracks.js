@@ -19,54 +19,54 @@ const cal = {
       nome: "Despertar", rank: "D", prazo: "2 meses", stages: 8,
       meta: "Criar o hábito e a base: flexões, mergulhos e remadas com boa forma. Ainda sem barra fixa.",
       tests: [
-        ["Flexões seguidas", 15, "reps"], ["Mergulhos nas paralelas seguidos", 3, "reps"],
-        ["Remadas australianas seguidas", 10, "reps"], ["Agachamentos seguidos", 50, "reps"],
-        ["Abdominais supra seguidos", 40, "reps"], ["Elevações de joelhos nas paralelas", 10, "reps"], ["Prancha", 60, "s"],
+        ["Flexões seguidas", 25, "reps"], ["Mergulhos nas paralelas seguidos", 12, "reps"],
+        ["Remadas australianas seguidas", 18, "reps"], ["Agachamentos seguidos", 75, "reps"],
+        ["Abdominais supra seguidos", 60, "reps"], ["Elevações de joelhos nas paralelas", 15, "reps"], ["Prancha", 90, "s"],
       ],
       days: [
         ["Empurrar A — Peito e tríceps", [
-          ["Flexão de braço", 3, 6, 4, 12, "reps", "Corpo reto, peito quase no chão. Se não sair, apoie os joelhos."],
+          ["Flexão de braço", 3, 10, 4, 18, "reps", "Corpo reto, peito quase no chão."],
           ["Flexão com as mãos no banco", 3, 10, 3, 16, "reps", "Mais leve: soma volume sem perder a forma."],
-          ["Mergulho no banco", 3, 8, 4, 14, "reps", "Mãos no banco atrás do corpo, desça até 90°."],
+          ["Série longa de mergulhos", 1, 6, 1, 13, "reps", "Sem parar, nas paralelas: treina para o teste."],
           ["Flexão pike", 2, 5, 3, 8, "reps", "Quadril alto, cabeça desce entre as mãos (ombros)."],
-          ["Prancha", 3, 30, 3, 50, "s", "Abdômen e glúteos contraídos."],
+          ["Prancha", 3, 30, 3, 60, "s", "Abdômen e glúteos contraídos."],
         ]],
         ["Puxar A — Costas e bíceps", [
-          ["Remada australiana nas paralelas", 3, 6, 4, 10, "reps", "Deite sob a barra, puxe o peito até ela."],
+          ["Remada australiana nas paralelas", 3, 8, 4, 14, "reps", "Deite sob a barra, puxe o peito até ela."],
           ["Remada australiana pegada supinada", 3, 5, 3, 9, "reps", "Palmas viradas para você: mais bíceps."],
-          ["Remada isométrica (segurar no topo)", 3, 8, 3, 15, "s", "Peito perto da barra, escápulas apertadas."],
+          ["Série longa de remadas australianas", 1, 10, 1, 20, "reps", "Sem parar: treina para o teste."],
           ["Superman", 3, 10, 3, 18, "reps", "Deitado de bruços, eleve braços e pernas."],
-          ["Abdominal supra", 3, 15, 3, 30, "reps", "Tire só os ombros do chão, sem puxar o pescoço."],
+          ["Abdominal supra", 3, 20, 3, 35, "reps", "Tire só os ombros do chão, sem puxar o pescoço."],
         ]],
         ["Pernas e core A", [
-          ["Agachamento", 3, 15, 4, 30, "reps", "Desça até a coxa ficar paralela ao chão."],
+          ["Agachamento", 3, 20, 4, 35, "reps", "Desça até a coxa ficar paralela ao chão."],
           ["Afundo (cada perna)", 3, 8, 3, 14, "reps", "Passo largo, joelho de trás quase no chão."],
           ["Subida no banco (cada perna)", 3, 10, 3, 15, "reps", "Suba sem impulso da perna de baixo."],
           ["Elevação de panturrilha", 3, 15, 3, 25, "reps", "Na borda do banco, amplitude total."],
-          ["Elevação de joelhos nas paralelas", 3, 5, 3, 10, "reps", "Apoiado nas barras, joelhos até o peito."],
+          ["Elevação de joelhos nas paralelas", 3, 6, 3, 13, "reps", "Apoiado nas barras, joelhos até o peito."],
           ["Abdominal bicicleta", 3, 16, 3, 30, "reps", "Cotovelo no joelho oposto, sem pressa."],
         ]],
         ["Empurrar B — Paralelas", [
-          ["Mergulho nas paralelas", 3, 2, 4, 4, "reps", "No começo, faça só a descida lenta (5 s) e suba com ajuda dos pés."],
+          ["Mergulho nas paralelas", 3, 4, 4, 9, "reps", "Desça até o ombro ficar na altura do cotovelo."],
           ["Flexão diamante", 3, 4, 3, 8, "reps", "Mãos juntas sob o peito (tríceps)."],
           ["Flexão aberta", 3, 6, 3, 12, "reps", "Mãos mais largas que os ombros (peito)."],
-          ["Série longa de flexões", 1, 10, 1, 16, "reps", "Uma série sem parar, ritmo constante: treina para o teste."],
+          ["Série longa de flexões", 1, 15, 1, 28, "reps", "Uma série sem parar, ritmo constante: treina para o teste."],
           ["Prancha lateral (cada lado)", 2, 20, 3, 35, "s", "Quadril alto, corpo em linha."],
         ]],
         ["Puxar B — Largura das costas", [
-          ["Remada australiana nas paralelas", 4, 5, 4, 10, "reps", "Cotovelos junto ao corpo, aperte as costas."],
+          ["Remada australiana nas paralelas", 4, 8, 4, 13, "reps", "Cotovelos junto ao corpo, aperte as costas."],
           ["Remada com pausa de 2 s no topo", 3, 4, 3, 8, "reps", "Segure com o peito perto da barra."],
           ["Superman em Y", 3, 10, 3, 15, "reps", "Braços em Y, polegares para cima."],
-          ["Série longa de abdominais supra", 1, 20, 1, 42, "reps", "Sem parar: resistência para o teste."],
+          ["Série longa de abdominais supra", 1, 25, 1, 65, "reps", "Sem parar: resistência para o teste."],
           ["Hollow hold (canoa)", 3, 15, 3, 30, "s", "Lombar colada no chão."],
         ]],
         ["Pernas e core B", [
-          ["Série longa de agachamentos", 1, 30, 1, 55, "reps", "Sem parar, ritmo constante."],
+          ["Série longa de agachamentos", 1, 35, 1, 80, "reps", "Sem parar, ritmo constante."],
           ["Agachamento búlgaro no banco (cada perna)", 3, 6, 3, 10, "reps", "Pé de trás apoiado no banco."],
           ["Ponte de glúteo unilateral (cada perna)", 3, 10, 3, 15, "reps", "Costas no chão, suba o quadril."],
           ["Panturrilha unilateral (cada perna)", 3, 10, 3, 15, "reps", "Segure no banco para equilibrar."],
-          ["Elevação de joelhos nas paralelas", 3, 6, 3, 12, "reps", "Sem balançar o corpo."],
-          ["Prancha", 2, 40, 2, 65, "s", "Respire, não prenda o ar."],
+          ["Elevação de joelhos nas paralelas", 3, 8, 3, 15, "reps", "Sem balançar o corpo."],
+          ["Prancha", 2, 45, 2, 95, "s", "Respire, não prenda o ar."],
         ]],
       ],
     },
@@ -74,39 +74,39 @@ const cal = {
       nome: "Fundação", rank: "C", prazo: "4 meses", stages: 8,
       meta: "Primeiras barras fixas e as primeiras séries longas de verdade.",
       tests: [
-        ["Flexões seguidas", 30, "reps"], ["Mergulhos nas paralelas seguidos", 10, "reps"], ["Barras fixas seguidas", 5, "reps"],
-        ["Agachamentos seguidos", 100, "reps"], ["Abdominais supra seguidos", 80, "reps"],
-        ["Elevações de joelhos nas paralelas", 15, "reps"], ["Prancha", 120, "s"],
+        ["Flexões seguidas", 40, "reps"], ["Mergulhos nas paralelas seguidos", 18, "reps"], ["Barras fixas seguidas", 5, "reps"],
+        ["Agachamentos seguidos", 120, "reps"], ["Abdominais supra seguidos", 100, "reps"],
+        ["Elevações de joelhos nas paralelas", 20, "reps"], ["Prancha", 120, "s"],
       ],
       days: [
         ["Empurrar A — Peito e tríceps", [
-          ["Flexão de braço", 4, 12, 4, 20, "reps", "Ritmo controlado, amplitude total."],
+          ["Flexão de braço", 4, 16, 4, 24, "reps", "Ritmo controlado, amplitude total."],
           ["Flexão com os pés no banco", 3, 6, 3, 12, "reps", "Parte de cima do peito."],
-          ["Mergulho nas paralelas", 3, 4, 4, 8, "reps", "Desça até o ombro ficar na altura do cotovelo."],
+          ["Mergulho nas paralelas", 3, 8, 4, 12, "reps", "Desça até o ombro ficar na altura do cotovelo."],
           ["Flexão pike", 3, 6, 3, 10, "reps", "Ombros."],
-          ["Série longa de flexões", 1, 18, 1, 32, "reps", "Sem parar."],
+          ["Série longa de flexões", 1, 28, 1, 43, "reps", "Sem parar."],
         ]],
         ["Puxar A — Barra fixa", [
           ["Barra fixa", 2, 1, 4, 4, "reps", "Pegada um pouco mais larga que os ombros. Se não sair nenhuma, faça negativas."],
           ["Barra negativa (desça em 5 s)", 3, 3, 3, 5, "reps", "Suba com um pulo e desça bem devagar."],
           ["Remada australiana", 4, 10, 4, 15, "reps", "Na barra baixa ou nas paralelas."],
           ["Suspensão na barra", 3, 20, 3, 40, "s", "Ombros ativos, longe das orelhas."],
-          ["Série longa de abdominais supra", 1, 42, 1, 82, "reps", "Sem parar."],
+          ["Série longa de abdominais supra", 1, 65, 1, 105, "reps", "Sem parar."],
         ]],
         ["Pernas e core A", [
-          ["Série longa de agachamentos", 1, 55, 1, 105, "reps", "Sem parar."],
+          ["Série longa de agachamentos", 1, 80, 1, 125, "reps", "Sem parar."],
           ["Afundo (cada perna)", 3, 12, 4, 16, "reps", "Tronco reto."],
           ["Agachamento búlgaro (cada perna)", 3, 8, 3, 12, "reps", "Desça em 2 s."],
           ["Panturrilha unilateral (cada perna)", 3, 12, 3, 20, "reps", "Pausa no alto."],
-          ["Elevação de joelhos nas paralelas", 3, 10, 4, 15, "reps", "Joelhos acima do quadril."],
+          ["Elevação de joelhos nas paralelas", 3, 13, 4, 20, "reps", "Joelhos acima do quadril."],
           ["Abdominal bicicleta", 3, 30, 3, 40, "reps", "Oblíquos."],
         ]],
         ["Empurrar B — Paralelas", [
-          ["Mergulho nas paralelas", 4, 5, 4, 10, "reps", "Amplitude completa."],
+          ["Série longa de mergulhos", 1, 12, 1, 19, "reps", "Sem parar: treina para o teste."],
           ["Flexão diamante", 3, 8, 4, 12, "reps", "Tríceps."],
           ["Flexão aberta", 3, 12, 3, 18, "reps", "Peito."],
           ["Flexão pike com os pés no banco", 3, 4, 3, 8, "reps", "Ombros."],
-          ["Prancha", 2, 60, 2, 125, "s", "Resistência para o teste."],
+          ["Prancha", 2, 95, 2, 125, "s", "Resistência para o teste."],
         ]],
         ["Puxar B — Barra fixa", [
           ["Barra supinada (chin-up)", 2, 1, 4, 4, "reps", "Palmas para você: costuma sair antes da barra pronada."],
@@ -116,11 +116,11 @@ const cal = {
           ["Hollow hold (canoa)", 3, 30, 3, 45, "s", "Core."],
         ]],
         ["Pernas e core B", [
-          ["Agachamento", 4, 25, 4, 40, "reps", "Ritmo constante."],
+          ["Agachamento", 4, 30, 4, 45, "reps", "Ritmo constante."],
           ["Agachamento com salto", 3, 10, 3, 15, "reps", "Aterrisse macio."],
           ["Ponte de glúteo unilateral (cada perna)", 3, 15, 3, 20, "reps", "Glúteo e posterior."],
           ["Elevação de pernas deitado", 3, 10, 3, 15, "reps", "Pernas retas, desça devagar."],
-          ["Abdominal supra", 3, 30, 3, 50, "reps", "Volume."],
+          ["Abdominal supra", 3, 35, 3, 55, "reps", "Volume."],
           ["Prancha lateral (cada lado)", 3, 35, 3, 50, "s", "Oblíquos."],
         ]],
       ],
@@ -129,16 +129,16 @@ const cal = {
       nome: "Ascensão", rank: "B", prazo: "7 meses", stages: 12,
       meta: "Volume alto e as primeiras habilidades: o V shape começa a aparecer.",
       tests: [
-        ["Flexões seguidas", 50, "reps"], ["Mergulhos nas paralelas seguidos", 20, "reps"], ["Barras fixas seguidas", 12, "reps"],
-        ["Agachamentos seguidos", 150, "reps"], ["Abdominais supra seguidos", 150, "reps"],
+        ["Flexões seguidas", 55, "reps"], ["Mergulhos nas paralelas seguidos", 25, "reps"], ["Barras fixas seguidas", 12, "reps"],
+        ["Agachamentos seguidos", 160, "reps"], ["Abdominais supra seguidos", 160, "reps"],
         ["Elevações de pernas retas nas paralelas", 12, "reps"], ["Prancha", 180, "s"], ["L-sit nas paralelas", 15, "s"],
       ],
       days: [
         ["Empurrar A — Peito e tríceps", [
-          ["Série longa de flexões", 1, 32, 1, 55, "reps", "Sem parar."],
+          ["Série longa de flexões", 1, 43, 1, 58, "reps", "Sem parar."],
           ["Flexão de braço", 4, 20, 5, 25, "reps", "Volume."],
           ["Flexão com os pés no banco", 3, 12, 4, 16, "reps", "Parte de cima do peito."],
-          ["Mergulho nas paralelas", 4, 10, 4, 16, "reps", "Incline o tronco para pegar mais peito."],
+          ["Mergulho nas paralelas", 4, 12, 4, 18, "reps", "Incline o tronco para pegar mais peito."],
           ["Flexão pike com os pés no banco", 3, 8, 4, 10, "reps", "Ombros."],
         ]],
         ["Puxar A — Barra fixa", [
@@ -149,7 +149,7 @@ const cal = {
           ["Superman em Y", 3, 15, 3, 20, "reps", "Lombar e escápulas."],
         ]],
         ["Pernas e core A", [
-          ["Série longa de agachamentos", 1, 105, 1, 160, "reps", "Sem parar."],
+          ["Série longa de agachamentos", 1, 125, 1, 165, "reps", "Sem parar."],
           ["Afundo andando (cada perna)", 4, 16, 4, 20, "reps", "Passos longos."],
           ["Agachamento búlgaro (cada perna)", 3, 12, 4, 15, "reps", "Desça em 3 s."],
           ["Panturrilha unilateral (cada perna)", 4, 20, 4, 25, "reps", "Amplitude total."],
@@ -157,7 +157,7 @@ const cal = {
           ["L-sit nas paralelas (comece com joelhos dobrados)", 3, 8, 4, 18, "s", "Ombros para baixo, braços travados."],
         ]],
         ["Empurrar B — Paralelas", [
-          ["Série longa de mergulhos", 1, 12, 1, 22, "reps", "Sem parar."],
+          ["Série longa de mergulhos", 1, 19, 1, 27, "reps", "Sem parar."],
           ["Flexão diamante", 4, 12, 4, 18, "reps", "Tríceps."],
           ["Flexão arqueiro (cada lado)", 3, 3, 3, 6, "reps", "Um braço trabalha, o outro só apoia esticado."],
           ["Flexão explosiva", 3, 5, 3, 8, "reps", "Empurre forte, as mãos saem do chão."],
@@ -174,7 +174,7 @@ const cal = {
           ["Agachamento pistola assistido (cada perna)", 3, 4, 3, 8, "reps", "Segure numa barra para equilibrar."],
           ["Agachamento com salto", 4, 12, 4, 15, "reps", "Explosivo."],
           ["Ponte de glúteo unilateral, pé no banco", 3, 15, 3, 20, "reps", "Posterior e glúteo."],
-          ["Série longa de abdominais supra", 1, 82, 1, 160, "reps", "Sem parar."],
+          ["Série longa de abdominais supra", 1, 105, 1, 165, "reps", "Sem parar."],
           ["Elevação de pernas retas nas paralelas", 3, 6, 3, 12, "reps", "Controle na descida."],
           ["Prancha lateral com elevação de quadril (cada lado)", 3, 12, 3, 20, "reps", "Oblíquos."],
         ]],
@@ -447,6 +447,48 @@ export function prescribe([s0, r0, s1, r1], k, leve) {
   return { series, alvo: Math.max(1, Math.round(v)) };
 }
 
+// ---- máximos do jogador (Teste de Avaliação) e treino calibrado --------------------------
+// Cada prova dos Testes de Rank tem uma chave; o jogador registra o seu máximo em cada uma.
+export const TEST_KEY = {
+  "Flexões seguidas": "flexoes", "Mergulhos nas paralelas seguidos": "mergulhos", "Remadas australianas seguidas": "remadas",
+  "Barras fixas seguidas": "barra", "Agachamentos seguidos": "agachamentos", "Abdominais supra seguidos": "abdominais",
+  "Elevações de joelhos nas paralelas": "joelhos", "Elevações de pernas retas nas paralelas": "pernasRetas", "Prancha": "prancha",
+  "L-sit nas paralelas": "lsit", "Agachamentos pistola (cada perna)": "pistola", "Flexões com um braço (cada lado)": "umBraco",
+  "Correr sem parar": "corrida",
+};
+// Exercício do treino → prova que mede o mesmo movimento (só estes são calibrados)
+const EX_KEY = {
+  "Flexão de braço": "flexoes", "Série longa de flexões": "flexoes",
+  "Mergulho nas paralelas": "mergulhos", "Série longa de mergulhos": "mergulhos",
+  "Remada australiana nas paralelas": "remadas", "Remada australiana": "remadas", "Série longa de remadas australianas": "remadas",
+  "Barra fixa": "barra", "Série longa de barras": "barra",
+  "Agachamento": "agachamentos", "Série longa de agachamentos": "agachamentos",
+  "Abdominal supra": "abdominais", "Série longa de abdominais supra": "abdominais",
+  "Elevação de joelhos nas paralelas": "joelhos", "Elevação de pernas retas nas paralelas": "pernasRetas",
+  "Prancha": "prancha", "L-sit nas paralelas": "lsit", "Agachamento pistola (cada perna)": "pistola",
+  "Flexão com um braço (cada lado)": "umBraco",
+};
+export const testKey = nome => TEST_KEY[nome] || null;
+export const pr = key => S.pr?.[key]?.v ?? null;
+export function setPR(key, v, date = today()) {
+  if (!key || !(v > 0)) return;
+  S.pr ||= {};
+  const old = S.pr[key];
+  S.pr[key] = { v, d: date, best: Math.max(v, old?.best ?? 0) };
+}
+
+// Séries normais: de ~70% a ~85% do seu máximo ao longo da fase. Série longa (sem parar): de ~90% a ~115%.
+// O valor da tabela continua sendo o mínimo: a calibragem só aumenta.
+export const CALIB = { serie: [0.7, 0.85], longa: [0.9, 1.15] };
+function calibrate(it, k, leve) {
+  const key = EX_KEY[it.nome], v = key && pr(key);
+  if (!v) return it;
+  const [a, b] = it.series === 1 ? CALIB.longa : CALIB.serie;
+  const pct = lerp(a, b, k);
+  const alvo = Math.max(1, Math.round(v * pct * (leve ? DELOAD_FACTOR : 1)));
+  return alvo > it.alvo ? { ...it, alvo, calib: { v, pct: Math.round(pct * 100) } } : it;
+}
+
 // Treino prescrito para a data, na etapa atual. { titulo, itens: [{nome, series, alvo, un, dica}] }
 export function workoutFor(date, indoor = false) {
   const t = currentTrack(), ph = currentPhase(); if (!t || !ph) return null;
@@ -462,7 +504,7 @@ export function workoutFor(date, indoor = false) {
       nome, ...(un === "km" || un === "m" && s0 === 1 ? { series: 1, alvo: Math.round(lerp(r0, r1, k) * (leve ? DELOAD_FACTOR : 1) * 10) / 10 }
         : un === "m" ? { series: Math.round(lerp(s0, s1, k) * (leve ? DELOAD_FACTOR : 1)) || 1, alvo: r0 }
         : prescribe([s0, r0, s1, r1], k, leve)), un, dica,
-    })),
+    })).map(it => t.id === "calistenia" ? calibrate(it, k, leve) : it),
   };
 }
 

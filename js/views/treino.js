@@ -4,7 +4,8 @@ import { S, day, save, photos } from "../store.js";
 import { today, addDays, esc, fmt, fmtTime, fmtDate, getPosition, getPreciseFix, distM, shrinkImage, uid, $, num } from "../util.js";
 import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox } from "../ui.js";
 import { completeWorkout, passTest, isRestDay, workoutKcal, grant, R, RANK_TESTS, RANK_ORDER, testsPassed } from "../game.js";
-import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, testStatus, TEST_COOLDOWN, trackFinished, unitLabel, SESSIONS_PER_STAGE } from "../tracks.js";
+import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, testStatus, TEST_COOLDOWN, trackFinished, unitLabel, SESSIONS_PER_STAGE, testKey, setPR } from "../tracks.js";
+import { statusList } from "./avaliacao.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
 const PUNCH_EXPIRES_H = 5;    // ponto de entrada vence depois disso
@@ -60,7 +61,9 @@ function trailCard() {
     <div class="bar" style="margin:6px 0 12px"><i style="width:${p.week > ph.stages ? 100 : pct}%"></i></div>
     <h3>Teste do rank ${ph.rank} · ~${ph.prazo.replace("~", "")} de jogo perfeito</h3>
     <p class="small" style="margin:4px 0">${ph.meta}</p>
-    <ul class="small" style="margin:4px 0 10px;padding-left:18px">${ph.tests.map(([n, v, un]) => `<li>${n}: <b>${unitLabel(v, un)}</b></li>`).join("")}</ul>
+    <h3 style="margin-top:10px">Seu status <span class="muted">(seu máximo / meta)</span></h3>
+    ${statusList(ph)}
+    <a class="btn sm block" style="margin:8px 0 12px" href="#/avaliacao">${S.pr && Object.keys(S.pr).length ? "Teste de Avaliação: atualizar meus máximos" : "Fazer o Teste de Avaliação (seus máximos)"}</a>
     <ul class="list small">${fases}</ul>
     <a class="btn sm ghost block" style="margin-top:8px" href="#/evolucao">Ver quadro de assiduidade</a>`);
 }
@@ -89,6 +92,7 @@ function testCard() {
 actions.submitTest = data => {
   const ph = currentPhase(), early = !!data.early;
   const falhas = ph.tests.filter(([, v], i) => (num(data["t" + i]) ?? 0) < v);
+  ph.tests.forEach(([n], i) => setPR(testKey(n), num(data["t" + i]))); // a tentativa, mesmo reprovada, atualiza seus máximos
   if (falhas.length) {
     progress().lastTestTry = today(); save(); refresh();
     return sysMessage("Teste não superado", `<p>Ainda falta em: <b>${falhas.map(f => f[0]).join(", ")}</b>.</p>
@@ -106,6 +110,7 @@ function exerciseList(w, plan, active) {
   return `<ul class="list">${plan.itens.map((it, e) => `<li style="display:block">
     <div class="row between"><b>${esc(it.nome)}</b><span class="chip">${it.series} × ${unitLabel(it.alvo, it.un)}</span></div>
     <div class="small muted">${esc(it.dica)}</div>
+    ${it.calib ? `<div class="small glow">⚡ Ajustado ao seu máximo (${it.calib.v}): ${it.calib.pct}%</div>` : ""}
     <div class="sets">${Array.from({ length: it.series }, (_, i) => `<button class="set ${w?.sets?.[e]?.[i] === true ? "on" : w?.sets?.[e]?.[i] === "low" ? "low" : ""}"
       ${active ? "" : "disabled"} data-act="toggleSet" data-e="${e}" data-i="${i}" aria-pressed="${!!w?.sets?.[e]?.[i]}" aria-label="Série ${i + 1} de ${esc(it.nome)}">${i + 1}</button>`).join("")}</div>
   </li>`).join("")}</ul>`;
