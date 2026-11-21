@@ -20,7 +20,7 @@ function penaltyBanner() {
     ${(() => { const st = nativeStatus(); if (!st) return "";
       if (!st.blockingEnabled) return `<p class="small warn">⚠ O bloqueio de apps está desligado.</p>`;
       if (!st.usageAccess || !st.overlay) return `<p class="small warn">⚠ O bloqueio de apps está sem permissão. <a href="#/bloqueio">Resolver</a></p>`;
-      return st.unlockUntil > Date.now() ? "" : `<p class="small bad">🔒 Apps bloqueados até você resolver.</p>`; })()}
+      return (st.unlockFrom || 0) <= Date.now() && st.unlockUntil > Date.now() ? `<p class="small warn">Emergência: apps liberados até ${new Date(st.unlockUntil).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.</p>` : `<p class="small bad">🔒 Apps bloqueados até você resolver.</p>`; })()}
     <a class="btn primary block" href="#/penalidade">Resolver penalidade</a>`, "alert");
 }
 

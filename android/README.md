@@ -3,11 +3,13 @@
 Casca nativa do app web. Abre o app publicado (`https://sousadiogenesdaniel-hub.github.io/sololeveling/`)
 num WebView preso a esse endereço e adiciona o que o navegador não faz:
 
-- **Bloqueio de apps na Zona de Penalidade** (WhatsApp, WhatsApp Business e Gmail por padrão; opcionais:
-  Instagram, YouTube e TikTok). Bancos, telefone e Ajustes nunca podem ser bloqueados.
+- **Bloqueio de apps na Zona de Penalidade**: WhatsApp, WhatsApp Business, Gmail, Instagram, TikTok, YouTube,
+  Facebook, Netflix, Crunchyroll e Prime Video (todos por padrão; dá para desmarcar fora da penalidade).
+  Bancos, telefone e Ajustes nunca podem ser bloqueados: a lista fica fixa no código Android.
 - **Bloqueio mesmo sem abrir o app:** se passar um dia cobrado sem missão concluída, o Android deduz a falta
   sozinho e bloqueia (`Prefs.missed`, coberta por testes em `PrefsTest`).
-- **Desbloqueio de emergência** (15 min, máx. 2 por dia, custa XP e Ouro) e **desligar só 24 h depois** do pedido.
+- **Desbloqueio de emergência**: espera de 10 min depois do pedido (dá para desistir), libera 15 min, 1 por dia,
+  custa XP e Ouro. **Desligar o bloqueio só vale 24 h depois** do pedido.
 - **Lembrete** à noite se a missão do dia não foi feita. Backup salvo em Downloads. Tela ligada durante o
   rastreamento por GPS.
 

@@ -65,7 +65,8 @@ final class Scheduler {
         long now = System.currentTimeMillis();
         LocalDateTime meiaNoite = LocalDate.now().plusDays(1).atTime(0, 1);
         set(c, 1, ACT_EVAL, toMillis(meiaNoite));
-        long unlock = Prefs.sp(c).getLong("unlockUntil", 0);
+        long unlockFrom = Prefs.sp(c).getLong("unlockFrom", 0), unlock = Prefs.sp(c).getLong("unlockUntil", 0);
+        if (unlockFrom > now) set(c, 5, ACT_EVAL, unlockFrom + 1000);
         if (unlock > now) set(c, 2, ACT_EVAL, unlock + 1000);
         long disable = Prefs.sp(c).getLong("disableAt", 0);
         if (disable > now) set(c, 3, ACT_EVAL, disable + 1000);

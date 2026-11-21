@@ -28,12 +28,20 @@ final class Prefs {
         BLOQUEAVEIS.put("com.whatsapp.w4b", "WhatsApp Business");
         BLOQUEAVEIS.put("com.google.android.gm", "Gmail");
         BLOQUEAVEIS.put("com.instagram.android", "Instagram");
-        BLOQUEAVEIS.put("com.google.android.youtube", "YouTube");
         BLOQUEAVEIS.put("com.zhiliaoapp.musically", "TikTok");
+        BLOQUEAVEIS.put("com.ss.android.ugc.trill", "TikTok");
+        BLOQUEAVEIS.put("com.google.android.youtube", "YouTube");
+        BLOQUEAVEIS.put("com.facebook.katana", "Facebook");
+        BLOQUEAVEIS.put("com.facebook.lite", "Facebook Lite");
+        BLOQUEAVEIS.put("com.netflix.mediaclient", "Netflix");
+        BLOQUEAVEIS.put("com.crunchyroll.crunchyroid", "Crunchyroll");
+        BLOQUEAVEIS.put("com.amazon.avod.thirdpartyclient", "Prime Video");
     }
-    static final Set<String> PADRAO = new HashSet<>(Arrays.asList("com.whatsapp", "com.whatsapp.w4b", "com.google.android.gm"));
+    /** Sem escolha do jogador, todos os da lista são bloqueados. */
+    static final Set<String> PADRAO = new HashSet<>(BLOQUEAVEIS.keySet());
 
-    static final int EMERGENCIA_MIN = 15, EMERGENCIA_POR_DIA = 2;
+    /** Emergência: pede, espera 10 min (dá para desistir do impulso), libera 15 min. Uma por dia. */
+    static final int EMERGENCIA_MIN = 15, EMERGENCIA_ESPERA_MIN = 10, EMERGENCIA_POR_DIA = 1;
     static final long ESPERA_DESLIGAR_MS = 24L * 60 * 60 * 1000;
 
     static SharedPreferences sp(Context c) { return c.getSharedPreferences("sistema", Context.MODE_PRIVATE); }
@@ -83,7 +91,7 @@ final class Prefs {
             p.edit().putBoolean("blockingEnabled", false).putLong("disableAt", 0).apply();
         }
         if (!p.getBoolean("blockingEnabled", true)) return false;
-        if (now < p.getLong("unlockUntil", 0)) return false;
+        if (now >= p.getLong("unlockFrom", 0) && now < p.getLong("unlockUntil", 0)) return false;
         return penaltyActive(c);
     }
 
@@ -95,15 +103,25 @@ final class Prefs {
         return !today.toString().equals(p.getString("lastDone", ""));
     }
 
-    /** Desbloqueio de emergência: 15 minutos, no máximo 2 por dia. Devolve o horário de fim, ou 0 se acabou o limite. */
+    /** Pede o desbloqueio de emergência. Devolve o horário em que os apps serão liberados, ou 0 se acabou o limite. */
     static long emergency(Context c) {
         SharedPreferences p = sp(c);
         String hoje = LocalDate.now().toString();
         int usadas = hoje.equals(p.getString("emergDay", "")) ? p.getInt("emergCount", 0) : 0;
-        if (usadas >= EMERGENCIA_POR_DIA) return 0;
-        long ate = System.currentTimeMillis() + EMERGENCIA_MIN * 60_000L;
-        p.edit().putString("emergDay", hoje).putInt("emergCount", usadas + 1).putLong("unlockUntil", ate).apply();
-        return ate;
+        long now = System.currentTimeMillis();
+        if (usadas >= EMERGENCIA_POR_DIA || now < p.getLong("unlockUntil", 0)) return 0;
+        long de = now + EMERGENCIA_ESPERA_MIN * 60_000L, ate = de + EMERGENCIA_MIN * 60_000L;
+        p.edit().putString("emergDay", hoje).putInt("emergCount", usadas + 1).putLong("unlockFrom", de).putLong("unlockUntil", ate).apply();
+        return de;
+    }
+
+    /** Desiste durante a contagem: nada é liberado e o pedido do dia volta. */
+    static boolean cancelEmergency(Context c) {
+        SharedPreferences p = sp(c);
+        if (System.currentTimeMillis() >= p.getLong("unlockFrom", 0)) return false;
+        p.edit().putLong("unlockFrom", 0).putLong("unlockUntil", 0)
+            .putInt("emergCount", Math.max(0, p.getInt("emergCount", 1) - 1)).apply();
+        return true;
     }
 
     static int emergencyLeft(Context c) {

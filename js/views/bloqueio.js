@@ -6,7 +6,9 @@ import { header, panel, toast, confirmBox, sysMessage } from "../ui.js";
 import { inPenalty, grant } from "../game.js";
 import { nativo, nativeStatus, syncNative, ultimoSync, testeBloqueio } from "../native.js";
 
-export const EMERG = { xp: 30, ouro: 30, min: 15 };
+export const EMERG = { xp: 100, ouro: 100, min: 15, espera: 10 };
+// Versão do app Android com a emergência nova (espera de 10 min, 1 por dia) e a lista ampliada de apps
+const appNovo = () => typeof nativo?.emergencyRequest === "function";
 const APK = "download/o-sistema.apk";
 
 function instalar() {
@@ -33,15 +35,32 @@ const perm = (ok, nome, desc, which, obrigatoria) => `<li>
   <span class="grow"><b>${nome}</b><br><span class="small muted">${desc}</span></span>
   ${ok ? "" : `<button class="btn sm ${obrigatoria ? "primary" : ""}" data-act="nativeSettings" data-which="${which}">Permitir</button>`}</li>`;
 
+function emergenciaPanel(st) {
+  const now = Date.now();
+  if (!appNovo()) return panel("Emergência", `<p style="margin-top:0" class="warn">A emergência mudou: agora tem espera de ${EMERG.espera} min antes de liberar e vale 1 vez por dia. Para usar, instale a versão 1.1 do app Android.</p>
+    <a class="btn block" href="download/o-sistema.apk">Baixar a versão 1.1</a>`);
+  if (st.unlockFrom > now) return panel("Emergência", `<p style="margin-top:0">Os apps serão liberados em</p>
+    <div class="timer num warn" id="emerg-timer" data-ate="${st.unlockFrom}">--:--</div>
+    <p class="small muted center">às ${fmtTime(st.unlockFrom)}, por ${EMERG.min} minutos. Mudou de ideia? Desistindo agora, o XP e o Ouro voltam.</p>
+    <button class="btn block" data-act="nativeEmergencyCancel">Desistir</button>`, "alert");
+  if (st.unlockUntil > now) return panel("Emergência", `<p class="mid warn" style="margin-top:0">Apps liberados até ${fmtTime(st.unlockUntil)}</p>
+    <p class="small muted" style="margin-bottom:0">Depois disso o bloqueio volta sozinho.</p>`);
+  return panel("Emergência", `<p style="margin-top:0">Para uma emergência de verdade. Depois de pedir, há uma <b>espera de ${EMERG.espera} minutos</b> e então os apps ficam liberados por <b>${EMERG.min} minutos</b>.
+    Custa <b class="bad">−${EMERG.xp} XP e −${EMERG.ouro} Ouro</b> (devolvidos se você desistir durante a espera). <b>${st.emergencyLeft ? "1 por dia" : "Já usada hoje"}</b>.</p>
+    <button class="btn danger block" data-act="nativeEmergency" ${st.emergencyLeft && st.blockingNow ? "" : "disabled"}>Pedir liberação</button>`);
+}
+
 function painel(st) {
   const cfg = S.nativeCfg || {}, pen = inPenalty();
   const faltando = !st.usageAccess || !st.overlay;
   const situacao = !st.blockingEnabled ? `<p class="mid warn">Bloqueio desligado</p>`
     : faltando ? `<p class="mid bad">Bloqueio sem permissão</p><p class="small">Sem as permissões obrigatórias, o bloqueio não funciona.</p>`
-    : st.unlockUntil > Date.now() ? `<p class="mid warn">Desbloqueio de emergência até ${fmtTime(st.unlockUntil)}</p>`
+    : (st.unlockFrom || 0) <= Date.now() && st.unlockUntil > Date.now() ? `<p class="mid warn">Desbloqueio de emergência até ${fmtTime(st.unlockUntil)}</p>`
     : st.blockingNow ? `<p class="mid bad">Apps bloqueados agora</p><p class="small muted">Zona de Penalidade ativa.</p>`
     : `<p class="mid ok">Armado</p><p class="small muted">Se você entrar na Zona de Penalidade, os apps escolhidos são bloqueados na hora, mesmo que você não abra O Sistema.</p>`;
-  const apps = (st.apps || []).filter(a => a.instalado || a.bloqueado);
+  // mostra os apps instalados; os outros da lista aparecem num resumo (são bloqueados se você instalar)
+  const apps = (st.apps || []).filter(a => a.instalado);
+  const outros = [...new Set((st.apps || []).filter(a => !a.instalado && a.bloqueado).map(a => a.nome))];
   const desligar = !st.blockingEnabled
     ? `<button class="btn block" data-act="nativeEnable">Ligar o bloqueio de novo</button>`
     : st.disableAt ? `<p class="small warn">O bloqueio desliga em <b>${fmtDate(iso(new Date(st.disableAt)))} às ${fmtTime(st.disableAt)}</b>.</p>
@@ -55,11 +74,12 @@ function painel(st) {
       ${perm(st.overlay, "Sobrepor a outros apps", "Mostrar a tela da Zona de Penalidade por cima dos apps bloqueados.", "overlay", true)}
       ${perm(st.notifications, "Notificações", "Lembrete da missão e aviso da Zona de Penalidade.", "notifications", false)}
       ${perm(st.battery, "Sem restrição de bateria", "Evita que o Android desligue o bloqueio para economizar bateria.", "battery", false)}</ul>`)}
-    ${panel("Apps bloqueados na Zona de Penalidade", `<ul class="list">${apps.map(a => `<li><span class="grow">${esc(a.nome)}${a.instalado ? "" : ` <span class="small muted">(não instalado)</span>`}</span>
+    ${panel("Apps bloqueados na Zona de Penalidade", `<ul class="list">${apps.map(a => `<li><span class="grow">${esc(a.nome)}</span>
       <button class="btn sm ${a.bloqueado ? "danger" : "ghost"}" data-act="nativeToggleApp" data-pkg="${a.pkg}" ${pen && a.bloqueado ? "disabled" : ""}>${a.bloqueado ? "Bloqueado ✔" : "Não bloqueado"}</button></li>`).join("")}</ul>
+      ${outros.length ? `<p class="small muted">Também bloqueados se você instalar: ${esc(outros.join(", "))}.</p>` : ""}
+      ${appNovo() ? "" : `<p class="small warn">Facebook, Netflix, Crunchyroll e Prime Video precisam da versão 1.1 do app Android. <a href="download/o-sistema.apk">Baixar</a></p>`}
       <p class="small muted" style="margin-bottom:0">Bancos, telefone e Ajustes nunca entram na lista.${pen ? " Durante a Zona de Penalidade dá para adicionar apps, mas não tirar." : ""}</p>`)}
-    ${st.blockingNow || st.unlockUntil > Date.now() ? panel("Emergência", `<p style="margin-top:0">Libera os apps por <b>${EMERG.min} minutos</b>. Custa <b class="bad">−${EMERG.xp} XP e −${EMERG.ouro} Ouro</b>. Restam <b>${st.emergencyLeft}</b> hoje.</p>
-      <button class="btn danger block" data-act="nativeEmergency" ${st.emergencyLeft && st.blockingNow ? "" : "disabled"}>Desbloquear ${EMERG.min} min</button>`) : ""}
+    ${st.blockingNow || st.unlockUntil > Date.now() ? emergenciaPanel(st) : ""}
     ${panel("Lembrete da missão", `<p class="small muted" style="margin-top:0">Notificação se a missão do dia ainda não foi feita.</p>
       <select data-chg="nativeReminder" aria-label="Horário do lembrete">${[-1, 17, 18, 19, 20, 21, 22].map(h => `<option value="${h}" ${(cfg.lembreteHora ?? st.reminderHour) === h ? "selected" : ""}>${h < 0 ? "Desligado" : h + ":00"}</option>`).join("")}</select>`)}
     ${panel("Desligar", desligar)}
@@ -99,12 +119,33 @@ actions.nativeReminder = (_, el) => {
 };
 
 actions.nativeEmergency = async () => {
-  if (!await confirmBox("Desbloqueio de emergência", `Liberar os apps por ${EMERG.min} minutos custa ${EMERG.xp} XP e ${EMERG.ouro} Ouro. A penalidade continua valendo.`, "Desbloquear")) return;
-  const r = JSON.parse(nativo.emergency());
-  if (!r.ok) return toast("Limite de desbloqueios de hoje atingido.");
-  grant(-EMERG.xp, -EMERG.ouro, `Desbloqueio de emergência (${EMERG.min} min)`);
+  if (!appNovo()) return;
+  if (!await confirmBox("Desbloqueio de emergência", `Os apps serão liberados daqui a ${EMERG.espera} minutos, por ${EMERG.min} minutos. Custa ${EMERG.xp} XP e ${EMERG.ouro} Ouro agora (devolvidos se você desistir na espera). Só 1 por dia, e a penalidade continua valendo.`, "Pedir")) return;
+  const r = JSON.parse(nativo.emergencyRequest());
+  if (!r.ok) return toast("A emergência de hoje já foi usada.");
+  grant(-EMERG.xp, -EMERG.ouro, `Pediu desbloqueio de emergência (libera às ${fmtTime(r.de)})`);
+  S.emergenciaCobrada = { de: r.de }; // para devolver se desistir na espera
   save(); refresh();
-  sysMessage("Apps liberados", `<p>Até <b>${fmtTime(r.ate)}</b>. Depois disso o bloqueio volta sozinho.</p><p class="small muted">Restam ${r.restantes} hoje.</p>`);
+};
+
+actions.nativeEmergencyCancel = () => {
+  if (!nativo.emergencyCancel()) return toast("A espera já acabou: os apps estão liberados.");
+  if (S.emergenciaCobrada) grant(EMERG.xp, EMERG.ouro, "Desistiu da emergência: XP e Ouro devolvidos");
+  delete S.emergenciaCobrada;
+  save(); refresh(); toast("Desistência registrada. Os apps continuam bloqueados.");
+};
+
+// contagem da espera da emergência
+views.bloqueio.after = () => {
+  const el = document.getElementById("emerg-timer"); if (!el) return;
+  const ate = +el.dataset.ate;
+  const tick = () => {
+    if (!el.isConnected) return clearInterval(iv);
+    const s = Math.max(0, Math.round((ate - Date.now()) / 1000));
+    el.textContent = `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+    if (!s) { clearInterval(iv); setTimeout(refresh, 1500); }
+  };
+  const iv = setInterval(tick, 1000); tick();
 };
 
 actions.nativeRequestDisable = async () => {

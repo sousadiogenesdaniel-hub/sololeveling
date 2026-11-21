@@ -61,7 +61,10 @@ final class NativeBridge {
             o.put("battery", a.getSystemService(PowerManager.class).isIgnoringBatteryOptimizations(a.getPackageName()));
             o.put("blockingEnabled", p.getBoolean("blockingEnabled", true));
             o.put("disableAt", p.getLong("disableAt", 0));
+            o.put("unlockFrom", p.getLong("unlockFrom", 0));
             o.put("unlockUntil", p.getLong("unlockUntil", 0));
+            o.put("emergencyWaitMin", Prefs.EMERGENCIA_ESPERA_MIN);
+            o.put("emergencyMin", Prefs.EMERGENCIA_MIN);
             o.put("emergencyLeft", Prefs.emergencyLeft(a));
             o.put("blockingNow", Prefs.shouldBlock(a));
             o.put("reminderHour", p.getInt("reminderHour", 20));
@@ -113,12 +116,20 @@ final class NativeBridge {
         try { a.startActivity(i); } catch (Exception e) { a.startActivity(new Intent(Settings.ACTION_SETTINGS)); }
     }
 
-    /** Desbloqueio de emergência (15 min, máx. 2 por dia; o limite é conferido aqui, no Android). */
+    /** Pede o desbloqueio de emergência: espera de 10 min, libera 15 min, 1 por dia (regras conferidas aqui, no Android). */
     @JavascriptInterface
-    public String emergency() {
-        long ate = Prefs.emergency(a);
+    public String emergencyRequest() {
+        long de = Prefs.emergency(a);
         Scheduler.scheduleNext(a);
-        return "{\"ok\":" + (ate > 0) + ",\"ate\":" + ate + ",\"restantes\":" + Prefs.emergencyLeft(a) + "}";
+        long ate = Prefs.sp(a).getLong("unlockUntil", 0);
+        return "{\"ok\":" + (de > 0) + ",\"de\":" + de + ",\"ate\":" + ate + ",\"restantes\":" + Prefs.emergencyLeft(a) + "}";
+    }
+
+    @JavascriptInterface
+    public boolean emergencyCancel() {
+        boolean ok = Prefs.cancelEmergency(a);
+        Scheduler.evaluate(a);
+        return ok;
     }
 
     /** Pede para desligar o bloqueio: só vale 24 h depois. */

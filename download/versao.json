@@ -1,6 +1,6 @@
 {
-  "versionCode": 1,
-  "versionName": "1.0",
-  "sha256": "a3c1423b0fd4cf19a8a937d478b7a1d20564cefe16f9f0a09107d5ffa4ea49dc",
-  "novidades": "Primeira versão do app Android: bloqueio de apps na Zona de Penalidade e lembrete da missão."
+  "versionCode": 2,
+  "versionName": "1.1",
+  "sha256": "06cbd9ba2ff73911e5592e20fc62924d67932045feaa458036041d07a05b14d7",
+  "novidades": "Bloqueio de Instagram, TikTok, YouTube, Facebook, Netflix, Crunchyroll e Prime Video, além de WhatsApp e Gmail. Emergência com espera de 10 minutos, 1 vez por dia."
 }
