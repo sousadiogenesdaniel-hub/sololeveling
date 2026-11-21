@@ -17,7 +17,7 @@ views.mais = () => {
     ${item("condicao", "🌙", "Condição", "Sono, foco, energia e celular na cama")}
     ${item("medidas", "📏", "Medidas", "Peso e abdômen diários, medidas semanais")}
     ${item("fotos", "📸", "Fotos", "Registro semanal e antes × depois")}
-    ${item("loja", "🛒", "Loja", "Sexta e sábado: troque Ouro pelo direito de comer besteira")}
+    ${item("loja", "🛒", "Loja", "Sexta a domingo: troque Ouro pelo direito de comer besteira")}
     ${item("penalidade", "⚠️", "Penalidades", "Multas por PIX e pessoas do grupo", pend ? `<span class="chip bad">${pend}</span>` : "")}
     ${item("historico", "📜", "Registro do Sistema", "Histórico de XP e Ouro")}
     ${item("bloqueio", "🔒", nativo ? "Bloqueio de apps" : "App Android", nativo ? "WhatsApp e Gmail bloqueados na Zona de Penalidade" : "Bloqueio de apps na Zona de Penalidade e lembretes")}
@@ -169,7 +169,7 @@ views.loja = () => {
   const dias = daysToShop(), aberta = dias === 0, pen = inPenalty(), g = S.game.gold;
   const status = pen ? `<p class="bad">Loja trancada: você está na Zona de Penalidade.</p>`
     : aberta ? `<p class="ok">A Loja está aberta hoje.</p>`
-      : `<p class="muted">A Loja abre na sexta e no sábado (próxima abertura em ${dias} ${dias === 1 ? "dia" : "dias"}).</p>`;
+      : `<p class="muted">A Loja abre de sexta a domingo (próxima abertura em ${dias} ${dias === 1 ? "dia" : "dias"}).</p>`;
   const compras = [...S.purchases].reverse().slice(0, 10);
   return `${header()}<div class="stack">
     ${panel("Loja", `${status}<p class="small muted">Cada treino rende ${R.treinoOuro} de Ouro. Uma semana perfeita (6 treinos) paga exatamente uma pizza.

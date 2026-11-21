@@ -102,7 +102,7 @@ function statusTiles() {
   const md = monthDebt();
   return `<div class="grid2">
     <div class="tile"><div class="lbl">Sequência</div><div class="val num">🔥 ${g.streak} ${g.streak === 1 ? "treino" : "treinos"}</div><div class="small muted">Recorde: ${g.bestStreak}</div></div>
-    <div class="tile"><div class="lbl">Loja (sex e sáb)</div><div class="val">${dias === 0 ? `<span class="ok">Aberta hoje</span>` : `abre em ${dias} ${dias === 1 ? "dia" : "dias"}`}</div>
+    <div class="tile"><div class="lbl">Loja (sex a dom)</div><div class="val">${dias === 0 ? `<span class="ok">Aberta hoje</span>` : `abre em ${dias} ${dias === 1 ? "dia" : "dias"}`}</div>
       <div class="small muted">${pizza ? `${pizza.icone} ${esc(pizza.nome)}: ${g.gold >= pizza.custo ? "você já pode comprar" : `faltam ${fmt(pizza.custo - g.gold)} de Ouro`}` : ""}</div></div>
     <div class="tile"><div class="lbl">Peso</div><div class="val num">${fmt(peso, 1)} kg</div>
       <div class="small ${delta <= 0 ? "ok" : "warn"}">${signed(delta)} kg em 7 dias</div></div>

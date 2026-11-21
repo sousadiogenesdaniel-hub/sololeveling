@@ -241,8 +241,8 @@ export function processDays() {
   return report;
 }
 
-// Loja aberta na sexta e no sábado. daysToShop: 0 = aberta hoje; senão, dias até a próxima sexta.
-export const SHOP_DAYS = [5, 6];
+// Loja aberta na sexta, no sábado e no domingo. daysToShop: 0 = aberta hoje; senão, dias até a próxima sexta.
+export const SHOP_DAYS = [5, 6, 0];
 export const shopOpen = (date = today()) => SHOP_DAYS.includes(parseDay(date).getDay());
 export const daysToShop = (date = today()) => shopOpen(date) ? 0 : (5 - parseDay(date).getDay() + 7) % 7;
 
