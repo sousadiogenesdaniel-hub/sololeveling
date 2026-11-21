@@ -4,7 +4,7 @@ import { S, save } from "../store.js";
 import { esc, fmtTime, fmtDate, iso } from "../util.js";
 import { header, panel, toast, confirmBox, sysMessage } from "../ui.js";
 import { inPenalty, grant } from "../game.js";
-import { nativo, nativeStatus, syncNative, ultimoSync, testeBloqueio } from "../native.js";
+import { nativo, nativeStatus, syncNative, ultimoSync } from "../native.js";
 
 export const EMERG = { xp: 100, ouro: 100, min: 15, espera: 10 };
 // Versão do app Android com a emergência nova (espera de 10 min, 1 por dia) e a lista ampliada de apps
@@ -87,7 +87,6 @@ function painel(st) {
       <tr><td>App Android</td><td>${esc(st.version || "?")}</td></tr>
       <tr><td>Sistema</td><td>${esc((navigator.userAgent.match(/Android [\d.]+/) || ["?"])[0])}</td></tr>
       <tr><td>Penalidade enviada ao Android</td><td>${ultimoSync ? `${ultimoSync.penalty ? "sim" : "não"} (${ultimoSync.em}${ultimoSync.ok ? "" : ", ERRO: " + esc(ultimoSync.erro)})` : "ainda não enviada"}</td></tr>
-      <tr><td>Teste do bloqueio</td><td>${testeBloqueio() ? "ligado" : "desligado"}</td></tr>
       <tr><td>Android quer bloquear agora</td><td>${st.blockingNow ? "sim" : "não"}</td></tr>
       <tr><td>Acesso ao uso / Sobrepor</td><td>${st.usageAccess ? "✔" : "✖"} / ${st.overlay ? "✔" : "✖"}</td></tr>
       <tr><td>Notificações / Bateria livre</td><td>${st.notifications ? "✔" : "✖"} / ${st.battery ? "✔" : "✖"}</td></tr>
