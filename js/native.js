@@ -12,8 +12,10 @@ export const nativo = window.SistemaNative || null;
 // Expira sozinho; depois do horário, abrir o app desliga o bloqueio. Remover depois do teste.
 export const TESTE_BLOQUEIO_ATE = Date.parse("2026-11-21T19:40:00Z"); // 16:40 em Brasília
 export const testeBloqueio = () => !!nativo && Date.now() < TESTE_BLOQUEIO_ATE;
-export const APPS_NOVOS = ["com.instagram.android", "com.zhiliaoapp.musically", "com.ss.android.ugc.trill", "com.google.android.youtube",
-  "com.facebook.katana", "com.facebook.lite", "com.netflix.mediaclient", "com.crunchyroll.crunchyroid", "com.amazon.avod.thirdpartyclient"];
+// Lista fixa de apps bloqueados (o app 1.2+ já ignora a lista enviada; o 1.1 usa esta, para bloquear todos também)
+export const APPS_TODOS = ["com.whatsapp", "com.whatsapp.w4b", "com.google.android.gm", "com.instagram.android", "com.zhiliaoapp.musically",
+  "com.ss.android.ugc.trill", "com.google.android.youtube", "com.facebook.katana", "com.facebook.lite", "com.netflix.mediaclient",
+  "com.crunchyroll.crunchyroid", "com.amazon.avod.thirdpartyclient", "com.spotify.music"];
 export let ultimoSync = null; // diagnóstico: o que foi enviado ao Android por último
 
 export function nativeStatus() {
@@ -30,10 +32,6 @@ function lastDone() {
 let ultimo = "";
 export function syncNative() {
   if (!nativo || !S.profile) return;
-  // lista ampliada (app 1.1): quem já tinha escolhido apps recebe os novos marcados uma vez
-  if (S.nativeCfg?.blocked && !S.nativeCfg.lista2) {
-    S.nativeCfg.blocked = [...new Set([...S.nativeCfg.blocked, ...APPS_NOVOS])]; S.nativeCfg.lista2 = true;
-  }
   const cfg = S.nativeCfg || {};
   const payload = {
     penalty: inPenalty() || testeBloqueio(),
@@ -41,7 +39,7 @@ export function syncNative() {
     obligatedFrom: trackFinished() ? "" : (S.trackSince || S.track?.startDate || ""),
     lastDone: lastDone(),
     today: today(),
-    ...(cfg.blocked ? { blocked: cfg.blocked } : {}),
+    blocked: APPS_TODOS,
     ...(cfg.lembreteHora != null ? { reminderHour: cfg.lembreteHora } : {}),
   };
   const j = JSON.stringify(payload);

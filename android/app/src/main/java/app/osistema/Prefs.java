@@ -36,9 +36,10 @@ final class Prefs {
         BLOQUEAVEIS.put("com.netflix.mediaclient", "Netflix");
         BLOQUEAVEIS.put("com.crunchyroll.crunchyroid", "Crunchyroll");
         BLOQUEAVEIS.put("com.amazon.avod.thirdpartyclient", "Prime Video");
+        BLOQUEAVEIS.put("com.spotify.music", "Spotify");
     }
-    /** Sem escolha do jogador, todos os da lista são bloqueados. */
-    static final Set<String> PADRAO = new HashSet<>(BLOQUEAVEIS.keySet());
+    /** Lista FIXA: todos são bloqueados na Zona de Penalidade, sem opção de desmarcar (é o pedido do jogador). */
+    static final Set<String> PADRAO = Collections.unmodifiableSet(new HashSet<>(BLOQUEAVEIS.keySet()));
 
     /** Emergência: pede, espera 10 min (dá para desistir do impulso), libera 15 min. Uma por dia. */
     static final int EMERGENCIA_MIN = 15, EMERGENCIA_ESPERA_MIN = 10, EMERGENCIA_POR_DIA = 1;
@@ -46,10 +47,7 @@ final class Prefs {
 
     static SharedPreferences sp(Context c) { return c.getSharedPreferences("sistema", Context.MODE_PRIVATE); }
 
-    static Set<String> blocked(Context c) {
-        Set<String> s = sp(c).getStringSet("blocked", null);
-        return s == null ? PADRAO : Collections.unmodifiableSet(new HashSet<>(s));
-    }
+    static Set<String> blocked(Context c) { return PADRAO; }
 
     /** Dia da semana no formato do JavaScript (0 = domingo). */
     static int jsWeekday(LocalDate d) { return d.getDayOfWeek().getValue() % 7; }

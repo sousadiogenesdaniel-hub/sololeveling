@@ -91,13 +91,8 @@ final class NativeBridge {
                 .putString("lastDone", o.optString("lastDone", ""))
                 .putString("lastSync", LocalDate.now().toString());
             if (o.has("reminderHour")) ed.putInt("reminderHour", Math.max(-1, Math.min(23, o.optInt("reminderHour", 20))));
-            if (o.has("blocked")) {
-                Set<String> s = new HashSet<>();
-                JSONArray arr = o.getJSONArray("blocked");
-                for (int i = 0; i < arr.length(); i++) if (Prefs.BLOQUEAVEIS.containsKey(arr.getString(i))) s.add(arr.getString(i));
-                ed.putStringSet("blocked", s);
-            }
-            ed.apply();
+            // "blocked" é ignorado de propósito: a lista é fixa e a página não consegue tirar apps dela
+            ed.remove("blocked").apply();
             Scheduler.evaluate(a);
         } catch (Exception ignored) {}
     }

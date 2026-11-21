@@ -1,6 +1,6 @@
 {
-  "versionCode": 2,
-  "versionName": "1.1",
-  "sha256": "06cbd9ba2ff73911e5592e20fc62924d67932045feaa458036041d07a05b14d7",
-  "novidades": "Bloqueio de Instagram, TikTok, YouTube, Facebook, Netflix, Crunchyroll e Prime Video, além de WhatsApp e Gmail. Emergência com espera de 10 minutos, 1 vez por dia."
+  "versionCode": 3,
+  "versionName": "1.2",
+  "sha256": "253627b360e6036f3e27b74ca4258974319bcaf4c3f5f009e8ecdcc2f9a5f313",
+  "novidades": "Spotify entra no bloqueio. A lista de apps bloqueados fica fixa: não dá mais para desmarcar apps."
 }

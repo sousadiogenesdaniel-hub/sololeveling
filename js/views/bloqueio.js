@@ -9,6 +9,7 @@ import { nativo, nativeStatus, syncNative, ultimoSync, testeBloqueio } from "../
 export const EMERG = { xp: 100, ouro: 100, min: 15, espera: 10 };
 // Versão do app Android com a emergência nova (espera de 10 min, 1 por dia) e a lista ampliada de apps
 const appNovo = () => typeof nativo?.emergencyRequest === "function";
+const versaoAtual = st => parseFloat(st.version) >= 1.2; // lista fixa + Spotify
 const APK = "download/o-sistema.apk";
 
 function instalar() {
@@ -74,11 +75,10 @@ function painel(st) {
       ${perm(st.overlay, "Sobrepor a outros apps", "Mostrar a tela da Zona de Penalidade por cima dos apps bloqueados.", "overlay", true)}
       ${perm(st.notifications, "Notificações", "Lembrete da missão e aviso da Zona de Penalidade.", "notifications", false)}
       ${perm(st.battery, "Sem restrição de bateria", "Evita que o Android desligue o bloqueio para economizar bateria.", "battery", false)}</ul>`)}
-    ${panel("Apps bloqueados na Zona de Penalidade", `<ul class="list">${apps.map(a => `<li><span class="grow">${esc(a.nome)}</span>
-      <button class="btn sm ${a.bloqueado ? "danger" : "ghost"}" data-act="nativeToggleApp" data-pkg="${a.pkg}" ${pen && a.bloqueado ? "disabled" : ""}>${a.bloqueado ? "Bloqueado ✔" : "Não bloqueado"}</button></li>`).join("")}</ul>
+    ${panel("Apps bloqueados na Zona de Penalidade", `<ul class="list">${[...new Set(apps.map(a => a.nome))].map(n => `<li><span class="grow">${esc(n)}</span><span class="chip bad">🔒 Bloqueado</span></li>`).join("")}</ul>
       ${outros.length ? `<p class="small muted">Também bloqueados se você instalar: ${esc(outros.join(", "))}.</p>` : ""}
-      ${appNovo() ? "" : `<p class="small warn">Facebook, Netflix, Crunchyroll e Prime Video precisam da versão 1.1 do app Android. <a href="download/o-sistema.apk">Baixar</a></p>`}
-      <p class="small muted" style="margin-bottom:0">Bancos, telefone e Ajustes nunca entram na lista.${pen ? " Durante a Zona de Penalidade dá para adicionar apps, mas não tirar." : ""}</p>`)}
+      ${versaoAtual(st) ? "" : `<p class="small warn">Spotify e a lista fixa precisam da versão 1.2 do app Android. <a href="download/o-sistema.apk">Baixar</a></p>`}
+      <p class="small muted" style="margin-bottom:0">A lista é fixa de propósito: nenhum app pode ser tirado dela pelo O Sistema. Bancos, telefone e Ajustes nunca entram.</p>`)}
     ${st.blockingNow || st.unlockUntil > Date.now() ? emergenciaPanel(st) : ""}
     ${panel("Lembrete da missão", `<p class="small muted" style="margin-top:0">Notificação se a missão do dia ainda não foi feita.</p>
       <select data-chg="nativeReminder" aria-label="Horário do lembrete">${[-1, 17, 18, 19, 20, 21, 22].map(h => `<option value="${h}" ${(cfg.lembreteHora ?? st.reminderHour) === h ? "selected" : ""}>${h < 0 ? "Desligado" : h + ":00"}</option>`).join("")}</select>`)}
@@ -103,15 +103,6 @@ views.bloqueio = () => {
 };
 
 actions.nativeSettings = ({ which }) => nativo?.openSettings(which);
-
-actions.nativeToggleApp = ({ pkg }) => {
-  const st = nativeStatus(); if (!st) return;
-  const atual = new Set(st.apps.filter(a => a.bloqueado).map(a => a.pkg));
-  if (atual.has(pkg)) { if (inPenalty()) return toast("Durante a Zona de Penalidade não dá para tirar apps do bloqueio."); atual.delete(pkg); }
-  else atual.add(pkg);
-  S.nativeCfg = { ...(S.nativeCfg || {}), blocked: [...atual] };
-  save(); syncNative(); refresh();
-};
 
 actions.nativeReminder = (_, el) => {
   S.nativeCfg = { ...(S.nativeCfg || {}), lembreteHora: +el.value };

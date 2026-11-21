@@ -4,8 +4,8 @@ Casca nativa do app web. Abre o app publicado (`https://sousadiogenesdaniel-hub.
 num WebView preso a esse endereço e adiciona o que o navegador não faz:
 
 - **Bloqueio de apps na Zona de Penalidade**: WhatsApp, WhatsApp Business, Gmail, Instagram, TikTok, YouTube,
-  Facebook, Netflix, Crunchyroll e Prime Video (todos por padrão; dá para desmarcar fora da penalidade).
-  Bancos, telefone e Ajustes nunca podem ser bloqueados: a lista fica fixa no código Android.
+  Facebook, Netflix, Crunchyroll, Prime Video e Spotify. A lista é **fixa** no código Android: não dá para
+  desmarcar apps pela página, e bancos, telefone e Ajustes nunca podem entrar nela.
 - **Bloqueio mesmo sem abrir o app:** se passar um dia cobrado sem missão concluída, o Android deduz a falta
   sozinho e bloqueia (`Prefs.missed`, coberta por testes em `PrefsTest`).
 - **Desbloqueio de emergência**: espera de 10 min depois do pedido (dá para desistir), libera 15 min, 1 por dia,
