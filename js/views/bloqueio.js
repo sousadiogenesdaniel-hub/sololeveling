@@ -4,7 +4,7 @@ import { S, save } from "../store.js";
 import { esc, fmtTime, fmtDate, iso } from "../util.js";
 import { header, panel, toast, confirmBox, sysMessage } from "../ui.js";
 import { inPenalty, grant } from "../game.js";
-import { nativo, nativeStatus, syncNative } from "../native.js";
+import { nativo, nativeStatus, syncNative, ultimoSync, testeBloqueio } from "../native.js";
 
 export const EMERG = { xp: 30, ouro: 30, min: 15 };
 const APK = "download/o-sistema.apk";
@@ -63,6 +63,16 @@ function painel(st) {
     ${panel("Lembrete da missão", `<p class="small muted" style="margin-top:0">Notificação se a missão do dia ainda não foi feita.</p>
       <select data-chg="nativeReminder" aria-label="Horário do lembrete">${[-1, 17, 18, 19, 20, 21, 22].map(h => `<option value="${h}" ${(cfg.lembreteHora ?? st.reminderHour) === h ? "selected" : ""}>${h < 0 ? "Desligado" : h + ":00"}</option>`).join("")}</select>`)}
     ${panel("Desligar", desligar)}
+    ${panel("Diagnóstico", `<table class="t small">
+      <tr><td>App Android</td><td>${esc(st.version || "?")}</td></tr>
+      <tr><td>Sistema</td><td>${esc((navigator.userAgent.match(/Android [\d.]+/) || ["?"])[0])}</td></tr>
+      <tr><td>Penalidade enviada ao Android</td><td>${ultimoSync ? `${ultimoSync.penalty ? "sim" : "não"} (${ultimoSync.em}${ultimoSync.ok ? "" : ", ERRO: " + esc(ultimoSync.erro)})` : "ainda não enviada"}</td></tr>
+      <tr><td>Teste do bloqueio</td><td>${testeBloqueio() ? "ligado" : "desligado"}</td></tr>
+      <tr><td>Android quer bloquear agora</td><td>${st.blockingNow ? "sim" : "não"}</td></tr>
+      <tr><td>Acesso ao uso / Sobrepor</td><td>${st.usageAccess ? "✔" : "✖"} / ${st.overlay ? "✔" : "✖"}</td></tr>
+      <tr><td>Notificações / Bateria livre</td><td>${st.notifications ? "✔" : "✖"} / ${st.battery ? "✔" : "✖"}</td></tr>
+      <tr><td>Bloqueio ligado</td><td>${st.blockingEnabled ? "sim" : "não"}${st.disableAt ? " (pedido de desligar)" : ""}</td></tr>
+      <tr><td>Apps marcados</td><td>${esc((st.apps || []).filter(a => a.bloqueado).map(a => a.nome).join(", ") || "nenhum")}</td></tr></table>`)}
     <p class="small muted center">App Android ${esc(st.version || "")}</p></div>`;
 }
 

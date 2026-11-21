@@ -7,6 +7,13 @@ import { trackFinished } from "./tracks.js";
 
 export const nativo = window.SistemaNative || null;
 
+// TESTE DO BLOQUEIO pedido pelo jogador em 21/11/2026: liga a Zona de Penalidade SÓ no Android até o horário
+// abaixo, para conferir que o WhatsApp é bloqueado. Não mexe no jogo (sem falta, multa, XP ou Ouro).
+// Expira sozinho; depois do horário, abrir o app desliga o bloqueio. Remover depois do teste.
+export const TESTE_BLOQUEIO_ATE = Date.parse("2026-11-21T17:30:00Z"); // 14:30 em Brasília
+export const testeBloqueio = () => !!nativo && Date.now() < TESTE_BLOQUEIO_ATE;
+export let ultimoSync = null; // diagnóstico: o que foi enviado ao Android por último
+
 export function nativeStatus() {
   if (!nativo) return null;
   try { return JSON.parse(nativo.status()); } catch { return null; }
@@ -23,7 +30,7 @@ export function syncNative() {
   if (!nativo || !S.profile) return;
   const cfg = S.nativeCfg || {};
   const payload = {
-    penalty: inPenalty(),
+    penalty: inPenalty() || testeBloqueio(),
     restDay: S.profile.restDay ?? 0,
     obligatedFrom: trackFinished() ? "" : (S.trackSince || S.track?.startDate || ""),
     lastDone: lastDone(),
@@ -34,7 +41,8 @@ export function syncNative() {
   const j = JSON.stringify(payload);
   if (j === ultimo) return;
   ultimo = j;
-  try { nativo.sync(j); } catch { /* casca antiga */ }
+  try { nativo.sync(j); ultimoSync = { em: new Date().toLocaleTimeString("pt-BR"), penalty: payload.penalty, ok: true }; }
+  catch (e) { ultimoSync = { em: new Date().toLocaleTimeString("pt-BR"), penalty: payload.penalty, ok: false, erro: String(e?.message || e) }; }
 }
 
 export function keepScreenOn(on) { try { nativo?.keepScreenOn(!!on); } catch { /* sem suporte */ } }

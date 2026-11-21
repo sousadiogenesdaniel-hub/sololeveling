@@ -1,5 +1,5 @@
 // Início: resumo rápido do dia
-import { nativeStatus } from "../native.js";
+import { nativeStatus, testeBloqueio } from "../native.js";
 import { views } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
@@ -115,5 +115,6 @@ views.inicio = () => {
   const t = today();
   return `${header()}
     <p class="small muted" style="margin-top:-6px">${WEEKDAYS[new Date(t + "T12:00").getDay()]}, ${fmtDate(t, { day: "numeric", month: "long" })}</p>
-    <div class="stack">${penaltyBanner()}${questCard()}${kcalCard()}${reminders()}${statusTiles()}</div>`;
+    <div class="stack">${testeBloqueio() ? panel("Teste do bloqueio", `<p style="margin-top:0">Até as <b>14:30</b>, a Zona de Penalidade está ligada <b>só no Android</b>, para testar: abra o WhatsApp e veja se aparece a tela vermelha.</p>
+      <p class="small muted" style="margin-bottom:0">Nada muda no jogo: sem falta, sem multa, sem perder XP ou Ouro. Depois das 14:30, abra O Sistema e o bloqueio sai sozinho.</p>`, "alert") : ""}${penaltyBanner()}${questCard()}${kcalCard()}${reminders()}${statusTiles()}</div>`;
 };
