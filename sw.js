@@ -1,6 +1,6 @@
 // Service worker: deixa o app funcionar offline.
 // Estratégia: responde do cache e atualiza em segundo plano (a versão nova aparece na próxima abertura).
-const CACHE = "sistema-v24";
+const CACHE = "sistema-v25";
 const SHELL = [
   "./", "index.html", "manifest.webmanifest", "css/styles.css", "vendor/chart.umd.js", "data/taco.json",
   "icons/icon.svg", "icons/icon-192.png",

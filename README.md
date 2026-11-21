@@ -51,6 +51,9 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   nunca abaixo da tabela. Testes: D 25 flexões, 12 mergulhos, 18 remadas, 75 agachamentos, 60 abdominais,
   15 elevações de joelhos, 90 s de prancha; C 40/18/5 barras/120/100/20/2 min; B 55/25/12/160/160.
   O modelo anterior está salvo no branch `modelo-anterior-ranks`.
+- **Dia de Avaliação / Dia de Teste de Rank:** na Missão, escolher um deles faz as provas valerem como a missão do
+  dia (com ponto e mínimo de 30 min). O treino da fila fica para amanhã e o dia não conta para subir a carga.
+  Não aparecem na Zona de Penalidade: a redenção é com o treino que ficou pendente.
 - **Teste antecipado:** a partir da metade das etapas da fase dá para tentar o Teste de Rank (1 tentativa a cada
   7 dias; falhar não pune). Passou: pula para a próxima fase e ganha +500 XP e +300 Ouro, sem pular níveis.
 - **Dieta (conferida no dia seguinte, sem Zona de Penalidade):** até 100 kcal acima da meta, nada; acima disso,

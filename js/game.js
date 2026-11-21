@@ -173,9 +173,11 @@ export function completeWorkout(date = today()) {
   const totalSets = w.plano.itens.reduce((n, i) => n + i.series, 0);
   const marks = Object.values(w.sets || {}).flat();
   const doneSets = marks.filter(Boolean).length, lowSets = marks.filter(m => m === "low").length;
-  w.full = doneSets >= totalSets;          // todas as séries feitas (mesmo abaixo do alvo)
-  w.hit = w.full && lowSets === 0;         // todas no alvo: conta para subir a carga
-  events.push(grant(R.treinoXp, R.treinoOuro, "Missão diária concluída", date));
+  const especial = !!w.plano?.modo;        // Dia de Avaliação / Teste de Rank: vale a missão, não a carga
+  w.full = !especial && doneSets >= totalSets;  // todas as séries feitas (mesmo abaixo do alvo)
+  w.hit = w.full && lowSets === 0;              // todas no alvo: conta para subir a carga
+  events.push(grant(R.treinoXp, R.treinoOuro, especial ? `Missão diária concluída: ${w.plano.titulo}` : "Missão diária concluída", date));
+  if (especial) events.push({ motivo: "O treino da fila fica para amanhã", xp: 0, gold: 0 });
   if (w.full) events.push(grant(R.completoXp, 0, "Todas as séries concluídas", date));
   const g = S.game;
   g.streak++; g.bestStreak = Math.max(g.bestStreak, g.streak);

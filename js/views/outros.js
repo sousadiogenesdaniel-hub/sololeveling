@@ -1,9 +1,10 @@
 // Mais, Medidas (diárias e semanais), Fotos e Loja
 import { views, actions, refresh } from "../core.js";
 import { S, day, save, photos } from "../store.js";
-import { today, esc, fmt, num, fmtDate, fmtShort, signed, shrinkImage, uid, $ } from "../util.js";
+import { today, esc, fmt, num, fmtDate, fmtShort, signed, shrinkImage, uid, daysBetween, $ } from "../util.js";
 import { header, panel, modal, closeModal, toast, showEvents, confirmBox, sysMessage } from "../ui.js";
 import { nativo } from "../native.js";
+import { weightOn } from "../game.js";
 import { grant, R, inPenalty, daysToShop, pendingDebts, monthDebt, BONUS, bonusWeek, cleanWeek, dietWeek, weekStart, weekEnd } from "../game.js";
 
 // ---- Mais -----------------------------------------------------------------------
@@ -110,28 +111,44 @@ views.fotos.after = async () => {
   urls.forEach(URL.revokeObjectURL); urls = [];
   photoCache = (await photos.all()).filter(p => p.tipo !== "prova").sort((a, b) => b.date.localeCompare(a.date) || a.angulo.localeCompare(b.angulo));
   const area = $("#photo-area"); if (!area) return;
-  if (!photoCache.length) { area.innerHTML = `<p class="muted center">Nenhuma foto ainda.</p>`; return; }
   const dates = [...new Set(photoCache.map(p => p.date))];
-  const opts = sel => dates.map(d => `<option value="${d}" ${d === sel ? "selected" : ""}>${fmtDate(d)}</option>`).join("");
-  const compare = dates.length > 1 ? panel("Antes × depois", `<div class="row">
-      <select id="cA" aria-label="Data antes">${opts(dates[dates.length - 1])}</select><select id="cB" aria-label="Data depois">${opts(dates[0])}</select>
-      <select id="cAng" aria-label="Ângulo">${ANGULOS.map(([k, n]) => `<option value="${k}">${n}</option>`).join("")}</select></div>
-      <div class="compare" id="cmp" style="margin-top:8px"></div>`) : "";
-  area.innerHTML = `<div class="stack">${compare}${dates.map(d => panel(fmtDate(d), `<div class="photos">
-    ${photoCache.filter(p => p.date === d).map(p => `<figure><img src="${urlOf(p.blob)}" alt="Foto de ${p.angulo} em ${fmtDate(d)}" loading="lazy">
+  // Antes × depois: escolha qualquer foto de cada lado (sempre visível)
+  const rotulo = p => `${fmtDate(p.date, { day: "2-digit", month: "2-digit", year: "2-digit" })} · ${p.angulo}`;
+  const antiga = [...photoCache].reverse().find(p => p.angulo === "frente") || photoCache[photoCache.length - 1];
+  const nova = antiga && (photoCache.find(p => p.angulo === antiga.angulo && p.date !== antiga.date) || photoCache.find(p => p !== antiga));
+  const opts = sel => photoCache.map(p => `<option value="${p.id}" ${p === sel ? "selected" : ""}>${esc(rotulo(p))}</option>`).join("");
+  const compare = panel("Antes × depois", dates.length > 1
+    ? `<div class="grid2"><select id="cA" aria-label="Foto da esquerda (antes)">${opts(antiga)}</select><select id="cB" aria-label="Foto da direita (depois)">${opts(nova)}</select></div>
+       <div class="compare" id="cmp" style="margin-top:8px"></div><p class="small center" id="cmp-dif" style="margin-bottom:0"></p>
+       <p class="small muted center" style="margin:4px 0 0">Toque numa foto para ampliar.</p>`
+    : `<p class="muted small" style="margin:0">Compare duas fotos lado a lado, com o peso de cada data. Adicione fotos em pelo menos <b>duas datas diferentes</b> para usar.
+       ${nativo ? "<br>As fotos não vêm no backup: adicione aqui as que quiser manter." : ""}</p>`);
+  area.innerHTML = `<div class="stack">${compare}${dates.length ? dates.map(d => panel(fmtDate(d), `<div class="photos">
+    ${photoCache.filter(p => p.date === d).map(p => `<figure><img src="${urlOf(p.blob)}" alt="Foto de ${p.angulo} em ${fmtDate(d)}" loading="lazy" data-act="zoomPhoto" data-id="${p.id}">
       <figcaption class="row between"><span>${esc(p.angulo)}</span><button class="btn sm danger" style="min-height:0;padding:0 6px" data-act="delPhoto" data-id="${p.id}" aria-label="Excluir foto">✕</button></figcaption></figure>`).join("")}</div>`,
-    "", S.days[d]?.peso ? `<span class="small muted num">${fmt(S.days[d].peso, 1)} kg</span>` : "")).join("")}</div>`;
+    "", S.days[d]?.peso ? `<span class="small muted num">${fmt(S.days[d].peso, 1)} kg</span>` : "")).join("") : `<p class="muted center">Nenhuma foto ainda.</p>`}</div>`;
   const cmp = $("#cmp");
-  if (cmp) {
-    const draw = () => {
-      cmp.innerHTML = [$("#cA").value, $("#cB").value].map(d => {
-        const p = photoCache.find(x => x.date === d && x.angulo === $("#cAng").value);
-        return `<div>${p ? `<img src="${urlOf(p.blob)}" alt="Foto de ${fmtDate(d)}">` : `<span class="muted small center">Sem foto de<br>${fmtDate(d)}</span>`}</div>`;
-      }).join("");
-    };
-    ["cA", "cB", "cAng"].forEach(id => { $("#" + id).onchange = draw; });
-    draw();
-  }
+  if (!cmp) return;
+  const pesoTxt = d => S.days[d]?.peso ? `${fmt(S.days[d].peso, 1)} kg` : `≈ ${fmt(weightOn(d), 1)} kg`;
+  const draw = () => {
+    const [pa, pb] = [$("#cA").value, $("#cB").value].map(id => photoCache.find(x => x.id === id));
+    cmp.innerHTML = [pa, pb].map(p => `<div style="display:block;position:relative">
+      <img src="${urlOf(p.blob)}" alt="Foto de ${p.angulo} em ${fmtDate(p.date)}" data-act="zoomPhoto" data-id="${p.id}" style="cursor:zoom-in">
+      <span class="small" style="position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);padding:3px 6px">${fmtDate(p.date)} · ${esc(p.angulo)}<br><b class="num">${pesoTxt(p.date)}</b></span></div>`).join("");
+    const [x, y] = pa.date <= pb.date ? [pa, pb] : [pb, pa];
+    const dias = daysBetween(x.date, y.date), dp = weightOn(y.date) - weightOn(x.date);
+    const ab = d => Object.keys(S.days).filter(k => k <= d && S.days[k].abdomen).sort().pop();
+    const a1 = ab(x.date), a2 = ab(y.date), dab = a1 && a2 && a1 !== a2 ? S.days[a2].abdomen - S.days[a1].abdomen : null;
+    $("#cmp-dif").innerHTML = dias ? `<b>${dias} dias</b> entre as fotos · peso <b class="${dp <= 0 ? "ok" : "warn"}">${signed(dp)} kg</b>${dab != null ? ` · abdômen <b class="${dab <= 0 ? "ok" : "warn"}">${signed(dab)} cm</b>` : ""}` : "Mesma data";
+  };
+  ["cA", "cB"].forEach(id => { $("#" + id).onchange = draw; });
+  draw();
+};
+
+actions.zoomPhoto = ({ id }) => {
+  const p = photoCache.find(x => x.id === id); if (!p) return;
+  modal(`<div class="ptitle"><h2>${fmtDate(p.date)} · ${esc(p.angulo)}</h2><button class="btn sm ghost" data-close aria-label="Fechar">✕</button></div>
+    <img src="${urlOf(p.blob)}" alt="Foto de ${p.angulo} em ${fmtDate(p.date)}" style="width:100%;display:block" data-close>`);
 };
 
 actions.addPhoto = async (d, form) => {

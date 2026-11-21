@@ -31,14 +31,14 @@ function questCard() {
     <p class="muted small">${esc(w.plano.titulo)} · ${w.durMin} min · ~${w.kcal} kcal</p>`, "good");
   if (isRestDay(t) && !S.game.needsWorkout) return panel("Missão diária", `<p class="mid">Dia de descanso</p>
     <p class="muted small">Recupere-se. Amanhã o Sistema cobra de novo.</p>`);
-  const plan = workoutFor(t);
+  const plan = w?.in ? w.plano : S.days[t]?.modo ? { titulo: S.days[t].modo === "avaliacao" ? "Dia de Avaliação" : "Dia de Teste de Rank", modo: true } : workoutFor(t);
   const estado = w?.in ? `<span class="chip warn">Em andamento</span>` : `<span class="chip">Pendente</span>`;
   const aviso = isObligated(t)
     ? `Se o dia virar sem o treino: ${R.faltaXp} XP, ${R.faltaOuro} Ouro e Zona de Penalidade.`
     : "Hoje ainda não vale penalidade: a cobrança começa amanhã.";
   return panel("Missão diária", `
     <p class="mid">${esc(plan.titulo)}</p>
-    <p class="muted small">${currentTrack().nome} · etapa ${plan.stage}/${plan.stages} · ${plan.itens.length} exercícios · +${R.treinoXp} XP · +${R.treinoOuro} Ouro</p>
+    <p class="muted small">${currentTrack().nome} · ${plan.modo ? "dia especial" : `etapa ${plan.stage}/${plan.stages} · ${plan.itens.length} exercícios`} · +${R.treinoXp} XP · +${R.treinoOuro} Ouro</p>
     <p class="small ${isObligated(t) ? "warn" : "muted"}">${aviso}</p>
     <a class="btn primary block" href="#/treino">${w?.in ? "Continuar treino" : "Ir para a missão"}</a>`, "", estado);
 }

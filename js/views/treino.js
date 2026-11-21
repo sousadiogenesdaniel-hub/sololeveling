@@ -5,7 +5,7 @@ import { today, addDays, esc, fmt, fmtTime, fmtDate, getPosition, getPreciseFix,
 import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox } from "../ui.js";
 import { completeWorkout, passTest, isRestDay, workoutKcal, grant, R, RANK_TESTS, RANK_ORDER, testsPassed } from "../game.js";
 import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, testStatus, TEST_COOLDOWN, trackFinished, unitLabel, SESSIONS_PER_STAGE, testKey, setPR } from "../tracks.js";
-import { statusList } from "./avaliacao.js";
+import { statusList, avaliacaoLiberada } from "./avaliacao.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
 const PUNCH_EXPIRES_H = 5;    // ponto de entrada vence depois disso
@@ -93,6 +93,7 @@ actions.submitTest = data => {
   const ph = currentPhase(), early = !!data.early;
   const falhas = ph.tests.filter(([, v], i) => (num(data["t" + i]) ?? 0) < v);
   ph.tests.forEach(([n], i) => setPR(testKey(n), num(data["t" + i]))); // a tentativa, mesmo reprovada, atualiza seus máximos
+  day().testeFeito = true; // vale para concluir o "Dia de Teste de Rank"
   if (falhas.length) {
     progress().lastTestTry = today(); save(); refresh();
     return sysMessage("Teste não superado", `<p>Ainda falta em: <b>${falhas.map(f => f[0]).join(", ")}</b>.</p>
@@ -128,6 +129,34 @@ actions.toggleSet = ({ e, i }, el) => {
   save();
 };
 
+// Dias especiais: a avaliação ou o Teste de Rank viram a missão do dia (com ponto). A fila de treinos
+// não anda (o treino do dia fica para amanhã) e a carga não sobe; XP, Ouro e sequência valem normalmente.
+// Na Zona de Penalidade não aparecem: a redenção é feita com o próprio treino que ficou pendente.
+export const MODOS = {
+  avaliacao: { titulo: "Dia de Avaliação", icone: "📊", link: "#/avaliacao", botao: "Registrar meus máximos",
+    desc: "Faça uma série máxima de cada prova da fase, com 3 a 5 min de descanso entre elas, e registre os números.",
+    pronto: () => !S.game.needsWorkout && avaliacaoLiberada(), feito: () => S.prEm === today() },
+  teste: { titulo: "Dia de Teste de Rank", icone: "⚔️", link: null, botao: null,
+    desc: "Faça cada prova do Teste de Rank descansado e registre os resultados no card do Teste de Rank, nesta mesma tela.",
+    pronto: () => { const st = testStatus(); return !S.game.needsWorkout && !!st && !st.nextTry; }, feito: () => !!S.days[today()]?.testeFeito },
+};
+
+function modoCard(m) {
+  const M = MODOS[m];
+  return panel(M.titulo, `<p style="margin-top:0">${M.desc}</p>
+    <p class="small muted">Vale como a missão de hoje: bata o ponto de entrada, faça as provas (mínimo de ${minMin()} min) e bata o ponto de saída no local.
+      O treino da fila (${esc(workoutFor(today()).titulo)}) fica para amanhã, e este dia não conta para subir a carga.</p>
+    <button class="btn primary block" data-act="punchIn">Bater ponto: entrada</button>
+    <button class="btn ghost block" style="margin-top:8px" data-act="setModo" data-m="">Voltar ao treino normal</button>`, "", `<span class="chip">${M.icone}</span>`);
+}
+
+actions.setModo = ({ m }) => {
+  const d = day();
+  if (m && !MODOS[m]?.pronto()) return toast("Não está disponível hoje.");
+  if (m) d.modo = m; else delete d.modo;
+  save(); refresh();
+};
+
 function todayCard() {
   const t = today(), w = S.days[t]?.workout;
   if (w?.done) {
@@ -136,9 +165,9 @@ function todayCard() {
       <div class="grid3">
         <div class="tile"><div class="lbl">Duração</div><div class="val num">${w.durMin} min</div></div>
         <div class="tile"><div class="lbl">Gasto</div><div class="val num">~${w.kcal} kcal</div></div>
-        <div class="tile"><div class="lbl">Séries</div><div class="val">${w.hit ? "No alvo" : w.full ? "Abaixo" : "Parcial"}</div></div></div>
+        <div class="tile"><div class="lbl">${w.plano.modo ? "Tipo" : "Séries"}</div><div class="val">${w.plano.modo ? MODOS[w.plano.modo].icone : w.hit ? "No alvo" : w.full ? "Abaixo" : "Parcial"}</div></div></div>
       <p class="small muted">${w.indoor ? "Treino indoor validado pelo clima." : `Ponto: entrada ${fmtTime(w.in.t)} (${fmt(w.in.dist / 1000, 1)} km de casa) · saída ${fmtTime(w.out.t)} (${fmt(w.out.dist / 1000, 1)} km)`}
-      ${w.hit ? "" : w.full ? "<br>Algumas séries ficaram abaixo do alvo: a carga se mantém e esse treino não conta para a etapa." : "<br>Como nem todas as séries foram marcadas, este treino não conta para subir a carga."}</p>`, "good");
+      ${w.plano.modo ? "<br>Dia especial: o treino da fila fica para amanhã." : w.hit ? "" : w.full ? "<br>Algumas séries ficaram abaixo do alvo: a carga se mantém e esse treino não conta para a etapa." : "<br>Como nem todas as séries foram marcadas, este treino não conta para subir a carga."}</p>`, "good");
   }
   if (isRestDay(t) && !S.game.needsWorkout) {
     return panel("Missão de hoje", `<p class="mid">Dia de descanso</p><p class="muted">Sem missão hoje. Durma bem e coma direito.</p>`);
@@ -147,6 +176,16 @@ function todayCard() {
   const cur = S.days[t]?.workout;
   if (cur?.in) {
     const plan = cur.plano, need = cur.indoor ? INDOOR_MIN : minMin();
+    if (plan.modo) {
+      const M = MODOS[plan.modo], feito = M.feito();
+      return panel(plan.titulo, `<div class="timer num glow" id="timer">00:00</div>
+        <p class="center small muted">Entrada às ${fmtTime(cur.in.t)} · ${cur.in.spot ? esc(cur.in.spot) : fmt(cur.in.dist / 1000, 1) + " km de casa"} · mínimo ${need} min</p>
+        <p>${M.desc}</p>
+        <p class="small ${feito ? "ok" : "warn"}">${feito ? "✔ Resultados registrados." : "Registre os resultados antes de bater o ponto de saída."}</p>
+        ${M.link && !feito ? `<a class="btn block" href="${M.link}">${M.botao}</a>` : ""}
+        <button class="btn primary block" style="margin-top:8px" data-act="punchOut">Bater ponto: saída</button>
+        <button class="btn ghost sm block" style="margin-top:8px" data-act="cancelWorkout">Cancelar</button>`, "", `<span class="chip warn">Em andamento</span>`);
+    }
     return panel(plan.titulo, `
       <div class="timer num glow" id="timer">00:00</div>
       <p class="center small muted">${cur.indoor ? "Dungeon Indoor" : `Entrada às ${fmtTime(cur.in.t)} · ${cur.in.spot ? esc(cur.in.spot) : fmt(cur.in.dist / 1000, 1) + " km de casa"}`} · mínimo ${need} min</p>
@@ -158,14 +197,20 @@ function todayCard() {
         : `<button class="btn primary block" style="margin-top:12px" data-act="punchOut">Bater ponto: saída</button>`}
       <button class="btn ghost sm block" style="margin-top:8px" data-act="cancelWorkout">Cancelar este treino</button>`, "", `<span class="chip warn">Em andamento</span>`);
   }
+  const modo = S.days[t]?.modo;
+  if (modo && MODOS[modo]?.pronto()) return modoCard(modo);
   const plan = workoutFor(t);
+  const especiais = Object.entries(MODOS).filter(([, M]) => M.pronto());
+  const escolha = especiais.length ? `<div class="row wrap" style="gap:6px;margin-top:8px">${especiais.map(([k, M]) =>
+    `<button class="btn sm ghost grow" data-act="setModo" data-m="${k}">${M.icone} Hoje é ${M.titulo.replace("Dia de ", "dia de ")}</button>`).join("")}</div>` : "";
   const redencao = S.game.needsWorkout ? `<p class="small warn">Treino de redenção: é o treino que ficou pendente${isRestDay(t) ? ". Hoje seria descanso, mas você está na Zona de Penalidade" : ""}.</p>` : "";
   const leve = plan.leve ? `<p class="small ok">Semana leve: volume 30% menor para o corpo se recuperar. Faz parte do plano.</p>` : "";
   return panel(plan.titulo, `${redencao}${leve}
     ${exerciseList(null, plan, false)}
     <p class="small muted">Para valer: bata o ponto de entrada ${activeSpots().length ? "no seu local de treino" : `a mais de ${fmt(minDist() / 1000, 1)} km de casa`} (GPS preciso), treine pelo menos ${minMin()} min e bata o ponto de saída no local.</p>
     <button class="btn primary block" data-act="punchIn">Bater ponto: entrada</button>
-    <button class="btn ghost block" style="margin-top:8px" data-act="checkRain">🌧 Chuva forte? Verificar clima</button>`,
+    <button class="btn ghost block" style="margin-top:8px" data-act="checkRain">🌧 Chuva forte? Verificar clima</button>
+    ${escolha}`,
     "", `<span class="chip ${plan.leve ? "ok" : ""}">${plan.leve ? "Semana leve · " : ""}Etapa ${plan.stage}/${plan.stages}</span>`);
 }
 
@@ -215,7 +260,9 @@ actions.punchIn = async () => {
   const pos = await locate(); if (!pos) return;
   const motivo = refuse(pos, false);
   if (motivo) return sysMessage("Ponto recusado", motivo);
-  day().workout = { trackId: S.track.id, plano: workoutFor(today()), in: pos, sets: {} };
+  const m = day().modo && MODOS[day().modo] ? day().modo : null;
+  const plano = m ? { titulo: MODOS[m].titulo, modo: m, itens: [], idx: null } : workoutFor(today());
+  day().workout = { trackId: S.track.id, plano, in: pos, sets: {} };
   save(); refresh();
   sysMessage("Ponto de entrada registrado", `<p>${posLine(pos)}</p><p class="mid glow">${fmtTime(pos.t)}</p>
     ${activeSpots().length ? "" : `<p class="small warn">Cadastre seu local de treino abaixo: depois de ativo, o ponto só vale dentro dele.</p>`}
@@ -225,6 +272,7 @@ actions.punchIn = async () => {
 actions.punchOut = async () => {
   const w = day().workout, falta = Math.ceil(minMin() - elapsedMin(w));
   if (falta > 0) return sysMessage("Ainda não", `<p>Faltam <b>${falta} min</b> para o tempo mínimo de ${minMin()} min de treino.</p>`);
+  if (w.plano.modo && !MODOS[w.plano.modo].feito()) return sysMessage("Faltam os resultados", `<p>Registre os resultados ${w.plano.modo === "avaliacao" ? "da avaliação" : "do Teste de Rank"} antes de bater o ponto de saída.</p>`);
   const pos = await locate(); if (!pos) return;
   const motivo = refuse(pos, true);
   if (motivo) return sysMessage("Ponto recusado", motivo);
@@ -297,7 +345,7 @@ function finish(w) {
 
 actions.cancelWorkout = async () => {
   if (!await confirmBox("Cancelar treino", "O ponto de entrada e as séries marcadas serão apagados.", "Cancelar treino")) return;
-  delete day().workout; save(); refresh();
+  delete day().workout; delete day().modo; save(); refresh();
 };
 
 // ---- chuva forte: Dungeon Indoor ---------------------------------------------------
