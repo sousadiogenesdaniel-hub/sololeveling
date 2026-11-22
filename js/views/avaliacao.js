@@ -1,6 +1,6 @@
 // Teste de Avaliação: o jogador mede o próprio máximo em cada prova do Teste de Rank da fase.
 // Esses números viram o "Status" (progresso até a meta do rank) e calibram os treinos.
-import { views, actions, go } from "../core.js";
+import { views, actions, go, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { today, addDays, daysBetween, fmt, fmtDate, num, esc } from "../util.js";
 import { header, panel, sysMessage, toast } from "../ui.js";
@@ -8,7 +8,8 @@ import { currentPhase, currentTrack, testKey, pr, setPR, unitLabel } from "../tr
 
 export const AVALIACAO_DIAS = 7;
 export const proximaAvaliacao = () => S.prEm ? addDays(S.prEm, AVALIACAO_DIAS) : null;
-const liberada = () => !S.prEm || daysBetween(S.prEm, today()) >= AVALIACAO_DIAS;
+// Uma avaliação por semana; no dia em que ela começou dá para salvar e corrigir as provas à vontade
+const liberada = () => !S.prEm || S.prEm === today() || daysBetween(S.prEm, today()) >= AVALIACAO_DIAS;
 export const avaliacaoLiberada = liberada;
 
 // Lista "Status": cada prova da fase com o seu máximo e a barra até a meta
@@ -24,14 +25,32 @@ export function statusList(ph) {
 // Formulário da avaliação (usado aqui e no card da Missão, no Dia de Avaliação).
 // data-rascunho: o que for digitado fica salvo na hora e volta se você trocar de aba ou fechar o app.
 export function avaliacaoForm(ph) {
+  const t = today();
   return `<form data-act="saveAvaliacao" data-rascunho="avaliacao">${ph.tests.map(([n, alvo, un], i) => {
-    const k = testKey(n), m = S.pr?.[k];
-    return `<div class="field"><label for="av${i}">${esc(n)} <span class="muted">(meta do rank ${ph.rank}: ${unitLabel(alvo, un)})</span></label>
-      <input id="av${i}" name="${k}" inputmode="decimal" placeholder="${m ? `atual: ${m.v} (${fmtDate(m.d, { day: "2-digit", month: "2-digit" })})` : "seu máximo"}"></div>`;
+    const k = testKey(n), m = S.pr?.[k], hoje = m?.d === t;
+    return `<div class="field"><label for="av${i}">${esc(n)} <span class="muted">(meta do rank ${ph.rank}: ${unitLabel(alvo, un)})</span>
+        ${hoje ? `<span class="ok" style="text-transform:none;letter-spacing:0"> ✔ salvo hoje: ${fmt(m.v, un === "km" ? 1 : 0)}</span>` : ""}</label>
+      <div class="row"><input id="av${i}" name="${k}" inputmode="decimal" placeholder="${m ? `atual: ${m.v} (${fmtDate(m.d, { day: "2-digit", month: "2-digit" })})` : "seu máximo"}">
+        <button type="button" class="btn sm ${hoje ? "ghost" : ""}" data-act="savePR" data-key="${k}" data-nome="${esc(n)}">${hoje ? "Corrigir" : "Salvar"}</button></div></div>`;
   }).join("")}
-    <p class="small muted" style="margin-top:0">O que você digita fica salvo como rascunho até tocar em Salvar.</p>
-    <button class="btn primary block">Salvar meus máximos</button></form>`;
+    <p class="small muted" style="margin-top:0">Salve cada prova assim que fizer. O que você digita também fica guardado como rascunho.</p>
+    <button class="btn ghost block">Salvar todas as preenchidas</button></form>`;
 }
+
+export const provasHoje = ph => ph.tests.filter(([n]) => S.pr?.[testKey(n)]?.d === today()).length;
+
+// Salva uma prova só
+actions.savePR = ({ key, nome }, el) => {
+  if (!liberada()) return toast(`A avaliação desta semana já foi feita. Próxima em ${fmtDate(proximaAvaliacao())}.`, 4000);
+  const input = el.closest(".field").querySelector("input"), v = num(input.value);
+  if (v == null || !(v > 0)) return toast("Digite o número antes de salvar.");
+  setPR(key, v);
+  S.prEm = today();
+  if (S.rascunhos?.avaliacao?.v) delete S.rascunhos.avaliacao.v[key];
+  save();
+  refresh();
+  toast(`${nome}: ${fmt(v, v % 1 ? 1 : 0)} salvo.`);
+};
 
 views.avaliacao = () => {
   const ph = currentPhase(), t = currentTrack();

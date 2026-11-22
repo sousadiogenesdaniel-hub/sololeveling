@@ -5,7 +5,7 @@ import { today, addDays, esc, fmt, fmtTime, fmtDate, getPosition, getPreciseFix,
 import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox } from "../ui.js";
 import { completeWorkout, passTest, isRestDay, workoutKcal, grant, R, RANK_TESTS, RANK_ORDER, testsPassed } from "../game.js";
 import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, testStatus, TEST_COOLDOWN, trackFinished, unitLabel, SESSIONS_PER_STAGE, testKey, setPR } from "../tracks.js";
-import { statusList, avaliacaoLiberada, avaliacaoForm } from "./avaliacao.js";
+import { statusList, avaliacaoLiberada, avaliacaoForm, provasHoje } from "./avaliacao.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
 const PUNCH_EXPIRES_H = 5;    // ponto de entrada vence depois disso
@@ -184,8 +184,10 @@ function todayCard() {
       return panel(plan.titulo, `<div class="timer num glow" id="timer">00:00</div>
         <p class="center small muted">Entrada às ${fmtTime(cur.in.t)} · ${cur.in.spot ? esc(cur.in.spot) : fmt(cur.in.dist / 1000, 1) + " km de casa"} · mínimo ${need} min</p>
         <p>${M.desc}</p>
-        <p class="small ${feito ? "ok" : "warn"}">${feito ? "✔ Resultados registrados." : "Registre os resultados antes de bater o ponto de saída."}</p>
-        ${plan.modo === "avaliacao" && !feito ? avaliacaoForm(currentPhase()) : ""}
+        <p class="small ${feito ? "ok" : "warn"}">${plan.modo === "avaliacao"
+          ? (feito ? `✔ ${provasHoje(currentPhase())} de ${currentPhase().tests.length} provas salvas hoje. Pode continuar e depois bater o ponto de saída.` : "Salve pelo menos uma prova antes de bater o ponto de saída.")
+          : (feito ? "✔ Resultados registrados." : "Registre os resultados antes de bater o ponto de saída.")}</p>
+        ${plan.modo === "avaliacao" ? avaliacaoForm(currentPhase()) : ""}
         <button class="btn primary block" style="margin-top:8px" data-act="punchOut">Bater ponto: saída</button>
         <button class="btn ghost sm block" style="margin-top:8px" data-act="cancelWorkout">Cancelar</button>`, "", `<span class="chip warn">Em andamento</span>`);
     }
