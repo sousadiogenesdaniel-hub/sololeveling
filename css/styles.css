@@ -342,16 +342,18 @@ body.rk-C { --rank: #3fb8ff; --rank-rgb: 63, 184, 255; } body.rk-B { --rank: #92
 body.rk-A { --rank: #ff2e4d; --rank-rgb: 255, 46, 77; } body.rk-S { --rank: #f0c45c; --rank-rgb: 240, 196, 92; }
 body.cl-necromante { --bg: #06040c; --bg2: #100821; --panel: rgba(18, 10, 34, .86); --panel2: rgba(34, 18, 62, .6); --text: #ece4ff; --muted: #a093c4;
   --accent: #7a3cff; --glow: #d9c2ff; --glow-rgb: 217, 194, 255; --line: color-mix(in srgb, var(--glow) 38%, #2a1a4a);
-  background: radial-gradient(1000px 440px at 50% -8%, rgba(138, 77, 255, .2), transparent 60%), linear-gradient(180deg, var(--bg2), var(--bg) 45%); background-color: var(--bg); background-attachment: fixed; }
+  background: radial-gradient(1000px 460px at 50% -8%, rgba(var(--glow-rgb), var(--halo, .22)), transparent 62%), linear-gradient(180deg, var(--bg2), var(--bg) 45%); background-color: var(--bg); background-attachment: fixed; }
 body.cl-necromante.rk-C { --glow: #b892ff; --glow-rgb: 184, 146, 255; }
 body.cl-necromante.rk-B { --glow: #9257ff; --glow-rgb: 146, 87, 255; }
-body.cl-necromante.rk-A { --glow: #8a3cf5; --glow-rgb: 138, 60, 245; }
+body.cl-necromante.rk-A { --glow: #7a2ce6; --glow-rgb: 122, 44, 230; --halo: .42; --panel: rgba(24, 9, 48, .88); --bg2: #170a30; }
+body.cl-necromante.rk-B { --halo: .32; --bg2: #140a2a; }
+body.cl-necromante.rk-C { --halo: .26; }
 body.cl-necromante.rk-S { --bg: #050403; --bg2: #14100a; --panel: rgba(20, 15, 7, .9); --panel2: rgba(40, 30, 12, .6); --text: #fff4dc; --muted: #b9a77d;
   --accent: #8a6a24; --glow: #f0c45c; --glow-rgb: 240, 196, 92; --line: color-mix(in srgb, #f0c45c 36%, #2a2010);
   background: radial-gradient(1000px 440px at 50% -8%, rgba(240, 196, 92, .14), transparent 60%), linear-gradient(180deg, var(--bg2), var(--bg) 45%); background-color: var(--bg); }
-body.cl-necromante::before { /* fumaça de sombra no lugar da grade */
-  background-image: radial-gradient(55% 28% at 18% 96%, rgba(138, 77, 255, .3), transparent 70%), radial-gradient(45% 24% at 82% 92%, rgba(110, 50, 220, .26), transparent 70%),
-    radial-gradient(80% 22% at 50% 104%, rgba(70, 25, 140, .45), transparent 70%), radial-gradient(35% 18% at 62% 70%, rgba(138, 77, 255, .1), transparent 70%);
+body.cl-necromante::before { /* fumaça de sombra no lugar da grade, na cor do rank */
+  background-image: radial-gradient(55% 28% at 18% 96%, rgba(var(--glow-rgb), .3), transparent 70%), radial-gradient(45% 24% at 82% 92%, rgba(var(--glow-rgb), .24), transparent 70%),
+    radial-gradient(80% 22% at 50% 104%, rgba(70, 25, 140, .45), transparent 70%), radial-gradient(35% 18% at 62% 70%, rgba(var(--glow-rgb), .1), transparent 70%);
   background-size: auto; mask-image: none; -webkit-mask-image: none; animation: fumacaFundo 9s ease-in-out infinite alternate; }
 body.cl-necromante.rk-S::before { /* fumaça e poeira douradas */
   background-image: radial-gradient(1px 1px at 20% 30%, #ffd875, transparent), radial-gradient(1px 1px at 70% 55%, #ffd875, transparent), radial-gradient(1.5px 1.5px at 42% 78%, #ffe9a8, transparent),
@@ -359,10 +361,13 @@ body.cl-necromante.rk-S::before { /* fumaça e poeira douradas */
     radial-gradient(55% 26% at 20% 98%, rgba(240, 196, 92, .16), transparent 70%), radial-gradient(70% 22% at 70% 104%, rgba(140, 100, 30, .3), transparent 70%); }
 @keyframes fumacaFundo { to { transform: translate(3%, -4%) scale(1.06); } }
 /* rank A: roxo imperial com brilho correndo */
-body.cl-necromante.rk-A .xpbar > i, body.cl-necromante.rk-A .btn.primary { background: linear-gradient(100deg, #5a16c4, #c9a0ff, #5a16c4); background-size: 220% 100%; animation: imperial 3s linear infinite; }
+body.cl-necromante.rk-A .xpbar > i, body.cl-necromante.rk-A .btn.primary { background: linear-gradient(100deg, #5b17cf 0 42%, #b98cff 50%, #5b17cf 58% 100%); background-size: 260% 100%; animation: imperial 3.2s linear infinite; }
+body.cl-necromante.rk-A .btn.primary { color: #fff; }
+body.cl-necromante.rk-A .glow, body.cl-necromante.rk-A a, body.cl-necromante.rk-A nav.bottom a.on, body.cl-necromante.rk-A .btn:not(.primary):not(.ghost):not(.danger) { color: #b98cff; }
+body.cl-necromante.rk-A .glow { text-shadow: 0 0 12px rgba(122, 44, 230, .9); }
 body.cl-necromante.rk-A .panel::before, body.cl-necromante.rk-A .panel::after { animation: imperialBorda 3s ease-in-out infinite; }
-@keyframes imperial { to { background-position: -220% 0; } }
-@keyframes imperialBorda { 50% { border-color: #d9b8ff; box-shadow: 0 0 10px #c9a0ff; } }
+@keyframes imperial { from { background-position: 130% 0; } to { background-position: -130% 0; } }
+@keyframes imperialBorda { 50% { border-color: #d9b8ff; } }
 body.cl-necromante.rk-S .btn.primary, body.cl-necromante.rk-S .xpbar > i { background: linear-gradient(90deg, #b8892e, #ffe08a, #b8892e); }
 /* na penalidade a grade volta (sem fumaça roxa) */
 body.penalty.penalty.penalty::before { background-image: linear-gradient(rgba(var(--glow-rgb), .045) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--glow-rgb), .045) 1px, transparent 1px);
