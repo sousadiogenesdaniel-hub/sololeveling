@@ -192,3 +192,60 @@ export function portaoFx(nome, cor, linha) {
     <div class="fx-name" style="--c:${cor};top:calc(50% + 110px);letter-spacing:.1em;font-size:1.4rem">${nome.toUpperCase()}</div>
     <div class="fx-lvl" style="top:calc(50% + 190px)">${linha}</div>`, 5000);
 }
+
+// ---- extração de sombra por grau (quanto mais alto o grau, mais camadas e mais tempo) ----
+const EX = {
+  soldado: { dur: 3.4, v: { dp: .1, dc: .2, df: .3, dsd: .6, ds: 1, do: 1.6, dn: 2, dfim: 2.6 } },
+  elite: { dur: 4.4, v: { dp: .1, dc: .2, dr: .3, df: .6, dsd: 1, ds: 1.2, do: 2.2, dn: 2.6, dfim: 3.4 }, part: [2.2, 22] },
+  cavaleiro: { dur: 5.4, metal: 1, v: { dp: .1, dc: .2, dk: .3, dpi: .8, df: .8, dsd: 1.2, ds: 1.4, do: 2.6, dg: 2.9, dw: 2.8, dn: 3.2, dfim: 4 }, part: [2.8, 26] },
+  comandante: { dur: 6.8, treme: 1, v: { dp: .1, dc: .2, dr: .4, dl: .9, dt: 1.5, df: 1.4, dsd: 1.6, ds: 1.9, do: 3.4, dw: 3.4, dn: 4, dfim: 4.8 }, part: [3.4, 40] },
+  marechal: { dur: 9, treme: 1, ouro: 1, msg: "[ O SISTEMA ] Um Marechal responde ao seu chamado.",
+    v: { dp: 2, dc: 2, dr: 2, dpi: 2.6, dt: 3, df: 3, dsd: 3.2, ds: 2, da: 5.2, do: 5.6, dco: 6, dcl: 6, dw: 6, dn: 6.4, dfim: 7.4 }, part: [1.8, 70] },
+};
+const runaSvg = c => `<svg viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="${c}" stroke-width="2"><circle cx="100" cy="100" r="94" stroke-opacity=".9"/><circle cx="100" cy="100" r="80" stroke-dasharray="6 6" stroke-opacity=".7"/><circle cx="100" cy="100" r="50" stroke-opacity=".6"/>
+  <polygon points="100,22 168,140 32,140" stroke-opacity=".7"/><polygon points="100,178 32,60 168,60" stroke-opacity=".7"/></g>
+  ${Array.from({ length: 16 }, (_, i) => { const a = i * Math.PI / 8, x = 100 + 87 * Math.cos(a), y = 100 + 87 * Math.sin(a);
+    return `<rect x="${(x - 2).toFixed(1)}" y="${(y - 5).toFixed(1)}" width="4" height="10" fill="${c}" transform="rotate(${i * 22.5} ${x.toFixed(1)} ${y.toFixed(1)})"/>`; }).join("")}</svg>`;
+const rachSvg = c => `<svg viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="${c}" stroke-width="1.6" style="filter:drop-shadow(0 0 3px ${c})">
+  <polyline points="100,40 70,44 52,38 20,46"/><polyline points="100,40 128,46 150,38 186,48"/><polyline points="100,40 88,54 80,60"/><polyline points="100,40 114,55 122,60"/><polyline points="100,40 60,30 40,32"/><polyline points="100,40 140,30 166,33"/></g></svg>`;
+const raioSvg = c => `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><g fill="none" stroke="${c}" stroke-width=".9">
+  <polyline points="18,0 24,18 17,26 26,44 20,58"/><polyline points="84,0 76,16 84,24 74,42 80,54"/><polyline points="50,0 54,10 47,17 53,28"/></g></svg>`;
+function somExtracao(k, v) {
+  const c = soundOn() && audio(); if (!c) return;
+  noise(c, v.df, 1.6, .12); tone(c, { f: 60, t: v.dsd, d: 1.4, type: "sawtooth", v: .05, slide: 120 });
+  tone(c, { f: 880, t: v.do, d: .5, type: "sine", v: .06 });
+  if (k !== "soldado") [392, 466.16, 587.33].forEach((f, i) => tone(c, { f, t: v.dn + i * .08, d: 1.4, v: .05 }));
+  if (v.dg || v.dw) tone(c, { f: 2637, t: v.dg || v.dw, d: .6, type: "sine", v: .05 });
+  if (v.dt) { tone(c, { f: 70, t: v.dt, d: 1.3, type: "sine", v: .35, slide: 36 }); noise(c, v.dt, 1, .3); }
+  if (k === "marechal") {
+    [261.63, 329.63, 392, 523.25, 659.25, 783.99].forEach((f, i) => tone(c, { f, t: v.dcl + i * .1, d: 2.4, v: .06 }));
+    [1046.5, 1318.5, 1568, 2093].forEach((f, i) => tone(c, { f, t: v.dco + i * .12, d: .8, type: "sine", v: .04 }));
+  }
+}
+// grau: soldado | elite | cavaleiro | comandante | marechal. arte: SVG da sombra (sombras.arteSombra).
+export function extracaoFx({ grau, arte, nome, sub, cor, faixa = "", palavra = "LEVANTE-SE" }) {
+  const T = EX[grau] || EX.soldado, v = T.v;
+  navigator.vibrate?.(grau === "marechal" ? [80, 60, 80, 60, 400] : grau === "comandante" ? [80, 60, 300] : [60]);
+  somExtracao(grau, v);
+  const vars = Object.entries(v).map(([a, x]) => `--${a}:${x}s`).join(";");
+  const camadas = [];
+  if (grau === "marechal") camadas.push(`<div class="ex-raios"></div>`);
+  if (v.dpi) camadas.push(`<div class="ex-pilar"></div>`);
+  if (v.dr) camadas.push(`<div class="ex-runa">${runaSvg(cor)}</div>`);
+  if (grau === "comandante" || grau === "marechal") camadas.push(`<div class="ex-runa r2">${runaSvg(cor)}</div>`);
+  if (v.dk) camadas.push(`<div class="ex-rach">${rachSvg(cor)}</div>`);
+  if (v.dl) camadas.push(`<div class="ex-raio">${raioSvg(cor)}</div>`);
+  camadas.push(`<div class="ex-chao"></div><div class="ex-fum f1"></div><div class="ex-fum f2"></div><div class="ex-fum f3"></div><div class="ex-fig">${arte}</div>`);
+  if (v.dg) camadas.push(`<div class="ex-glint"></div>`);
+  if (v.dw) camadas.push(`<div class="ex-onda"></div><div class="ex-onda o2"></div>`);
+  const [p0, pn] = T.part || [0, 0];
+  const part = Array.from({ length: pn }, () => { const sz = 2 + Math.random() * 4, d = 1.6 + Math.random() * 2.4;
+    return `<i style="left:${(Math.random() * 100).toFixed(1)}%;width:${sz.toFixed(1)}px;height:${sz.toFixed(1)}px;animation-duration:${d.toFixed(2)}s;animation-delay:${(p0 + Math.random() * (grau === "marechal" ? 6 : 1.4)).toFixed(2)}s"></i>`; }).join("");
+  let i = 0;
+  const msg = T.msg ? `<div class="ex-msg">${[...T.msg].map(ch => `<span style="animation-delay:${(i++ * .035).toFixed(3)}s">${ch === " " ? "&nbsp;" : ch}</span>`).join("")}</div>` : "";
+  return overlay(`fx-ex${T.treme ? " treme" : ""}${T.metal ? " metal" : ""}${T.ouro ? " ouro" : ""}`, `<div class="ex-cfg" style="--c:${cor};${vars}">
+    <div class="ex-fundo"></div>${msg}<div class="ex-palavra">${palavra}</div><div class="ex-cena">${camadas.join("")}</div>
+    <div class="ex-part">${part}</div>${v.dcl ? `<div class="ex-clarao"></div>` : ""}
+    <div class="ex-placa">${faixa ? `<div class="ex-faixa">${faixa}</div>` : ""}<div class="ex-nome">${nome}</div><div class="ex-sub">${sub}</div></div>
+    <div class="ex-toque">toque para continuar</div></div>`, (T.dur + 3) * 1000);
+}

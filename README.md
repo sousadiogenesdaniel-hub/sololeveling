@@ -91,6 +91,11 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   Elite → Cavaleiro no 20). Por missão: +1 Ouro por Soldado e +3 por Cavaleiro (até +40), +1% de sorte no baú por Elite
   (até +10%). **Invocação** de um Comandante 1 vez por semana (ex.: Cavaleiro Carmesim = baú da missão de hoje no mínimo
   Raro). Nada disso alivia penalidade.
+- **Visual por classe e rank:** o losango do rank tem a cor do rank (E cinza, D verde, C azul, B roxo, A vermelho,
+  S dourado). Humano usa o azul de sempre; o Necromante tem fundo preto-arroxeado com fumaça e destaque em roxos do D
+  (claro) ao A (roxo imperial com brilho); no S, preto e dourado. A Zona de Penalidade (vermelha) vence tudo. A
+  extração de cada grau tem a sua animação, mais longa e exclusiva quanto mais alto o grau (Soldado ~3 s, Marechal
+  ~9 s com mensagem do Sistema, asas, coroa e clarão dourado).
 - **Equipamentos** (arma, manto, acessório) caem de baús Épicos/Lendários, Portões e chefes; repetido vira Ouro.
 - **Portões:** um por semana, num dia sorteado e sem aviso, com desafio calculado pelos máximos (contra o relógio,
   circuito ou resistência) e 48 h para entrar. Normal (73%, opcional: +100 XP, baú Épico+, corpo e 25% de item),

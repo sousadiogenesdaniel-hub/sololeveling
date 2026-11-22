@@ -35,9 +35,6 @@ Necromante está pronto.
   conquistas; os títulos exibidos refletem a classe atual.
 - **A decidir:** o valor de X; se os equipamentos são do jogador (hoje) ou da classe.
 
-### Visual do app por classe e por rank (próxima conversa)
-Mudar as cores do layout conforme a classe do jogador e o rank. O Daniel quer pensar isso junto.
-
 ### Grandes Recompensas por rank (próxima conversa)
 Além do Comandante e dos títulos, uma única **mega recompensa** a cada rank, para cada subida ter a empolgação
 que a mudança de classe no rank D tem. O Daniel ainda está pensando.

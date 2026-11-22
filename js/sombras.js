@@ -144,7 +144,7 @@ export function arteSombra({ grau, cmd } = {}, { tam = 96, bloqueado = false } =
     atras.push(`<path d="M27 50 C14 70 12 95 9 118 L91 118 C88 95 86 70 73 50 Z" ${capa} ${tr}/>`);
   }
   if (g === "marechal") {
-    atras.push(`<path d="M25 54 C6 42 1 22 5 6 C11 26 21 38 32 46 Z" ${fill} ${tr}/><path d="M75 54 C94 42 99 22 95 6 C89 26 79 38 68 46 Z" ${fill} ${tr}/>`);
+    atras.push(`<g class="asas"><path d="M25 54 C6 42 1 22 5 6 C11 26 21 38 32 46 Z" ${fill} ${tr}/><path d="M75 54 C94 42 99 22 95 6 C89 26 79 38 68 46 Z" ${fill} ${tr}/></g>`);
   }
   if (g === "soldado") {
     frente.push(`<path d="M47 16 L50 6 L53 16 Z" ${fill} ${tr}/>`,
@@ -171,10 +171,10 @@ export function arteSombra({ grau, cmd } = {}, { tam = 96, bloqueado = false } =
       `<path d="M50.5 9.6 L51.6 12.4 L54.6 12.5 L52.2 14.3 L53.1 17.2 L50.5 15.5 L47.9 17.2 L48.8 14.3 L46.4 12.5 L49.4 12.4 Z" fill="${cor}"/>`);
   }
   if (g === "marechal") {
-    frente.push(`<path d="M40 15 L42 6 L46 11 L50 2 L54 11 L58 6 L60 15 Z" fill="${cor}" fill-opacity=".8"/>`);
+    frente.push(`<path class="coroa" d="M40 15 L42 6 L46 11 L50 2 L54 11 L58 6 L60 15 Z" fill="${cor}" fill-opacity=".8"/>`);
   }
-  const olhos = bloqueado ? "" : `<g filter="url(#${id}g)"><ellipse cx="45.3" cy="28" rx="3" ry="1.6" fill="${cor}"/><ellipse cx="54.7" cy="28" rx="3" ry="1.6" fill="${cor}"/></g>
-    <ellipse cx="45.3" cy="28" rx="1.7" ry=".8" fill="#fff" fill-opacity=".9"/><ellipse cx="54.7" cy="28" rx="1.7" ry=".8" fill="#fff" fill-opacity=".9"/>`;
+  const olhos = bloqueado ? "" : `<g class="olhos"><g filter="url(#${id}g)"><ellipse cx="45.3" cy="28" rx="3" ry="1.6" fill="${cor}"/><ellipse cx="54.7" cy="28" rx="3" ry="1.6" fill="${cor}"/></g>
+    <ellipse cx="45.3" cy="28" rx="1.7" ry=".8" fill="#fff" fill-opacity=".9"/><ellipse cx="54.7" cy="28" rx="1.7" ry=".8" fill="#fff" fill-opacity=".9"/></g>`;
   return `<svg class="sombra-arte" viewBox="0 0 100 120" width="${tam}" height="${Math.round(tam * 1.2)}" role="img" aria-label="${bloqueado ? "Sombra desconhecida" : esc2(k?.nome || GRAU[g].nome)}">
     <defs><radialGradient id="${id}a" cx="50%" cy="58%" r="58%"><stop offset="0" stop-color="${cor}" stop-opacity="${bloqueado ? .15 : .5}"/><stop offset="1" stop-color="${cor}" stop-opacity="0"/></radialGradient>
       <linearGradient id="${id}f" x1="0" y1="0" x2="0" y2="1"><stop offset=".62" stop-color="${ESCURO}"/><stop offset="1" stop-color="${ESCURO}" stop-opacity="0"/></linearGradient>

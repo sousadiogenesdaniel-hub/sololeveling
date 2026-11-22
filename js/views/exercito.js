@@ -3,7 +3,7 @@ import { views, actions, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { esc, fmt, fmtDate, addDays, today } from "../util.js";
 import { header, panel, toast, confirmBox, aviso } from "../ui.js";
-import { levantarFx, falhaFx } from "../fx.js";
+import { extracaoFx, falhaFx } from "../fx.js";
 import { weekStart } from "../game.js";
 import { RAR, SLOTS, ITENS, itemBase, inventario, equipados, equipar, efeitoTxt, bonus } from "../premios.js";
 import { necromante, precisaEscolherClasse, classeAtual, sombras, corpos, GRAU, COMANDANTES, arteSombra, nomeSombra, nivelSombra, poderSombra,
@@ -103,7 +103,8 @@ actions.levantar = async ({ id }) => {
   save();
   if (r.ok) {
     const s = r.sombra, cor = s.cmd ? COMANDANTES[s.cmd].cor : GRAU[s.grau].cor;
-    await levantarFx(arteSombra(s, { tam: 200 }), esc(nomeSombra(s)), s.cmd ? `${GRAU[s.grau].nome} · ${COMANDANTES[s.cmd].poder}` : GRAU[s.grau].nome, cor);
+    await extracaoFx({ grau: s.grau, arte: arteSombra(s, { tam: 300 }), nome: esc(nomeSombra(s)), cor,
+      sub: s.cmd ? COMANDANTES[s.cmd].poder : `${GRAU[s.grau].nome} · nível 1`, faixa: s.cmd ? GRAU[s.grau].nome.toUpperCase() : "" });
     if (s.cmd) await aviso("Comandante extraído", `<p class="mid" style="color:${cor}">${esc(s.nome)}</p><p>${COMANDANTES[s.cmd].poder}: ${COMANDANTES[s.cmd].efeito}.</p>
       <p class="small muted">Invoque uma vez por semana na tela do Exército.</p>${botaoCompartilhar("sombra", { nome: s.nome, grau: GRAU[s.grau].nome, cor, arte: arteSombra(s, { tam: 200 }) })}`);
   } else if (r.cinzas) await falhaFx("A SOMBRA VIROU CINZAS", esc(r.corpo.origem));
@@ -118,6 +119,6 @@ actions.invocar = async ({ r }) => {
   if (!invocar(r)) return toast("Não dá para invocar agora.");
   save();
   const s = sombras().find(x => x.cmd === r);
-  await levantarFx(arteSombra(s, { tam: 200 }), esc(k.nome), k.poder, k.cor, "INVOCAÇÃO");
+  await extracaoFx({ grau: s.grau, arte: arteSombra(s, { tam: 300 }), nome: esc(k.nome), sub: k.poder, cor: k.cor, faixa: "INVOCAÇÃO", palavra: "INVOCAÇÃO" });
   refresh();
 };

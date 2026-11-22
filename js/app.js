@@ -2,7 +2,7 @@
 import { $, $$, today } from "./util.js";
 import { S, load, save } from "./store.js";
 import { actions, views, setRender } from "./core.js";
-import { processDays, inPenalty, applyAutoKcal, migrarCurva } from "./game.js";
+import { processDays, inPenalty, applyAutoKcal, migrarCurva, levelInfo } from "./game.js";
 import { aplicarFoco } from "./tracks.js";
 import { showEvents, toast, sysMessage, aviso } from "./ui.js";
 import { celebrate } from "./fx.js";
@@ -29,7 +29,7 @@ const TAB_OF = { inicio: "inicio", treino: "treino", comida: "comida", evolucao:
 function render() {
   const app = $("#app"), nav = $("#nav");
   document.body.classList.toggle("penalty", !!S.profile && inPenalty());
-  document.querySelector('meta[name="theme-color"]').content = document.body.classList.contains("penalty") ? "#0c0305" : "#04070f";
+  aplicarTema();
   if (!S.profile) { nav.classList.add("hidden"); app.innerHTML = onboarding(); return; }
   nav.classList.remove("hidden");
   if (aplicarFoco()) save(); // com 2+ trilhas: a trilha do treino de hoje
@@ -50,6 +50,15 @@ function render() {
   syncNative(); // app Android: informa o estado da Zona de Penalidade
 }
 setRender(render);
+
+// Tema: classe (clima do app) e rank (cor do losango e, no Necromante, do destaque). Ver o fim do styles.css.
+function aplicarTema() {
+  const b = document.body;
+  [...b.classList].filter(c => /^(cl|rk)-/.test(c)).forEach(c => b.classList.remove(c));
+  if (S.profile) { b.classList.add("rk-" + levelInfo().rank); if (S.classe) b.classList.add("cl-" + S.classe); }
+  const cor = getComputedStyle(b).getPropertyValue("--bg").trim() || "#04070f";
+  document.querySelector('meta[name="theme-color"]').content = cor;
+}
 
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-act]");
