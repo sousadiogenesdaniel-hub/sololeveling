@@ -131,11 +131,12 @@ actions.toggleSet = ({ e, i }, el) => {
 
 // Dias especiais: a avaliação ou o Teste de Rank viram a missão do dia (com ponto). A fila de treinos
 // não anda (o treino do dia fica para amanhã) e a carga não sobe; XP, Ouro e sequência valem normalmente.
-// Na Zona de Penalidade não aparecem: a redenção é feita com o próprio treino que ficou pendente.
+// Na Zona de Penalidade, o Dia de Avaliação pode servir de redenção (o treino pendente continua na fila e vai
+// para o dia seguinte); o Dia de Teste de Rank não aparece na penalidade.
 export const MODOS = {
   avaliacao: { titulo: "Dia de Avaliação", icone: "📊", link: "#/avaliacao", botao: "Registrar meus máximos",
     desc: "Faça uma série máxima de cada prova da fase, com 3 a 5 min de descanso entre elas, e registre os números.",
-    pronto: () => !S.game.needsWorkout && avaliacaoLiberada(), feito: () => S.prEm === today() },
+    pronto: () => avaliacaoLiberada(), feito: () => S.prEm === today() },
   teste: { titulo: "Dia de Teste de Rank", icone: "⚔️", link: null, botao: null,
     desc: "Faça cada prova do Teste de Rank descansado e registre os resultados no card do Teste de Rank, nesta mesma tela.",
     pronto: () => { const st = testStatus(); return !S.game.needsWorkout && !!st && !st.nextTry; }, feito: () => !!S.days[today()]?.testeFeito },
@@ -146,6 +147,7 @@ function modoCard(m) {
   return panel(M.titulo, `<p style="margin-top:0">${M.desc}</p>
     <p class="small muted">Vale como a missão de hoje: bata o ponto de entrada, faça as provas (mínimo de ${minMin()} min) e bata o ponto de saída no local.
       O treino da fila (${esc(workoutFor(today()).titulo)}) fica para amanhã, e este dia não conta para subir a carga.</p>
+    ${S.game.needsWorkout ? `<p class="small warn">Vale como treino de redenção da Zona de Penalidade. O treino que ficou pendente continua na fila e passa para amanhã.</p>` : ""}
     <button class="btn primary block" data-act="punchIn">Bater ponto: entrada</button>
     <button class="btn ghost block" style="margin-top:8px" data-act="setModo" data-m="">Voltar ao treino normal</button>`, "", `<span class="chip">${M.icone}</span>`);
 }

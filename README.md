@@ -53,7 +53,8 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   O modelo anterior está salvo no branch `modelo-anterior-ranks`.
 - **Dia de Avaliação / Dia de Teste de Rank:** na Missão, escolher um deles faz as provas valerem como a missão do
   dia (com ponto e mínimo de 30 min). O treino da fila fica para amanhã e o dia não conta para subir a carga.
-  Não aparecem na Zona de Penalidade: a redenção é com o treino que ficou pendente.
+  Na Zona de Penalidade, o Dia de Avaliação vale como redenção (o treino pendente continua na fila e passa para
+  o dia seguinte); o Dia de Teste de Rank não aparece na penalidade.
 - **Teste antecipado:** a partir da metade das etapas da fase dá para tentar o Teste de Rank (1 tentativa a cada
   7 dias; falhar não pune). Passou: pula para a próxima fase e ganha +500 XP e +300 Ouro, sem pular níveis.
 - **Dieta (conferida no dia seguinte, sem Zona de Penalidade):** até 100 kcal acima da meta, nada; acima disso,
