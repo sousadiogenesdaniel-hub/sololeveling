@@ -1,9 +1,6 @@
 package app.osistema;
 
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.IntentFilter;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import android.content.Intent;
@@ -38,41 +35,21 @@ public class BlockerService extends Service {
     private WindowManager wm;
     private View overlay;
     private String lastPkg, shownFor;
-    private Boolean bloqueando = null; // estado mostrado na notificação
-    private BroadcastReceiver telaLigou;
+    private boolean primeira = true; // primeira conferência: olha mais para trás para achar o app já aberto
 
     @Override public IBinder onBind(Intent i) { return null; }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         wm = getSystemService(WindowManager.class);
-        bloqueando = null;
-        foreground(Prefs.shouldBlock(this));
-        if (telaLigou == null) {
-            telaLigou = new BroadcastReceiver() {
-                @Override public void onReceive(Context c, Intent i) { h.removeCallbacks(loop); h.post(loop); }
-            };
-            IntentFilter f = new IntentFilter(Intent.ACTION_SCREEN_ON);
-            f.addAction(Intent.ACTION_USER_PRESENT);
-            f.addAction(Intent.ACTION_DATE_CHANGED);
-            f.addAction(Intent.ACTION_TIME_CHANGED);
-            if (Build.VERSION.SDK_INT >= 33) registerReceiver(telaLigou, f, Context.RECEIVER_NOT_EXPORTED);
-            else registerReceiver(telaLigou, f);
-        }
+        android.app.Notification n = Scheduler.notification(this, Scheduler.CH_BLOQUEIO, "Zona de Penalidade ativa",
+            String.join(", ", nomes()) + " bloqueados até você pagar a multa e cumprir a missão.", true);
+        if (Build.VERSION.SDK_INT >= 34) startForeground(1, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        else startForeground(1, n);
+        primeira = true;
         h.removeCallbacks(loop);
         h.post(loop);
         return START_STICKY;
-    }
-
-    /** Coloca (ou troca) a notificação do serviço conforme o estado. */
-    private void foreground(boolean bloq) {
-        android.app.Notification n = bloq
-            ? Scheduler.notification(this, Scheduler.CH_BLOQUEIO, "Zona de Penalidade ativa",
-                String.join(", ", nomes()) + " bloqueados até você pagar a multa e cumprir a missão.", true)
-            : Scheduler.notification(this, Scheduler.CH_VIGIA, "O Sistema: bloqueio armado",
-                "Se você faltar à missão, os apps escolhidos são bloqueados na hora.", true);
-        if (Build.VERSION.SDK_INT >= 34) startForeground(1, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
-        else startForeground(1, n);
     }
 
     private java.util.List<String> nomes() {
@@ -83,18 +60,10 @@ public class BlockerService extends Service {
 
     private final Runnable loop = new Runnable() {
         @Override public void run() {
-            Prefs.tick(BlockerService.this);
-            if (!Prefs.canRun(BlockerService.this)) { hide(); stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); return; }
-            boolean b = Prefs.shouldBlock(BlockerService.this);
-            boolean mudou = bloqueando == null || bloqueando != b;
-            if (mudou) {
-                bloqueando = b;
-                foreground(b);
-                Prefs.logEval(BlockerService.this, b ? "bloqueando" : "armado");
-            }
-            if (!b) { hide(); lastPkg = null; h.postDelayed(this, 30_000); return; }
-            // começou a bloquear agora: olha mais para trás para saber qual app JÁ está na frente
-            String fg = foreground(mudou ? 6 * 60 * 60 * 1000L : 5000);
+            if (!Prefs.shouldBlock(BlockerService.this)) { hide(); stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); return; }
+            // começou a bloquear agora: olha as últimas horas para saber qual app JÁ está na frente
+            String fg = foreground(primeira ? 6 * 60 * 60 * 1000L : 5000);
+            primeira = false;
             if (fg != null) lastPkg = fg;
             boolean cobrir = lastPkg != null && Prefs.blocked(BlockerService.this).contains(lastPkg)
                 && Settings.canDrawOverlays(BlockerService.this);
@@ -185,9 +154,5 @@ public class BlockerService extends Service {
         overlay = null; shownFor = null;
     }
 
-    @Override public void onDestroy() {
-        h.removeCallbacks(loop); hide();
-        if (telaLigou != null) { try { unregisterReceiver(telaLigou); } catch (Exception ignored) {} telaLigou = null; }
-        super.onDestroy();
-    }
+    @Override public void onDestroy() { h.removeCallbacks(loop); hide(); super.onDestroy(); }
 }

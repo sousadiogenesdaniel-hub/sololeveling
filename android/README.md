@@ -6,11 +6,11 @@ num WebView preso a esse endereço e adiciona o que o navegador não faz:
 - **Bloqueio de apps na Zona de Penalidade**: WhatsApp, WhatsApp Business, Gmail, Instagram, TikTok, YouTube,
   Facebook, Netflix, Crunchyroll, Prime Video e Spotify. A lista é **fixa** no código Android: não dá para
   desmarcar apps pela página, e bancos, telefone e Ajustes nunca podem entrar nela.
-- **Bloqueio mesmo sem abrir o app:** um vigia (serviço com notificação discreta) fica ligado enquanto o bloqueio
-  está armado. Ele confere a cada 30 s e sempre que a tela liga; se passou um dia cobrado sem missão, deduz a
-  falta sozinho e bloqueia (`Prefs.missed`, coberta por testes em `PrefsTest`). Não depende de alarmes, que o
-  "modo dormir" do celular pode segurar. Ao começar a bloquear, olha as últimas horas para saber qual app já
-  está aberto.
+- **Bloqueio mesmo sem abrir o app:** todo dia às 07:05 (logo depois do modo dormir do jogador) o Android confere
+  os dias anteriores: se algum dia cobrado passou sem missão, deduz a falta sozinho e bloqueia
+  (`Prefs.missed` e `Scheduler.nextCheck`, cobertas por testes). Fora da penalidade nada fica rodando; durante a
+  penalidade, um serviço com notificação cobre os apps bloqueados e, ao começar, olha as últimas horas para
+  saber qual app já está aberto.
 - **Desbloqueio de emergência**: espera de 10 min depois do pedido (dá para desistir), libera 15 min, 1 por dia,
   custa XP e Ouro. **Desligar o bloqueio só vale 24 h depois** do pedido.
 - **Lembrete** à noite se a missão do dia não foi feita. Backup salvo em Downloads. Tela ligada durante o

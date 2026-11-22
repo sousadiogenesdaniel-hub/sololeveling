@@ -93,7 +93,6 @@ final class Prefs {
     }
 
     // ---- diagnóstico ----
-    static void tick(Context c) { sp(c).edit().putLong("svcTick", System.currentTimeMillis()).apply(); }
     static void logEval(Context c, String r) { sp(c).edit().putLong("evalAt", System.currentTimeMillis()).putString("evalResult", r).apply(); }
     static void logError(Context c, String e) { sp(c).edit().putLong("errAt", System.currentTimeMillis()).putString("errMsg", e).apply(); }
 

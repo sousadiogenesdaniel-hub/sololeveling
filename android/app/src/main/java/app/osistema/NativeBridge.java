@@ -63,7 +63,6 @@ final class NativeBridge {
             o.put("emergencyMin", Prefs.EMERGENCIA_MIN);
             o.put("emergencyLeft", Prefs.emergencyLeft(a));
             o.put("blockingNow", Prefs.shouldBlock(a));
-            o.put("svcTick", p.getLong("svcTick", 0));
             o.put("evalAt", p.getLong("evalAt", 0));
             o.put("evalResult", p.getString("evalResult", ""));
             o.put("errAt", p.getLong("errAt", 0));

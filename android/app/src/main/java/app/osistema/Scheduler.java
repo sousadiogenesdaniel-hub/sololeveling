@@ -17,14 +17,22 @@ import java.time.ZoneId;
 final class Scheduler {
     private Scheduler() {}
 
-    static final String CH_BLOQUEIO = "bloqueio", CH_LEMBRETE = "lembrete", CH_VIGIA = "vigia";
+    static final String CH_BLOQUEIO = "bloqueio", CH_LEMBRETE = "lembrete";
+    /** Hora da conferência diária da falta do dia anterior: logo depois do fim do modo dormir do jogador. */
+    static final int CONFERE_HORA = 7, CONFERE_MIN = 5;
+
+    /** Próxima conferência: hoje às 07:05 se ainda não passou; senão amanhã. (Testado em SchedulerTest.) */
+    static LocalDateTime nextCheck(LocalDateTime agora) {
+        LocalDateTime hoje = agora.toLocalDate().atTime(CONFERE_HORA, CONFERE_MIN);
+        return agora.isBefore(hoje) ? hoje : hoje.plusDays(1);
+    }
     static final String ACT_EVAL = "app.osistema.EVAL", ACT_LEMBRETE = "app.osistema.LEMBRETE";
 
     static void channels(Context c) {
         NotificationManager nm = c.getSystemService(NotificationManager.class);
         nm.createNotificationChannel(new NotificationChannel(CH_BLOQUEIO, "Zona de Penalidade", NotificationManager.IMPORTANCE_LOW));
         nm.createNotificationChannel(new NotificationChannel(CH_LEMBRETE, "Lembretes de missão", NotificationManager.IMPORTANCE_DEFAULT));
-        nm.createNotificationChannel(new NotificationChannel(CH_VIGIA, "Vigia do bloqueio (sem penalidade)", NotificationManager.IMPORTANCE_MIN));
+        nm.deleteNotificationChannel("vigia"); // canal da versão 1.3, que tinha o vigia sempre ligado
     }
 
     static PendingIntent openApp(Context c) {
@@ -47,11 +55,11 @@ final class Scheduler {
         catch (SecurityException ignored) { /* sem permissão de notificação */ }
     }
 
-    /** Mantém o vigia ligado (se puder) e agenda as conferências de reserva. */
+    /** Liga o bloqueio se houver penalidade (informada pelo app ou deduzida) e agenda as próximas conferências. */
     static void evaluate(Context c) {
         boolean bloq = Prefs.shouldBlock(c);
         Prefs.logEval(c, bloq ? "bloqueando" : "armado");
-        if (Prefs.canRun(c)) startBlocker(c);
+        if (bloq && Prefs.canRun(c)) startBlocker(c);
         scheduleNext(c);
     }
 
@@ -67,8 +75,7 @@ final class Scheduler {
 
     static void scheduleNext(Context c) {
         long now = System.currentTimeMillis();
-        LocalDateTime meiaNoite = LocalDate.now().plusDays(1).atTime(0, 1);
-        set(c, 1, ACT_EVAL, toMillis(meiaNoite));
+        set(c, 1, ACT_EVAL, toMillis(nextCheck(LocalDateTime.now())));
         long unlockFrom = Prefs.sp(c).getLong("unlockFrom", 0), unlock = Prefs.sp(c).getLong("unlockUntil", 0);
         if (unlockFrom > now) set(c, 5, ACT_EVAL, unlockFrom + 1000);
         if (unlock > now) set(c, 2, ACT_EVAL, unlock + 1000);

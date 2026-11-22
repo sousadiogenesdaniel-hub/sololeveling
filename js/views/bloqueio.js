@@ -58,7 +58,7 @@ function painel(st) {
     : faltando ? `<p class="mid bad">Bloqueio sem permissão</p><p class="small">Sem as permissões obrigatórias, o bloqueio não funciona.</p>`
     : (st.unlockFrom || 0) <= Date.now() && st.unlockUntil > Date.now() ? `<p class="mid warn">Desbloqueio de emergência até ${fmtTime(st.unlockUntil)}</p>`
     : st.blockingNow ? `<p class="mid bad">Apps bloqueados agora</p><p class="small muted">Zona de Penalidade ativa.</p>`
-    : `<p class="mid ok">Armado</p><p class="small muted">Se você faltar à missão, os apps são bloqueados assim que você usar o celular, mesmo sem abrir O Sistema.${st.svcTick !== undefined ? " Uma notificação discreta, “O Sistema: bloqueio armado”, mostra que o vigia está ligado." : ""}</p>`;
+    : `<p class="mid ok">Armado</p><p class="small muted">Se você faltar à missão, os apps são bloqueados na hora em que você abrir O Sistema ou, sem abrir, às <b>07:05 do dia seguinte</b> (logo depois do modo dormir). Fora da penalidade, nada fica rodando.</p>`;
   // mostra os apps instalados; os outros da lista aparecem num resumo (são bloqueados se você instalar)
   const apps = (st.apps || []).filter(a => a.instalado);
   const outros = [...new Set((st.apps || []).filter(a => !a.instalado && a.bloqueado).map(a => a.nome))];
@@ -88,8 +88,7 @@ function painel(st) {
       <tr><td>Sistema</td><td>${esc((navigator.userAgent.match(/Android [\d.]+/) || ["?"])[0])}</td></tr>
       <tr><td>Penalidade enviada ao Android</td><td>${ultimoSync ? `${ultimoSync.penalty ? "sim" : "não"} (${ultimoSync.em}${ultimoSync.ok ? "" : ", ERRO: " + esc(ultimoSync.erro)})` : "ainda não enviada"}</td></tr>
       <tr><td>Android quer bloquear agora</td><td>${st.blockingNow ? "sim" : "não"}</td></tr>
-      ${st.svcTick !== undefined ? `<tr><td>Vigia</td><td>${Date.now() - st.svcTick < 90000 ? "ativo" : "parado"}${st.svcTick ? ` (visto às ${fmtTime(st.svcTick)})` : ""}</td></tr>
-      <tr><td>Última conferência</td><td>${st.evalAt ? `${fmtTime(st.evalAt)} · ${esc(st.evalResult)}` : "—"}</td></tr>
+      ${st.evalAt !== undefined ? `<tr><td>Última conferência</td><td>${st.evalAt ? `${fmtDate(iso(new Date(st.evalAt)), { day: "2-digit", month: "2-digit" })} ${fmtTime(st.evalAt)} · ${esc(st.evalResult)}` : "—"}</td></tr>
       ${st.errMsg ? `<tr><td>Último erro</td><td class="bad">${fmtTime(st.errAt)} · ${esc(st.errMsg)}</td></tr>` : ""}` : ""}
       <tr><td>Acesso ao uso / Sobrepor</td><td>${st.usageAccess ? "✔" : "✖"} / ${st.overlay ? "✔" : "✖"}</td></tr>
       <tr><td>Notificações / Bateria livre</td><td>${st.notifications ? "✔" : "✖"} / ${st.battery ? "✔" : "✖"}</td></tr>
