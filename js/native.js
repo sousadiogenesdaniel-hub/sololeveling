@@ -3,7 +3,7 @@
 import { S } from "./store.js";
 import { today } from "./util.js";
 import { inPenalty } from "./game.js";
-import { trackFinished } from "./tracks.js";
+import { todasConcluidas } from "./tracks.js";
 
 export const nativo = window.SistemaNative || null;
 
@@ -31,7 +31,7 @@ export function syncNative() {
   const payload = {
     penalty: inPenalty(),
     restDay: S.profile.restDay ?? 0,
-    obligatedFrom: trackFinished() ? "" : (S.trackSince || S.track?.startDate || ""),
+    obligatedFrom: todasConcluidas() ? "" : (S.trackSince || S.track?.startDate || ""),
     lastDone: lastDone(),
     today: today(),
     blocked: APPS_TODOS,

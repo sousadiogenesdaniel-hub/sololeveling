@@ -3,9 +3,10 @@ import { views, actions, refresh } from "../core.js";
 import { S, day, save, photos } from "../store.js";
 import { today, addDays, esc, fmt, fmtTime, fmtDate, getPosition, getPreciseFix, distM, shrinkImage, uid, $, num } from "../util.js";
 import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox } from "../ui.js";
-import { completeWorkout, passTest, isRestDay, workoutKcal, grant, R, RANK_TESTS, RANK_ORDER, testsPassed } from "../game.js";
-import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, testStatus, TEST_COOLDOWN, trackFinished, unitLabel, SESSIONS_PER_STAGE, testKey, setPR } from "../tracks.js";
-import { statusList, avaliacaoLiberada, avaliacaoForm, provasHoje } from "./avaliacao.js";
+import { completeWorkout, passTest, isRestDay, workoutKcal, grant, R, rankDe } from "../game.js";
+import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, testStatus, TEST_COOLDOWN, JANELA_2A, trackFinished, unitLabel, SESSIONS_PER_STAGE, testKey, setPR,
+  ativas, multi, setFoco, trilhaSugerida, pesaPernas } from "../tracks.js";
+import { statusList, avaliacaoLiberada, avaliacaoForm, provasHoje, avaliouHoje } from "./avaliacao.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
 const PUNCH_EXPIRES_H = 5;    // ponto de entrada vence depois disso
@@ -34,16 +35,14 @@ function chooseTrack() {
 actions.pickTrack = ({ id }) => {
   S.track = { id, startDate: S.game.log.length || Object.keys(S.days).length ? today() : addDays(today(), 1) };
   S.trackSince ??= S.track.startDate;
-  progress(id);
+  progress(id).inicio ??= S.track.startDate;
+  S.ativas = [...new Set([...ativas(), id])];
   save();
   const ph = currentPhase();
   sysMessage("Trilha iniciada", `<p class="mid glow">${trackById(id).nome}</p>
     <p>Fase <b>${ph.nome}</b>. Sua primeira meta tem prazo de <b>${ph.prazo}</b>.</p>
     <p class="small muted">6 treinos por semana, 1 dia de descanso. Faltou, pagou.</p>`, { onClose: refresh });
 };
-
-// Rank que passa a ser permitido se você passar no próximo teste (null se já foi liberado em outra trilha)
-const unlocks = () => RANK_ORDER.find(r => RANK_TESTS[r] === progress().phase + 1 && RANK_TESTS[r] > testsPassed()) || null;
 
 function trailCard() {
   const t = currentTrack(), p = progress(), ph = currentPhase();
@@ -57,7 +56,8 @@ function trailCard() {
   return panel(`Trilha: ${t.nome}`, `
     <div class="row between small"><span>Etapa <b class="glow">${stage}</b> de ${ph.stages}</span>
       <span class="muted">${p.week > ph.stages ? "Teste de Rank liberado" : `${p.sessions}/${SESSIONS_PER_STAGE} treinos completos para subir a carga`}</span></div>
-    ${p.week < Math.ceil(ph.stages / 2) + 1 ? `<p class="small muted" style="margin:4px 0 0">Teste antecipado a partir da etapa ${Math.ceil(ph.stages / 2) + 1}.</p>` : ""}
+    ${p.nivelamento && p.week <= ph.stages ? `<p class="small ok" style="margin:4px 0 0">Nivelamento aberto: o teste do rank ${ph.rank} já vale (média de 2 tentativas), até o seu primeiro treino normal desta trilha.</p>`
+      : p.week < Math.ceil(ph.stages / 2) + 1 ? `<p class="small muted" style="margin:4px 0 0">Teste antecipado a partir da etapa ${Math.ceil(ph.stages / 2) + 1}.</p>` : ""}
     <div class="bar" style="margin:6px 0 12px"><i style="width:${p.week > ph.stages ? 100 : pct}%"></i></div>
     <h3>Teste do rank ${ph.rank} · ~${ph.prazo.replace("~", "")} de jogo perfeito</h3>
     <p class="small" style="margin:4px 0">${ph.meta}</p>
@@ -68,43 +68,79 @@ function trailCard() {
     <a class="btn sm ghost block" style="margin-top:8px" href="#/evolucao">Ver quadro de assiduidade</a>`);
 }
 
+const fmtV = (v, un) => unitLabel(fmt(v, un === "km" || v % 1 ? 1 : 0), un);
+// Quanto a 2ª tentativa precisa, prova a prova, para a média bater a meta
+const precisaNa2a = (ph, t1) => ph.tests.map(([n, meta, un], i) => ({ n, un, v1: t1.vals[i], min: Math.max(0, Math.ceil((2 * meta - (t1.vals[i] || 0)) * 10) / 10) }));
+const listaPrecisa = ph => l => `<ul class="list small">${l.map(x => `<li><span class="grow">${esc(x.n)} <span class="muted">(1ª: ${fmtV(x.v1 || 0, x.un)})</span></span>
+  <b class="num">${x.min ? "≥ " + fmtV(x.min, x.un) : "já garantido"}</b></li>`).join("")}</ul>`;
+
 function testCard() {
-  const ph = currentPhase(), st = testStatus();
+  const ph = currentPhase(), st = testStatus(), t = currentTrack();
+  const titulo = st.nivel ? "Nivelamento" : st.early ? "Teste antecipado" : "Teste de Rank";
+  const sobre = `<p class="small glow">Passou: rank ${ph.rank}${multi() ? ` na ${t.nome}` : ""} na hora, em qualquer nível. A fase seguinte começa (os treinos mudam) e você ganha +${R.testeXp} XP e +${R.testeOuro} Ouro.</p>`;
+  const form = (precisa) => `<form data-act="submitTest" data-rascunho="teste">${ph.tests.map(([n, v, un], i) => `<div class="field">
+      <label for="t${i}">${n} (meta: ${unitLabel(v, un)}${precisa ? ` · hoje: ${precisa[i].min ? "≥ " + fmtV(precisa[i].min, un) : "qualquer valor"}` : ""})</label>
+      <input id="t${i}" name="t${i}" inputmode="decimal" required></div>`).join("")}
+      <button class="btn primary block">${st.tentativa === 1 ? "Registrar 1ª tentativa" : st.tentativa === 2 ? "Registrar 2ª tentativa" : "Enviar resultado"}</button></form>`;
+  if (st.tentativa === 2) {
+    const precisa = precisaNa2a(ph, st.t1);
+    if (st.nextTry) {
+      return panel(titulo, `<p>1ª tentativa feita em ${fmtDate(st.t1.d)}. A 2ª abre em <b>${fmtDate(st.de)}</b> e vai até <b>${fmtDate(st.ate)}</b>: descanse entre as duas.</p>
+        <p class="small muted">Passa se a média das duas bater a meta em cada prova. Na 2ª, você vai precisar de:</p>${listaPrecisa(ph)(precisa)}${sobre}`);
+    }
+    return panel(titulo, `<p><b>2ª tentativa</b> do teste do rank <b>${ph.rank}</b> (a 1ª foi em ${fmtDate(st.t1.d)}). Vale até ${fmtDate(st.ate)}.</p>
+      <p class="small muted">Passa se a média das duas tentativas bater a meta em cada prova. Faça descansado, no início do treino.</p>
+      ${sobre}${form(precisa)}`, "good");
+  }
   if (st.nextTry) {
-    return panel("Teste de Rank", `<p>Próxima tentativa do teste do rank <b>${ph.rank}</b> em <b>${fmtDate(st.nextTry)}</b>.</p>
+    return panel(titulo, `<p>Próxima tentativa do teste do rank <b>${ph.rank}</b> em <b>${fmtDate(st.nextTry)}</b>.</p>
       <p class="small muted">Uma tentativa a cada ${TEST_COOLDOWN} dias. Enquanto isso, siga a fase normalmente.</p>`);
   }
-  const form = `<form data-act="submitTest" data-rascunho="teste"><input type="hidden" name="early" value="${st.early ? 1 : ""}">${ph.tests.map(([n, v, un], i) => `<div class="field">
-      <label for="t${i}">${n} (meta: ${unitLabel(v, un)})</label>
-      <input id="t${i}" name="t${i}" inputmode="decimal" required></div>`).join("")}
-      <button class="btn primary block">Enviar resultado</button></form>`;
-  const sobre = `<p class="small glow">Passar libera o rank ${ph.rank}${unlocks() ? "" : " (já liberado em outra trilha)"} quando você também tiver o nível, revela a próxima meta e dá +${R.testeXp} XP e +${R.testeOuro} Ouro.</p>`;
   if (st.early) {
-    return panel("Teste antecipado", `<p>Você já completou metade da fase <b>${ph.nome}</b>. Se já consegue as metas do rank <b>${ph.rank}</b>, prove agora e pule direto para a próxima fase.</p>
-      ${sobre}<p class="small muted">Se não passar, nada perde: continua a fase normalmente e pode tentar de novo em ${TEST_COOLDOWN} dias. Faça descansado, no início do treino.</p>
-      <details><summary class="btn block" style="list-style:none">Fazer o teste agora</summary><div style="margin-top:12px">${form}</div></details>`);
+    const intro = st.nivel
+      ? `<p>Você acabou de iniciar a trilha <b>${t.nome}</b>. Se já tem condicionamento, prove o rank <b>${ph.rank}</b> agora e pule a fase <b>${ph.nome}</b>. Passando, dá para nivelar de novo na fase seguinte.</p>
+         <p class="small muted">O nivelamento vale até o seu primeiro treino normal desta trilha.</p>`
+      : `<p>Você já completou metade da fase <b>${ph.nome}</b>. Se já consegue as metas do rank <b>${ph.rank}</b>, prove agora e pule direto para a próxima fase.</p>`;
+    return panel(titulo, `${intro}
+      <p class="small">Vale pela <b>média de 2 tentativas em dias diferentes</b>: a 2ª entre ${JANELA_2A.de} e ${JANELA_2A.ate} dias depois da 1ª. Assim um dia inspirado não engana o Sistema.</p>
+      ${st.expirou ? `<p class="small warn">A 1ª tentativa de ${fmtDate(st.expirou)} venceu sem a 2ª. Comece de novo.</p>` : ""}
+      ${sobre}<p class="small muted">Se não passar, nada perde: continua a fase normalmente e pode tentar de novo em ${TEST_COOLDOWN} dias.</p>
+      <details><summary class="btn block" style="list-style:none">Fazer a 1ª tentativa agora</summary><div style="margin-top:12px">${form()}</div></details>`);
   }
-  return panel("Teste de Rank", `<p>Você concluiu todas as etapas da fase <b>${ph.nome}</b>. Prove que está pronto para o rank <b>${ph.rank}</b>:
-    informe seu melhor resultado em cada prova (faça descansado, de preferência no início do treino).</p>
-    ${sobre}${form}`, "good");
+  return panel(titulo, `<p>Você concluiu todas as etapas da fase <b>${ph.nome}</b>. Prove que está pronto para o rank <b>${ph.rank}</b>:
+    informe seu melhor resultado em cada prova (faça descansado, de preferência no início do treino). No fim da fase, uma tentativa basta.</p>
+    ${sobre}${form()}`, "good");
 }
 
 actions.submitTest = data => {
-  const ph = currentPhase(), early = !!data.early;
-  const falhas = ph.tests.filter(([, v], i) => (num(data["t" + i]) ?? 0) < v);
-  ph.tests.forEach(([n], i) => setPR(testKey(n), num(data["t" + i]))); // a tentativa, mesmo reprovada, atualiza seus máximos
+  const ph = currentPhase(), st = testStatus(), p = progress();
+  if (!st || st.nextTry) return toast("O teste não está disponível agora.");
+  const vals = ph.tests.map((_, i) => num(data["t" + i]) ?? 0);
+  ph.tests.forEach(([n], i) => setPR(testKey(n), vals[i])); // cada tentativa, mesmo reprovada, atualiza seus máximos
   day().testeFeito = true; // vale para concluir o "Dia de Teste de Rank"
   if (S.rascunhos) delete S.rascunhos.teste;
-  if (falhas.length) {
-    progress().lastTestTry = today(); save(); refresh();
-    return sysMessage("Teste não superado", `<p>Ainda falta em: <b>${falhas.map(f => f[0]).join(", ")}</b>.</p>
-      <p class="small muted">${early ? "Sem problema: continue a fase normalmente." : "Continue treinando na etapa final."} Próxima tentativa em ${fmtDate(addDays(today(), TEST_COOLDOWN))}.</p>`);
+  if (st.tentativa === 1) {
+    p.antecipada = { d: today(), fase: p.phase, vals };
+    save(); refresh();
+    return sysMessage("1ª tentativa registrada", `<p>Agora descanse. A 2ª tentativa abre em <b>${fmtDate(addDays(today(), JANELA_2A.de))}</b> e vai até <b>${fmtDate(addDays(today(), JANELA_2A.ate))}</b>.</p>
+      <p class="small muted">Passa se a média das duas bater a meta em cada prova. Na 2ª, você vai precisar de:</p>${listaPrecisa(ph)(precisaNa2a(ph, p.antecipada))}`);
   }
-  const ev = passTest(early);
-  const acabou = trackFinished();
+  const media = st.tentativa === 2;
+  const finais = media ? vals.map((v, i) => (v + (st.t1.vals[i] || 0)) / 2) : vals;
+  if (media) delete p.antecipada;
+  const falhas = ph.tests.map(([n, meta, un], i) => ({ n, meta, un, v: finais[i] })).filter(x => x.v < x.meta);
+  if (falhas.length) {
+    p.lastTestTry = today(); save(); refresh();
+    return sysMessage("Teste não superado", `<p>${media ? "Na média das duas tentativas, ainda" : "Ainda"} falta em:</p>
+      <ul class="list small">${falhas.map(f => `<li><span class="grow">${esc(f.n)}</span><b class="num">${fmtV(f.v, f.un)} de ${unitLabel(f.meta, f.un)}</b></li>`).join("")}</ul>
+      <p class="small muted">${st.early ? "Sem problema: continue a fase normalmente." : "Continue treinando na etapa final."} Próxima tentativa em ${fmtDate(addDays(today(), TEST_COOLDOWN))}.</p>`);
+  }
+  const ev = passTest(st.early);
+  const acabou = trackFinished(), prox = currentPhase();
   showEvents("Meta conquistada", [ev], acabou
     ? `<p class="glow">Você concluiu a trilha inteira. O Sistema reconhece um Monarca.</p>`
-    : `<p>Uma nova meta foi revelada: <b class="glow">${currentPhase().nome}</b>, rumo ao rank ${currentPhase().rank}.</p>`);
+    : `<p>Rank <b class="glow">${ph.rank}</b>${multi() ? ` na ${currentTrack().nome}` : ""}${media ? " (pela média das duas tentativas)" : ""}. Nova meta revelada: <b class="glow">${prox.nome}</b>, rumo ao rank ${prox.rank}. Os treinos já são os da fase nova.</p>
+      ${progress().nivelamento ? `<p class="small muted">O nivelamento continua aberto: se quiser, já pode tentar o rank ${prox.rank} também.</p>` : ""}`);
   refresh();
 };
 
@@ -137,7 +173,7 @@ actions.toggleSet = ({ e, i }, el) => {
 export const MODOS = {
   avaliacao: { titulo: "Dia de Avaliação", icone: "📊", link: "#/avaliacao", botao: "Registrar meus máximos",
     desc: "Faça uma série máxima de cada prova da fase, com 3 a 5 min de descanso entre elas, e registre os números.",
-    pronto: () => avaliacaoLiberada(), feito: () => S.prEm === today() },
+    pronto: () => avaliacaoLiberada(), feito: () => avaliouHoje() },
   teste: { titulo: "Dia de Teste de Rank", icone: "⚔️", link: null, botao: null,
     desc: "Faça cada prova do Teste de Rank descansado e registre os resultados no card do Teste de Rank, nesta mesma tela.",
     pronto: () => { const st = testStatus(); return !S.game.needsWorkout && !!st && !st.nextTry; }, feito: () => !!S.days[today()]?.testeFeito },
@@ -409,15 +445,53 @@ actions.finishIndoor = async (_, el) => {
   finish(w);
 };
 
+// Com 2+ trilhas: qual trilha vale o treino de hoje (antes de começar)
+function focoCard() {
+  if (!multi()) return "";
+  const t = today(), w = S.days[t]?.workout;
+  if (w?.in || w?.done || (isRestDay(t) && !S.game.needsWorkout)) return "";
+  const ids = ativas().filter(id => (S.progress[id]?.phase || 0) < trackById(id).phases.length), sug = trilhaSugerida(t);
+  if (ids.length < 2) return "";
+  const ontem = S.days[addDays(t, -1)]?.workout, plan = !trackFinished() && workoutFor(t);
+  const aviso = plan && ontem?.done && pesaPernas(ontem.trackId, ontem.plano?.titulo) && pesaPernas(S.track.id, plan.titulo)
+    ? `<p class="small warn" style="margin-bottom:0">Ontem foi ${esc(ontem.plano.titulo)}: ${esc(plan.titulo)} hoje pesa nas mesmas pernas. Se puder, troque de trilha.</p>` : "";
+  return panel("Trilha de hoje", `<div class="row wrap" style="gap:6px">${ids.map(id => {
+      const tr = trackById(id), on = id === S.track.id;
+      return `<button class="btn sm ${on ? "primary" : "ghost"} grow" data-act="focoTrilha" data-id="${id}" aria-pressed="${on}">${tr.icone} ${tr.nome} · ${rankDe(id)}${id === sug ? " · sugerida" : ""}</button>`;
+    }).join("")}</div>
+    <p class="small muted" style="margin-bottom:0">Qualquer trilha vale a missão de hoje. A sugerida é a que está há mais tempo sem treino.</p>${aviso}`);
+}
+
+actions.focoTrilha = ({ id }) => {
+  const w = S.days[today()]?.workout;
+  if (w?.in || w?.done) return toast("O treino de hoje já começou.");
+  S.focoDia = { d: today(), id };
+  setFoco(id);
+  if (S.days[today()]?.modo) delete S.days[today()].modo; // dia especial era da outra trilha
+  save(); refresh();
+};
+
+function trilhasCard() {
+  if (!multi()) return "";
+  return panel("Suas trilhas", `<ul class="list">${ativas().map(id => {
+      const tr = trackById(id), p = S.progress[id] || {}, fim = (p.phase || 0) >= tr.phases.length, ph = tr.phases[Math.min(p.phase || 0, tr.phases.length - 1)];
+      return `<li><span style="font-size:1.4rem">${tr.icone}</span><span class="grow"><b>${tr.nome}</b> · rank <b class="glow">${rankDe(id)}</b><br>
+        <span class="small muted">${fim ? "Trilha concluída" : `Fase ${ph.nome} · etapa ${Math.min(p.week || 1, ph.stages)}/${ph.stages}${p.nivelamento ? " · nivelamento aberto" : ""}`}</span></span>
+        ${id === S.track.id ? `<span class="chip">Hoje</span>` : ""}</li>`;
+    }).join("")}</ul>
+    <p class="small muted">XP, nível, Ouro, sequência e penalidade são do jogador; fase, etapa, fila, máximos e rank são de cada trilha.</p>
+    <a class="btn sm ghost block" href="#/perfil">Gerenciar trilhas</a>`);
+}
+
 views.treino = () => {
   if (!S.track) return chooseTrack();
   if (trackFinished()) {
-    return `${header()}<div class="stack">${panel("Trilha concluída", `<p class="mid glow">Você chegou ao topo desta trilha.</p>
-      <p>Escolha uma nova trilha no Perfil para continuar evoluindo.</p>`, "good")}</div>`;
+    return `${header()}<div class="stack">${focoCard()}${panel("Trilha concluída", `<p class="mid glow">Você chegou ao topo da trilha ${currentTrack().nome}.</p>
+      <p>${multi() ? "Escolha outra trilha acima para o treino de hoje." : "Escolha uma nova trilha no Perfil para continuar evoluindo."}</p>`, "good")}${trilhasCard()}</div>`;
   }
   // Teste do fim da fase fica no topo; o antecipado (e o aviso de espera) fica abaixo da missão de hoje
   const st = testStatus(), topo = st && !st.early && !st.nextTry;
-  return `${header()}<div class="stack">${topo ? testCard() : ""}${todayCard()}${st && !topo ? testCard() : ""}${spotsCard()}${trailCard()}</div>`;
+  return `${header()}<div class="stack">${focoCard()}${topo ? testCard() : ""}${todayCard()}${st && !topo ? testCard() : ""}${spotsCard()}${trailCard()}${trilhasCard()}</div>`;
 };
 
 let tick = null;

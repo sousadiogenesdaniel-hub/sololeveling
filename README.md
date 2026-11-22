@@ -31,15 +31,21 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   últimas 3 missões foram cumpridas (o descanso não quebra a sequência). Semana inteira dentro da meta de calorias:
   +150 (só em semana sem falta). Nada na Zona de Penalidade; até 300 por semana. A semana do jogo começa no dia
   seguinte ao descanso (descanso na sexta → sábado a sexta). O rastreamento tem pausa (o tempo parado não conta).
-- **Nível e rank:** cada nível pede 34 XP a mais que o anterior. Cada rank exige o nível mínimo **e** o Teste
-  de Rank da sua fase (em qualquer trilha); vale o que vier por último. D: nível 18 + teste Despertar (~2 meses),
-  C: 28 + Fundação (~4 meses), B: 40 + Ascensão (~7 meses), A: 52 + Elite (~1 ano), S: 68 + Monarca (~20 meses).
-  O nível chega poucas semanas antes do teste; o nível não tem teto.
+- **Nível e rank são separados.** O **nível** mede a constância: vem do XP, começa rápido (~1 nível por missão
+  na 1ª semana) e desacelera (cada nível pede 16 XP a mais que o anterior); jogando perfeito, nível ~29 em 2 meses,
+  ~77 em 1 ano e 100 em ~20 meses, sem teto. O **rank** mede o que o corpo faz: vem só do Teste de Rank. Passou,
+  sobe na hora, em qualquer nível, e a trilha já passa para a fase seguinte. Com várias trilhas, cada uma tem o seu
+  rank e o do jogador é o melhor deles.
 - **Meta de calorias automática** (opcional, no Perfil): toda semana recalcula gasto − déficit pelo peso de tendência;
   depois de ~5 semanas, também pelo que você comeu e emagreceu de fato. Muda no máximo 100 kcal por semana,
   respeita um piso e, perto da meta, reduz o déficit até virar manutenção.
 - **Comemorações:** subir de nível tem uma animação curta e subir de rank, uma mais longa, com som (desligável no Perfil).
 - **Trocar de trilha** não mexe em XP, nível, rank, Ouro nem sequência; os testes já passados continuam valendo.
+- **Várias trilhas (opcional):** no Perfil, "Iniciar outra trilha" mantém a atual. Com 2+ trilhas, a missão do dia
+  continua uma só e qualquer trilha ativa vale; a Missão sugere a que está há mais tempo sem treino (e evita emendar
+  dois treinos pesados de pernas). XP, nível, Ouro, sequência e penalidade são do jogador; fase, etapa, fila,
+  máximos, Avaliação e rank são de cada trilha. Uma trilha nova abre o **Nivelamento**: o teste do rank já vale desde
+  a etapa 1 (média de 2 tentativas) até o primeiro treino normal dela. Com uma trilha só, nada disso aparece.
 - **Trilhas:** Calistenia e Corrida, cada uma com 5 fases (uma por rank). O S da calistenia exige 100 flexões,
   50 mergulhos, 30 barras, 300 agachamentos e 300 abdominais seguidos; o da corrida, uma maratona. Barra fixa só
   entra a partir do rank D. O volume sobe a cada 6 treinos com todas as séries no alvo (série tocada 2× = abaixo
@@ -56,8 +62,10 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   dia (com ponto e mínimo de 30 min). O treino da fila fica para amanhã e o dia não conta para subir a carga.
   Na Zona de Penalidade, o Dia de Avaliação vale como redenção (o treino pendente continua na fila e passa para
   o dia seguinte); o Dia de Teste de Rank não aparece na penalidade.
-- **Teste antecipado:** a partir da metade das etapas da fase dá para tentar o Teste de Rank (1 tentativa a cada
-  7 dias; falhar não pune). Passou: pula para a próxima fase e ganha +500 XP e +300 Ouro, sem pular níveis.
+- **Teste antecipado:** a partir da metade das etapas da fase. Vale pela **média de 2 tentativas em dias
+  diferentes** (a 2ª de 2 a 7 dias depois da 1ª), para um dia inspirado não enganar o Sistema; o app mostra quanto a
+  2ª precisa em cada prova. No fim da fase, uma tentativa basta. Reprovou: nova tentativa em 7 dias, sem punição.
+  Passou: rank na hora, próxima fase, +500 XP e +300 Ouro.
 - **Dieta (conferida no dia seguinte, sem Zona de Penalidade):** até 100 kcal acima da meta, nada; acima disso,
   −10 XP e −10 Ouro a cada 100 kcal (máx. −150 XP e −100 Ouro por dia). Compra na Loja libera 2 kcal por Ouro gasto.
 

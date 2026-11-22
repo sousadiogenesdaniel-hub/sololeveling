@@ -1,7 +1,7 @@
 // Regras do Sistema: XP, nível, rank, Ouro, fechamento dos dias, Zona de Penalidade.
 import { S, day, save } from "./store.js";
 import { today, addDays, weekday, daysBetween, fmt, fmtDate, parseDay } from "./util.js";
-import { progress, currentPhase, currentTrack, trackFinished, earlyFrom, advanceQueue, SESSIONS_PER_STAGE } from "./tracks.js";
+import { progress, currentPhase, currentTrack, trackFinished, todasConcluidas, earlyFrom, advanceQueue, SESSIONS_PER_STAGE } from "./tracks.js";
 
 export const R = {
   treinoXp: 100, treinoOuro: 100,      // treino do dia concluído
@@ -21,39 +21,47 @@ export const R = {
 };
 
 // ---- nível e rank ------------------------------------------------------------------
-// XP acumulado para chegar ao nível L. Cada nível pede 34 XP a mais que o anterior.
-// O nível mínimo de cada rank chega algumas semanas ANTES do Teste de Rank jogando perfeito (~1.060 XP/semana),
-// para o teste ser o portão normal e o XP só segurar quem falta muito.
-// Perfeito: D ~1,6 mês · C ~3,5 · B ~6,7 · A ~11 · S ~18,5 (testes: 2, 4, 7, 12 e ~20 meses).
-export const xpToReach = L => 150 * (L - 1) + 17 * (L - 1) * (L - 2);
+// Duas medidas separadas:
+// - NÍVEL = constância. Vem do XP. Começa rápido (~1 nível por missão na 1ª semana) e desacelera: cada nível
+//   pede 16 XP a mais que o anterior. Jogando perfeito (~1.030 XP/semana): nível ~8 na 1ª semana, ~29 em 2 meses,
+//   ~77 em 1 ano e 100 em ~20 meses. Não tem teto.
+// - RANK = o que o seu corpo faz. Vem só do Teste de Rank: passou, sobe na hora, em qualquer nível.
+//   Cada trilha tem o seu rank (fases concluídas); o rank do jogador é o melhor deles.
+export const xpToReach = L => 100 * (L - 1) + 8 * (L - 1) * (L - 2);
+const xpToReachV1 = L => 150 * (L - 1) + 17 * (L - 1) * (L - 2); // curva antiga (68 níveis até o S), para a migração
 export const RANK_ORDER = ["E", "D", "C", "B", "A", "S"];
-const RANK_LEVEL = { E: 1, D: 18, C: 28, B: 40, A: 52, S: 68 };
-// Testes de Rank necessários para cada rank (fases concluídas em qualquer trilha): um teste por rank
+// Testes de Rank necessários para cada rank (fases concluídas numa trilha): um teste por rank
 export const RANK_TESTS = { E: 0, D: 1, C: 2, B: 3, A: 4, S: 5 };
 
-export const rankByLevel = L => [...RANK_ORDER].reverse().find(r => L >= RANK_LEVEL[r]);
-// Maior fase concluída em qualquer trilha: trocar de trilha não apaga o que você já provou.
+// Rank de uma trilha: fases concluídas nela (testes já passados continuam valendo mesmo se a trilha for encerrada)
+export const rankDe = id => RANK_ORDER[Math.min(5, S.progress?.[id]?.phase || 0)];
+// Maior fase concluída em qualquer trilha
 export const testsPassed = () => Math.min(5, Math.max(0, ...Object.values(S.progress || {}).map(p => p.phase || 0)));
-const maxRankByTests = n => [...RANK_ORDER].reverse().find(r => RANK_TESTS[r] <= n);
 
-export function levelInfo(xp = S.game.xp) {
+function nivelDe(xp, curva = xpToReach) {
   let L = 1;
-  while (xpToReach(L + 1) <= xp) L++;
-  const base = xpToReach(L), next = xpToReach(L + 1);
-  const porNivel = rankByLevel(L), porTeste = maxRankByTests(testsPassed());
-  const rank = RANK_ORDER[Math.min(RANK_ORDER.indexOf(porNivel), RANK_ORDER.indexOf(porTeste))];
-  return { level: L, into: xp - base, need: next - base, pct: (xp - base) / (next - base) * 100, rank,
-    travado: RANK_ORDER.indexOf(porNivel) > RANK_ORDER.indexOf(rank) }; // nível já basta, falta o teste
+  while (curva(L + 1) <= xp) L++;
+  return L;
 }
-export const rankOf = L => rankByLevel(L);
+export function levelInfo(xp = S.game.xp) {
+  const L = nivelDe(xp), base = xpToReach(L), next = xpToReach(L + 1);
+  return { level: L, into: xp - base, need: next - base, pct: (xp - base) / (next - base) * 100, rank: RANK_ORDER[testsPassed()] };
+}
 
-// O que falta para o próximo rank: nível e/ou Teste de Rank
+// O que falta para o próximo rank: só o Teste de Rank
 export function nextRank(li = levelInfo()) {
   const r = RANK_ORDER[RANK_ORDER.indexOf(li.rank) + 1];
-  if (!r) return null;
-  const nivel = RANK_LEVEL[r], testes = RANK_TESTS[r];
-  return { rank: r, level: nivel, faltaXp: Math.max(0, xpToReach(nivel) - S.game.xp),
-    teste: testes > testsPassed() };
+  return r ? { rank: r, teste: true } : null;
+}
+
+// Migração para a curva de 100 níveis (uma vez): o XP fica igual, só o nível é recalculado
+export function migrarCurva() {
+  const g = S.game;
+  if ((g.curva || 1) >= 2) return null;
+  g.curva = 2;
+  if (!g.xp) return null; // jogador novo: nada a avisar
+  const de = nivelDe(g.xp, xpToReachV1), para = nivelDe(g.xp);
+  return { levelFrom: de, levelTo: para, levelUp: para > de ? para : null, rankFrom: levelInfo().rank };
 }
 
 function changes(a, b) {
@@ -107,7 +115,7 @@ export function workoutKcal(date, durMin, indoor) {
 export const isRestDay = date => weekday(date) === (S.profile?.restDay ?? 0);
 export function isObligated(date) {
   const desde = S.trackSince || S.track?.startDate; // vale mesmo no intervalo entre trocar de trilha e escolher outra
-  return !!desde && date >= desde && !isRestDay(date) && !trackFinished();
+  return !!desde && date >= desde && !isRestDay(date) && !todasConcluidas();
 }
 export const pendingDebts = () => S.debts.filter(d => d.status !== "validado");
 export const inPenalty = () => S.game.needsWorkout || pendingDebts().length > 0;
@@ -179,6 +187,7 @@ export function completeWorkout(date = today()) {
   events.push(grant(R.treinoXp, R.treinoOuro, especial ? `Missão diária concluída: ${w.plano.titulo}` : "Missão diária concluída", date));
   if (especial) events.push({ motivo: "O treino da fila fica para amanhã", xp: 0, gold: 0 });
   if (w.full) events.push(grant(R.completoXp, 0, "Todas as séries concluídas", date));
+  if (!especial && w.trackId && S.progress?.[w.trackId]?.nivelamento) delete S.progress[w.trackId].nivelamento; // 1º treino normal: fim do nivelamento
   const g = S.game;
   g.streak++; g.bestStreak = Math.max(g.bestStreak, g.streak);
   if (g.streak % 7 === 0) events.push(grant(0, R.streakOuro, `Sequência de ${g.streak} treinos`, date));
@@ -204,10 +213,11 @@ export function completeWorkout(date = today()) {
 // Passar no teste dá só o bônus de XP (no máximo ~2 níveis): nunca pula direto para o nível do rank.
 export function passTest(antecipado = false) {
   const p = progress(), ph = currentPhase(), before = levelInfo();
-  p.phase++; p.week = 1; p.sessions = 0; p.lastTestTry = null;
-  const ev = grant(R.testeXp, R.testeOuro, `Teste do rank ${ph.rank} superado${antecipado ? " antecipadamente" : ""} (fase ${ph.nome})`);
+  // a trilha avança de fase na hora (treinos da fase seguinte), em qualquer nível
+  p.phase++; p.week = 1; p.sessions = 0; p.lastTestTry = null; delete p.antecipada;
+  const ev = grant(R.testeXp, R.testeOuro, `Teste do rank ${ph.rank} superado${antecipado ? " antecipadamente" : ""} (${currentTrack().nome}, fase ${ph.nome})`);
   save();
-  return { ...ev, ...changes(before, levelInfo()) }; // o teste pode destravar um rank
+  return { ...ev, ...changes(before, levelInfo()) }; // o rank sobe na hora se for o seu melhor
 }
 
 // ---- fechamento dos dias passados ----------------------------------------------------------

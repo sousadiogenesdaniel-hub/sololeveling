@@ -7,9 +7,16 @@ import { header, panel, sysMessage, toast } from "../ui.js";
 import { currentPhase, currentTrack, testKey, pr, setPR, unitLabel } from "../tracks.js";
 
 export const AVALIACAO_DIAS = 7;
-export const proximaAvaliacao = () => S.prEm ? addDays(S.prEm, AVALIACAO_DIAS) : null;
+// Data da última avaliação, por trilha (cada trilha tem as suas provas)
+export function prEm(id = S.track?.id) {
+  if (S.prEm) { (S.prEmT ||= {})[S.track?.id || "calistenia"] ??= S.prEm; delete S.prEm; } // antes era uma data só
+  return S.prEmT?.[id] || null;
+}
+const marcaAvaliacao = () => { (S.prEmT ||= {})[S.track.id] = today(); };
+export const avaliouHoje = () => prEm() === today();
+export const proximaAvaliacao = () => prEm() ? addDays(prEm(), AVALIACAO_DIAS) : null;
 // Uma avaliação por semana; no dia em que ela começou dá para salvar e corrigir as provas à vontade
-const liberada = () => !S.prEm || S.prEm === today() || daysBetween(S.prEm, today()) >= AVALIACAO_DIAS;
+const liberada = () => !prEm() || prEm() === today() || daysBetween(prEm(), today()) >= AVALIACAO_DIAS;
 export const avaliacaoLiberada = liberada;
 
 // Lista "Status": cada prova da fase com o seu máximo e a barra até a meta
@@ -45,7 +52,7 @@ actions.savePR = ({ key, nome }, el) => {
   const input = el.closest(".field").querySelector("input"), v = num(input.value);
   if (v == null || !(v > 0)) return toast("Digite o número antes de salvar.");
   setPR(key, v);
-  S.prEm = today();
+  marcaAvaliacao();
   if (S.rascunhos?.avaliacao?.v) delete S.rascunhos.avaliacao.v[key];
   save();
   refresh();
@@ -60,7 +67,7 @@ views.avaliacao = () => {
   return `${header()}<div class="stack">
     ${panel("Teste de Avaliação", `<p style="margin-top:0">Meça o seu <b>máximo de hoje</b> em cada prova: uma série só, sem parar, com boa forma. Faça descansado, de preferência no começo de um treino.</p>
       <p class="small muted">Esses números viram o seu Status e <b>ajustam os treinos</b>: as séries pedem de ~70% a ~85% do seu máximo, e a série longa vai de ~90% até além dele. Pode deixar em branco o que não medir hoje.</p>
-      <p class="small muted">Dica: na Missão, escolha <b>"Hoje é dia de Avaliação"</b> para a avaliação contar como a missão do dia. O ideal é reavaliar a cada 2 a 4 semanas${S.prEm ? ` (a última foi há ${daysBetween(S.prEm, today())} dia${daysBetween(S.prEm, today()) === 1 ? "" : "s"})` : ""}.</p>
+      <p class="small muted">Dica: na Missão, escolha <b>"Hoje é dia de Avaliação"</b> para a avaliação contar como a missão do dia. O ideal é reavaliar a cada 2 a 4 semanas${prEm() ? ` (a última foi há ${daysBetween(prEm(), today())} dia${daysBetween(prEm(), today()) === 1 ? "" : "s"})` : ""}.</p>
       ${pode ? form : `<p class="warn">Próxima avaliação em <b>${fmtDate(proximaAvaliacao())}</b>.</p>
         <p class="small muted" style="margin-bottom:0">Uma avaliação por semana. As tentativas de Teste de Rank também atualizam seus máximos.</p>`}`)}
     ${panel(`Status · rumo ao rank ${ph.rank}`, statusList(ph) + `<p class="small muted" style="margin-bottom:0">${t.nome} · fase ${esc(ph.nome)}</p>`)}</div>`;
@@ -73,7 +80,7 @@ actions.saveAvaliacao = d => {
   if (!vals.length) return toast("Preencha pelo menos uma prova.");
   const keys = new Set(ph.tests.map(([n]) => testKey(n)));
   for (const [k, v] of vals) if (keys.has(k)) setPR(k, v);
-  S.prEm = today();
+  marcaAvaliacao();
   if (S.rascunhos) delete S.rascunhos.avaliacao;
   save();
   const missao = S.days[today()]?.workout?.plano?.modo === "avaliacao" && !S.days[today()].workout.done;

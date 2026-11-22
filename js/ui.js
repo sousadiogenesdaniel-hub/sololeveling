@@ -1,7 +1,8 @@
 // Componentes de interface: modal, notificação do Sistema, toast, cabeçalho.
 import { $, esc, fmt } from "./util.js";
 import { S } from "./store.js";
-import { levelInfo } from "./game.js";
+import { levelInfo, rankDe } from "./game.js";
+import { multi, ativas, trackById } from "./tracks.js";
 import { celebrate, RANK_COLORS } from "./fx.js";
 
 export function toast(msg, ms = 2600) {
@@ -66,11 +67,13 @@ export function showEvents(titulo, events, extra = "") {
 
 export function header() {
   const li = levelInfo(), g = S.game;
+  // com 2+ trilhas: o rank de cada uma em selos pequenos (o grande é o melhor)
+  const selos = multi() ? ` · ${ativas().map(id => `<span title="${esc(trackById(id).nome)}: rank ${rankDe(id)}">${trackById(id).icone}<b>${rankDe(id)}</b></span>`).join(" ")}` : "";
   return `<header class="topbar">
-    <div class="rank" title="Rank ${li.rank}${li.travado ? " (próximo rank aguarda o Teste de Rank)" : ""}"><span>${li.rank}</span></div>
+    <div class="rank" title="Rank ${li.rank}"><span>${li.rank}</span></div>
     <div class="grow">
       <div class="row between"><h1>${esc(S.profile?.nome || "Jogador")}</h1><span class="gold num" title="Ouro">◆ ${fmt(g.gold)}</span></div>
-      <div class="row between small muted"><span>Nível <b class="glow">${li.level}</b>${li.travado ? ` · <span class="warn">rank travado</span>` : ""}</span><span class="num">${fmt(li.into)} / ${fmt(li.need)} XP</span></div>
+      <div class="row between small muted"><span>Nível <b class="glow">${li.level}</b>${selos}</span><span class="num">${fmt(li.into)} / ${fmt(li.need)} XP</span></div>
       <div class="xpbar" role="progressbar" aria-valuenow="${Math.round(li.pct)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${li.pct}%"></i></div>
     </div></header>`;
 }

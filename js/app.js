@@ -2,8 +2,10 @@
 import { $, $$, today } from "./util.js";
 import { S, load, save } from "./store.js";
 import { actions, views, setRender } from "./core.js";
-import { processDays, inPenalty, applyAutoKcal } from "./game.js";
-import { showEvents, toast } from "./ui.js";
+import { processDays, inPenalty, applyAutoKcal, migrarCurva } from "./game.js";
+import { aplicarFoco } from "./tracks.js";
+import { showEvents, toast, sysMessage } from "./ui.js";
+import { celebrate } from "./fx.js";
 import "./views/home.js";
 import "./views/treino.js";
 import "./views/comida.js";
@@ -25,6 +27,7 @@ function render() {
   document.querySelector('meta[name="theme-color"]').content = document.body.classList.contains("penalty") ? "#0c0305" : "#04070f";
   if (!S.profile) { nav.classList.add("hidden"); app.innerHTML = onboarding(); return; }
   nav.classList.remove("hidden");
+  if (aplicarFoco()) save(); // com 2+ trilhas: a trilha do treino de hoje
   const [rota = "inicio", arg] = location.hash.replace(/^#\/?/, "").split("/");
   const view = views[rota] || views.inicio;
   const y = window.scrollY, same = app.dataset.rota === rota + "/" + (arg || "");
@@ -105,8 +108,17 @@ document.addEventListener("click", e => {
 
 async function boot() {
   await load();
-  if (S.profile) closeDays();
+  const mig = S.profile ? migrarCurva() : null; // curva de 100 níveis: avisa uma vez, antes do relatório do dia
+  if (mig) save();
+  if (S.profile && !mig) closeDays();
   render();
+  if (mig) {
+    celebrate([mig]).then(() => sysMessage("O Sistema evoluiu", `<p>Agora são <b>100 níveis</b>, e eles sobem mais rápido no começo.
+      Seu XP continua o mesmo (${S.game.xp.toLocaleString("pt-BR")} XP); o nível foi recalculado: <b>${mig.levelFrom} → <span class="glow">${mig.levelTo}</span></b>.</p>
+      <p><b>Rank e nível agora são separados.</b> O rank vem só do Teste de Rank: passou, sobe na hora, em qualquer nível. O nível mede a sua constância.</p>
+      <p class="small muted">O teste antecipado (a partir da metade da fase) passa a valer pela média de 2 tentativas em dias diferentes. No fim da fase, uma tentativa basta.</p>`,
+      { onClose: () => { closeDays(); render(); } }));
+  }
   if (S.tracking && !S.tracking.nativo) { startWatch(); keepScreenOn(true); } // no app Android 1.5+, quem rastreia é o Android
   // app Android: ao voltar dos Ajustes (permissões), fecha dias e atualiza a tela
   window.__nativeResume = () => {

@@ -4,7 +4,7 @@
 // uma série nova, as reps se redistribuem (sem salto de volume). A cada 4 etapas há uma semana leve (−30%).
 // No fim da fase, o Teste de Rank libera o rank seguinte e revela a próxima meta.
 import { S } from "./store.js";
-import { today, addDays } from "./util.js";
+import { today, addDays, daysBetween } from "./util.js";
 
 export const SESSIONS_PER_STAGE = 6;
 export const DELOAD_EVERY = 4, DELOAD_FACTOR = 0.7;
@@ -400,18 +400,79 @@ export function currentPhase() {
   return t.phases[Math.min(progress().phase, t.phases.length - 1)];
 }
 export const trackFinished = () => { const t = currentTrack(); return !!t && progress().phase >= t.phases.length; };
-// A etapa final da fase foi concluída: libera o Teste de Rank.
-// Teste antecipado: liberado a partir da metade das etapas da fase (ex.: etapa 5 de 8).
-// Uma tentativa a cada 7 dias (o teste é autodeclarado; evita "chutar até passar").
+const concluida = id => (S.progress?.[id]?.phase || 0) >= trackById(id).phases.length;
+
+// ---- várias trilhas ----------------------------------------------------------------------
+// S.ativas = trilhas iniciadas. Com uma só, tudo funciona como antes. Com duas ou mais, a missão do dia é uma
+// só (qualquer trilha ativa vale) e cada trilha tem fase, etapa, fila, máximos e rank próprios.
+// S.track é a trilha "em foco" (a do treino de hoje).
+export const ativas = () => {
+  if (!S.ativas) S.ativas = S.track ? [S.track.id] : [];
+  return S.ativas;
+};
+export const multi = () => ativas().length > 1;
+// Ainda há cobrança de missão: alguma trilha ativa não foi concluída
+export const todasConcluidas = () => !ativas().length ? !!S.track && trackFinished() : ativas().every(concluida);
+
+export function setFoco(id) {
+  S.track = { id, startDate: progress(id).inicio || S.track?.startDate || today() };
+}
+// Treino de pernas pesado (para não emendar dois no mesmo par de pernas)
+export const pesaPernas = (trackId, titulo = "") => trackId === "calistenia" ? /^Pernas/.test(titulo) : /Tiros|Ritmo|Longão/.test(titulo);
+function proximoTitulo(id) {
+  const t = trackById(id), p = progress(id);
+  return t.phases[Math.min(p.phase, t.phases.length - 1)].days[p.nextIdx ?? 0]?.[0] || "";
+}
+// Trilha sugerida para o dia: a que está há mais tempo sem treino; se ontem foi pernas pesado e a sugerida
+// também seria, e outra trilha não, sugere a outra
+export function trilhaSugerida(date = today()) {
+  const ids = ativas().filter(id => !concluida(id));
+  if (!ids.length) return S.track?.id || null;
+  const ultimo = id => Object.keys(S.days).filter(d => d < date && S.days[d].workout?.done && S.days[d].workout.trackId === id).sort().pop() || "";
+  const ordem = [...ids].sort((a, b) => ultimo(a).localeCompare(ultimo(b)) || (a === S.track?.id ? -1 : b === S.track?.id ? 1 : 0));
+  const ontem = S.days[addDays(date, -1)]?.workout;
+  if (ontem?.done && pesaPernas(ontem.trackId, ontem.plano?.titulo) && pesaPernas(ordem[0], proximoTitulo(ordem[0]))) {
+    const leve = ordem.find(id => !pesaPernas(id, proximoTitulo(id)));
+    if (leve) return leve;
+  }
+  return ordem[0];
+}
+// Escolhe a trilha em foco do dia (só com 2+ trilhas): a do treino já começado, a escolhida hoje ou a sugerida.
+// Devolve true se mudou.
+export function aplicarFoco(date = today()) {
+  if (!multi()) return false;
+  const antes = S.track?.id, w = S.days[date]?.workout;
+  let id;
+  if (w?.trackId && (w.in || w.done)) id = w.trackId;
+  else if (S.focoDia?.d === date && ativas().includes(S.focoDia.id)) id = S.focoDia.id;
+  else id = trilhaSugerida(date);
+  if (id && id !== antes) setFoco(id);
+  return !!id && id !== antes;
+}
+
+// ---- Teste de Rank -------------------------------------------------------------------------
+// A etapa final da fase foi concluída: libera o Teste de Rank (uma tentativa basta).
+// Teste antecipado: liberado a partir da metade das etapas da fase (ex.: etapa 5 de 8) e vale pela MÉDIA de 2
+// tentativas em dias diferentes (a 2ª de 2 a 7 dias depois da 1ª): separa um dia inspirado do seu nível real.
+// Nivelamento: numa trilha nova (iniciada além da primeira), o teste antecipado já vale desde a etapa 1, até o
+// primeiro treino normal dela. Passou, pula de fase e pode nivelar de novo.
+// Reprovou: nova tentativa em 7 dias (o teste é autodeclarado; evita "chutar até passar").
 export const TEST_COOLDOWN = 7;
+export const JANELA_2A = { de: 2, ate: 7 };
 export const earlyFrom = ph => Math.ceil(ph.stages / 2) + 1;
 export function testStatus() {
   const ph = currentPhase(), p = progress();
   if (!ph || trackFinished()) return null;
-  const full = p.week > ph.stages, early = !full && p.week >= earlyFrom(ph);
+  const full = p.week > ph.stages, nivel = !full && !!p.nivelamento, early = !full && (nivel || p.week >= earlyFrom(ph));
   if (!full && !early) return null;
+  const t1 = early && p.antecipada?.fase === p.phase && daysBetween(p.antecipada.d, today()) <= JANELA_2A.ate ? p.antecipada : null;
+  if (t1) {
+    const de = addDays(t1.d, JANELA_2A.de);
+    return { early, nivel, tentativa: 2, t1, de, ate: addDays(t1.d, JANELA_2A.ate), nextTry: de > today() ? de : null };
+  }
   const next = p.lastTestTry ? addDays(p.lastTestTry, TEST_COOLDOWN) : null;
-  return { early, nextTry: next && next > today() ? next : null };
+  const expirou = early && p.antecipada?.fase === p.phase ? p.antecipada.d : null; // 1ª tentativa vencida
+  return { early, nivel, tentativa: early ? 1 : null, expirou, nextTry: next && next > today() ? next : null };
 }
 export const testUnlocked = () => !!testStatus();
 
@@ -429,10 +490,10 @@ export function workoutIndex() {
   }
   return p.nextIdx;
 }
-// Chamado ao concluir um treino: avança a fila
+// Chamado ao concluir um treino: avança a fila da trilha do treino
 export function advanceQueue(w) {
-  if (w.trackId !== S.track?.id || w.plano?.idx == null) return;
-  progress().nextIdx = (w.plano.idx + 1) % DAYS_PER_CYCLE;
+  if (!w.trackId || !S.progress?.[w.trackId] || w.plano?.idx == null) return;
+  progress(w.trackId).nextIdx = (w.plano.idx + 1) % DAYS_PER_CYCLE;
 }
 
 // Semana leve: a cada 4 etapas, menos na última etapa da fase (véspera do teste)
