@@ -39,6 +39,10 @@ Necromante está pronto.
 Além do Comandante e dos títulos, uma única **mega recompensa** a cada rank, para cada subida ter a empolgação
 que a mudança de classe no rank D tem. O Daniel ainda está pensando.
 
+### Armas e acessórios (próxima conversa)
+Montar juntos o catálogo de armas, mantos e acessórios: nomes, visual, de onde cada um cai e o que cada um faz. Hoje
+existem 17 itens provisórios no código (ex.: Adagas do Primeiro Portão, Manto do Necromante, Selo do Monarca).
+
 ### Recompensas: próximos passos
 - **Portões de corrida:** hoje os Portões são de calistenia (peso do corpo). Com a Corrida ativa, poderiam pedir uma
   distância rastreada pelo GPS.
