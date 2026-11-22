@@ -58,7 +58,7 @@ function painel(st) {
     : faltando ? `<p class="mid bad">Bloqueio sem permissão</p><p class="small">Sem as permissões obrigatórias, o bloqueio não funciona.</p>`
     : (st.unlockFrom || 0) <= Date.now() && st.unlockUntil > Date.now() ? `<p class="mid warn">Desbloqueio de emergência até ${fmtTime(st.unlockUntil)}</p>`
     : st.blockingNow ? `<p class="mid bad">Apps bloqueados agora</p><p class="small muted">Zona de Penalidade ativa.</p>`
-    : `<p class="mid ok">Armado</p><p class="small muted">Se você entrar na Zona de Penalidade, os apps escolhidos são bloqueados na hora, mesmo que você não abra O Sistema.</p>`;
+    : `<p class="mid ok">Armado</p><p class="small muted">Se você faltar à missão, os apps são bloqueados assim que você usar o celular, mesmo sem abrir O Sistema.${st.svcTick !== undefined ? " Uma notificação discreta, “O Sistema: bloqueio armado”, mostra que o vigia está ligado." : ""}</p>`;
   // mostra os apps instalados; os outros da lista aparecem num resumo (são bloqueados se você instalar)
   const apps = (st.apps || []).filter(a => a.instalado);
   const outros = [...new Set((st.apps || []).filter(a => !a.instalado && a.bloqueado).map(a => a.nome))];
@@ -88,6 +88,9 @@ function painel(st) {
       <tr><td>Sistema</td><td>${esc((navigator.userAgent.match(/Android [\d.]+/) || ["?"])[0])}</td></tr>
       <tr><td>Penalidade enviada ao Android</td><td>${ultimoSync ? `${ultimoSync.penalty ? "sim" : "não"} (${ultimoSync.em}${ultimoSync.ok ? "" : ", ERRO: " + esc(ultimoSync.erro)})` : "ainda não enviada"}</td></tr>
       <tr><td>Android quer bloquear agora</td><td>${st.blockingNow ? "sim" : "não"}</td></tr>
+      ${st.svcTick !== undefined ? `<tr><td>Vigia</td><td>${Date.now() - st.svcTick < 90000 ? "ativo" : "parado"}${st.svcTick ? ` (visto às ${fmtTime(st.svcTick)})` : ""}</td></tr>
+      <tr><td>Última conferência</td><td>${st.evalAt ? `${fmtTime(st.evalAt)} · ${esc(st.evalResult)}` : "—"}</td></tr>
+      ${st.errMsg ? `<tr><td>Último erro</td><td class="bad">${fmtTime(st.errAt)} · ${esc(st.errMsg)}</td></tr>` : ""}` : ""}
       <tr><td>Acesso ao uso / Sobrepor</td><td>${st.usageAccess ? "✔" : "✖"} / ${st.overlay ? "✔" : "✖"}</td></tr>
       <tr><td>Notificações / Bateria livre</td><td>${st.notifications ? "✔" : "✖"} / ${st.battery ? "✔" : "✖"}</td></tr>
       <tr><td>Bloqueio ligado</td><td>${st.blockingEnabled ? "sim" : "não"}${st.disableAt ? " (pedido de desligar)" : ""}</td></tr>

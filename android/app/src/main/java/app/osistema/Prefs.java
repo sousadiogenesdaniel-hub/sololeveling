@@ -78,6 +78,25 @@ final class Prefs {
         return false;
     }
 
+    static boolean hasUsageAccess(Context c) {
+        android.app.AppOpsManager ops = c.getSystemService(android.app.AppOpsManager.class);
+        int mode = android.os.Build.VERSION.SDK_INT >= 29
+            ? ops.unsafeCheckOpNoThrow(android.app.AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), c.getPackageName())
+            : ops.checkOpNoThrow(android.app.AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), c.getPackageName());
+        return mode == android.app.AppOpsManager.MODE_ALLOWED;
+    }
+
+    /** O vigia pode ficar ligado? (bloqueio ligado e as duas permissões dadas) */
+    static boolean canRun(Context c) {
+        shouldBlock(c); // aplica um eventual "desligar em 24 h" vencido
+        return sp(c).getBoolean("blockingEnabled", true) && hasUsageAccess(c) && android.provider.Settings.canDrawOverlays(c);
+    }
+
+    // ---- diagnóstico ----
+    static void tick(Context c) { sp(c).edit().putLong("svcTick", System.currentTimeMillis()).apply(); }
+    static void logEval(Context c, String r) { sp(c).edit().putLong("evalAt", System.currentTimeMillis()).putString("evalResult", r).apply(); }
+    static void logError(Context c, String e) { sp(c).edit().putLong("errAt", System.currentTimeMillis()).putString("errMsg", e).apply(); }
+
     static boolean penaltyActive(Context c) { return sp(c).getBoolean("penalty", false) || inferredMiss(c); }
 
     /** O bloqueio deve estar valendo agora? */

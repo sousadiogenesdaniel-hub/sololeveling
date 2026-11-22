@@ -17,13 +17,14 @@ import java.time.ZoneId;
 final class Scheduler {
     private Scheduler() {}
 
-    static final String CH_BLOQUEIO = "bloqueio", CH_LEMBRETE = "lembrete";
+    static final String CH_BLOQUEIO = "bloqueio", CH_LEMBRETE = "lembrete", CH_VIGIA = "vigia";
     static final String ACT_EVAL = "app.osistema.EVAL", ACT_LEMBRETE = "app.osistema.LEMBRETE";
 
     static void channels(Context c) {
         NotificationManager nm = c.getSystemService(NotificationManager.class);
         nm.createNotificationChannel(new NotificationChannel(CH_BLOQUEIO, "Zona de Penalidade", NotificationManager.IMPORTANCE_LOW));
         nm.createNotificationChannel(new NotificationChannel(CH_LEMBRETE, "Lembretes de missão", NotificationManager.IMPORTANCE_DEFAULT));
+        nm.createNotificationChannel(new NotificationChannel(CH_VIGIA, "Vigia do bloqueio (sem penalidade)", NotificationManager.IMPORTANCE_MIN));
     }
 
     static PendingIntent openApp(Context c) {
@@ -46,9 +47,11 @@ final class Scheduler {
         catch (SecurityException ignored) { /* sem permissão de notificação */ }
     }
 
-    /** Liga ou desliga o bloqueio conforme as regras e agenda as próximas conferências. */
+    /** Mantém o vigia ligado (se puder) e agenda as conferências de reserva. */
     static void evaluate(Context c) {
-        if (Prefs.shouldBlock(c)) startBlocker(c);
+        boolean bloq = Prefs.shouldBlock(c);
+        Prefs.logEval(c, bloq ? "bloqueando" : "armado");
+        if (Prefs.canRun(c)) startBlocker(c);
         scheduleNext(c);
     }
 
@@ -56,8 +59,9 @@ final class Scheduler {
         try {
             c.startForegroundService(new Intent(c, BlockerService.class));
         } catch (Exception e) {
-            // O Android pode impedir de iniciar em segundo plano: avisa para o usuário abrir o app.
-            notify(c, 3, CH_BLOQUEIO, "Zona de Penalidade", "Toque para abrir O Sistema e ativar a Zona de Penalidade.");
+            // O Android pode impedir de iniciar em segundo plano: registra e, se houver penalidade, avisa.
+            Prefs.logError(c, e.getClass().getSimpleName() + ": " + e.getMessage());
+            if (Prefs.shouldBlock(c)) notify(c, 3, CH_BLOQUEIO, "Zona de Penalidade", "Toque para abrir O Sistema e ativar a Zona de Penalidade.");
         }
     }
 

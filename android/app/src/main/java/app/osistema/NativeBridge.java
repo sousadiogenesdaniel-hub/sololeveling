@@ -37,11 +37,7 @@ final class NativeBridge {
     NativeBridge(MainActivity a) { this.a = a; }
 
     private boolean usageAccess() {
-        AppOpsManager ops = a.getSystemService(AppOpsManager.class);
-        int mode = Build.VERSION.SDK_INT >= 29
-            ? ops.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), a.getPackageName())
-            : ops.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), a.getPackageName());
-        return mode == AppOpsManager.MODE_ALLOWED;
+        return Prefs.hasUsageAccess(a);
     }
 
     private boolean installed(String pkg) {
@@ -67,6 +63,11 @@ final class NativeBridge {
             o.put("emergencyMin", Prefs.EMERGENCIA_MIN);
             o.put("emergencyLeft", Prefs.emergencyLeft(a));
             o.put("blockingNow", Prefs.shouldBlock(a));
+            o.put("svcTick", p.getLong("svcTick", 0));
+            o.put("evalAt", p.getLong("evalAt", 0));
+            o.put("evalResult", p.getString("evalResult", ""));
+            o.put("errAt", p.getLong("errAt", 0));
+            o.put("errMsg", p.getString("errMsg", ""));
             o.put("reminderHour", p.getInt("reminderHour", 20));
             JSONArray apps = new JSONArray();
             Set<String> bl = Prefs.blocked(a);
