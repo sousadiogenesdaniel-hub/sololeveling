@@ -1,6 +1,6 @@
 // O Sistema — inicialização, rotas e delegação de eventos
-import { $, $$ } from "./util.js";
-import { S, load } from "./store.js";
+import { $, $$, today } from "./util.js";
+import { S, load, save } from "./store.js";
 import { actions, views, setRender } from "./core.js";
 import { processDays, inPenalty, applyAutoKcal } from "./game.js";
 import { showEvents, toast } from "./ui.js";
@@ -29,6 +29,7 @@ function render() {
   const view = views[rota] || views.inicio;
   const y = window.scrollY, same = app.dataset.rota === rota + "/" + (arg || "");
   app.innerHTML = view(arg);
+  restoreDrafts();
   app.dataset.rota = rota + "/" + (arg || "");
   window.scrollTo(0, same ? y : 0);
   const tab = views[rota] ? (TAB_OF[rota] || "mais") : "inicio";
@@ -75,6 +76,24 @@ function closeDays() {
 // Faixa atrás da barra de status (criada aqui também, caso o index.html em cache seja de uma versão antiga)
 if (!document.getElementById("statusbar")) {
   const sb = document.createElement("div"); sb.id = "statusbar"; document.body.prepend(sb);
+}
+
+// Rascunhos: formulários com data-rascunho guardam o que foi digitado (no dia) e preenchem de volta ao redesenhar
+let rascunhoT = null;
+document.addEventListener("input", e => {
+  const f = e.target.closest?.("form[data-rascunho]"); if (!f) return;
+  const v = {};
+  for (const el of f.elements) if (el.name && el.type !== "hidden" && el.value !== "") v[el.name] = el.value;
+  (S.rascunhos ||= {})[f.dataset.rascunho] = { d: today(), v };
+  clearTimeout(rascunhoT); rascunhoT = setTimeout(save, 400);
+});
+function restoreDrafts() {
+  for (const f of document.querySelectorAll("form[data-rascunho]")) {
+    const r = S.rascunhos?.[f.dataset.rascunho];
+    if (!r || r.d !== today()) continue;
+    for (const [n, val] of Object.entries(r.v)) { const el = f.elements[n]; if (el && !el.value) el.value = val; }
+    if (Object.keys(r.v).length) f.closest("details")?.setAttribute("open", "");
+  }
 }
 
 // Marca quando o usuário abre o seletor de arquivos (no app Android ele sai do app e volta)

@@ -5,7 +5,7 @@ import { today, addDays, esc, fmt, fmtTime, fmtDate, getPosition, getPreciseFix,
 import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox } from "../ui.js";
 import { completeWorkout, passTest, isRestDay, workoutKcal, grant, R, RANK_TESTS, RANK_ORDER, testsPassed } from "../game.js";
 import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, testStatus, TEST_COOLDOWN, trackFinished, unitLabel, SESSIONS_PER_STAGE, testKey, setPR } from "../tracks.js";
-import { statusList, avaliacaoLiberada } from "./avaliacao.js";
+import { statusList, avaliacaoLiberada, avaliacaoForm } from "./avaliacao.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
 const PUNCH_EXPIRES_H = 5;    // ponto de entrada vence depois disso
@@ -74,7 +74,7 @@ function testCard() {
     return panel("Teste de Rank", `<p>Próxima tentativa do teste do rank <b>${ph.rank}</b> em <b>${fmtDate(st.nextTry)}</b>.</p>
       <p class="small muted">Uma tentativa a cada ${TEST_COOLDOWN} dias. Enquanto isso, siga a fase normalmente.</p>`);
   }
-  const form = `<form data-act="submitTest"><input type="hidden" name="early" value="${st.early ? 1 : ""}">${ph.tests.map(([n, v, un], i) => `<div class="field">
+  const form = `<form data-act="submitTest" data-rascunho="teste"><input type="hidden" name="early" value="${st.early ? 1 : ""}">${ph.tests.map(([n, v, un], i) => `<div class="field">
       <label for="t${i}">${n} (meta: ${unitLabel(v, un)})</label>
       <input id="t${i}" name="t${i}" inputmode="decimal" required></div>`).join("")}
       <button class="btn primary block">Enviar resultado</button></form>`;
@@ -94,6 +94,7 @@ actions.submitTest = data => {
   const falhas = ph.tests.filter(([, v], i) => (num(data["t" + i]) ?? 0) < v);
   ph.tests.forEach(([n], i) => setPR(testKey(n), num(data["t" + i]))); // a tentativa, mesmo reprovada, atualiza seus máximos
   day().testeFeito = true; // vale para concluir o "Dia de Teste de Rank"
+  if (S.rascunhos) delete S.rascunhos.teste;
   if (falhas.length) {
     progress().lastTestTry = today(); save(); refresh();
     return sysMessage("Teste não superado", `<p>Ainda falta em: <b>${falhas.map(f => f[0]).join(", ")}</b>.</p>
@@ -184,7 +185,7 @@ function todayCard() {
         <p class="center small muted">Entrada às ${fmtTime(cur.in.t)} · ${cur.in.spot ? esc(cur.in.spot) : fmt(cur.in.dist / 1000, 1) + " km de casa"} · mínimo ${need} min</p>
         <p>${M.desc}</p>
         <p class="small ${feito ? "ok" : "warn"}">${feito ? "✔ Resultados registrados." : "Registre os resultados antes de bater o ponto de saída."}</p>
-        ${M.link && !feito ? `<a class="btn block" href="${M.link}">${M.botao}</a>` : ""}
+        ${plan.modo === "avaliacao" && !feito ? avaliacaoForm(currentPhase()) : ""}
         <button class="btn primary block" style="margin-top:8px" data-act="punchOut">Bater ponto: saída</button>
         <button class="btn ghost sm block" style="margin-top:8px" data-act="cancelWorkout">Cancelar</button>`, "", `<span class="chip warn">Em andamento</span>`);
     }

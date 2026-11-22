@@ -21,16 +21,23 @@ export function statusList(ph) {
   }).join("")}</ul>`;
 }
 
-views.avaliacao = () => {
-  const ph = currentPhase(), t = currentTrack();
-  if (!ph) return `${header()}<div class="stack">${panel("Teste de Avaliação", `<p>Escolha uma trilha primeiro.</p><a class="btn block" href="#/treino">Ir para a Missão</a>`)}</div>`;
-  const pode = liberada();
-  const form = `<form data-act="saveAvaliacao">${ph.tests.map(([n, alvo, un], i) => {
+// Formulário da avaliação (usado aqui e no card da Missão, no Dia de Avaliação).
+// data-rascunho: o que for digitado fica salvo na hora e volta se você trocar de aba ou fechar o app.
+export function avaliacaoForm(ph) {
+  return `<form data-act="saveAvaliacao" data-rascunho="avaliacao">${ph.tests.map(([n, alvo, un], i) => {
     const k = testKey(n), m = S.pr?.[k];
     return `<div class="field"><label for="av${i}">${esc(n)} <span class="muted">(meta do rank ${ph.rank}: ${unitLabel(alvo, un)})</span></label>
       <input id="av${i}" name="${k}" inputmode="decimal" placeholder="${m ? `atual: ${m.v} (${fmtDate(m.d, { day: "2-digit", month: "2-digit" })})` : "seu máximo"}"></div>`;
   }).join("")}
+    <p class="small muted" style="margin-top:0">O que você digita fica salvo como rascunho até tocar em Salvar.</p>
     <button class="btn primary block">Salvar meus máximos</button></form>`;
+}
+
+views.avaliacao = () => {
+  const ph = currentPhase(), t = currentTrack();
+  if (!ph) return `${header()}<div class="stack">${panel("Teste de Avaliação", `<p>Escolha uma trilha primeiro.</p><a class="btn block" href="#/treino">Ir para a Missão</a>`)}</div>`;
+  const pode = liberada();
+  const form = avaliacaoForm(ph);
   return `${header()}<div class="stack">
     ${panel("Teste de Avaliação", `<p style="margin-top:0">Meça o seu <b>máximo de hoje</b> em cada prova: uma série só, sem parar, com boa forma. Faça descansado, de preferência no começo de um treino.</p>
       <p class="small muted">Esses números viram o seu Status e <b>ajustam os treinos</b>: as séries pedem de ~70% a ~85% do seu máximo, e a série longa vai de ~90% até além dele. Pode deixar em branco o que não medir hoje.</p>
@@ -48,6 +55,7 @@ actions.saveAvaliacao = d => {
   const keys = new Set(ph.tests.map(([n]) => testKey(n)));
   for (const [k, v] of vals) if (keys.has(k)) setPR(k, v);
   S.prEm = today();
+  if (S.rascunhos) delete S.rascunhos.avaliacao;
   save();
   const missao = S.days[today()]?.workout?.plano?.modo === "avaliacao" && !S.days[today()].workout.done;
   go(missao ? "treino" : "avaliacao");
