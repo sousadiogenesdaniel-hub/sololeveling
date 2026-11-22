@@ -149,15 +149,24 @@ export function arteSombra({ grau, cmd } = {}, { tam = 96, bloqueado = false } =
       `<rect x="82.5" y="12" width="3" height="104" ${fill} ${tr}/><path d="M84 2 L88.5 14 L79.5 14 Z" ${fill} ${tr}/>`);
   }
   if (g === "elite") {
-    frente.push(`<path d="M37 31 C37 14 44 8 50 7 C56 8 63 14 63 31 C60 22 56 18 50 18 C44 18 40 22 37 31 Z" ${fill} ${tr}/>`,
+    frente.push(`<path d="M37.5 22 C36 13 47 8.5 58 10.5 C66 12 67.5 17.5 62.5 20.5 C54 23.5 45 23.5 37.5 22 Z" ${fill} ${tr}/>`,
+      `<circle cx="43.5" cy="17" r="2.2" fill="${cor}" fill-opacity=".85"/>`,
       `<path d="M25 70 L17 94 L20.5 95 L28.5 71 Z" ${fill} ${tr}/><path d="M75 70 L83 94 L79.5 95 L71.5 71 Z" ${fill} ${tr}/>`);
+  }
+  if (g === "cavaleiro") {
+    frente.push(`<path d="M50 11.5 C52 4 58.5 .5 66 1.5 C60 4.5 55.5 8.5 53.5 12.5 Z" fill="${cor}" fill-opacity=".7"/>`,
+      `<path d="M38 33.5 C37.5 18 43 11 50 11 C57 11 62.5 18 62 33.5 L58 36.5 L42 36.5 Z" ${fill} ${tr}/>`,
+      `<rect x="40.5" y="26.6" width="19" height="2.8" rx="1" fill="#000"/><line x1="50" y1="30" x2="50" y2="36" stroke="${cor}" stroke-opacity=".4" stroke-width=".8"/>`);
   }
   if (g === "cavaleiro" || g === "comandante" || g === "marechal") {
     frente.push(`<ellipse cx="27" cy="52" rx="9.5" ry="6.5" ${fill} ${tr}/><ellipse cx="73" cy="52" rx="9.5" ry="6.5" ${fill} ${tr}/>`,
       `<rect x="48" y="62" width="4" height="52" ${fill} ${tr}/><rect x="39" y="59" width="22" height="3.5" ${fill} ${tr}/><circle cx="50" cy="56" r="2.5" ${fill} ${tr}/>`);
   }
   if (g === "comandante") {
-    frente.push(`<path d="M42 19 C36 12 34 6 36 0 C38 7 42 11 46.5 16 Z" ${fill} ${tr}/><path d="M58 19 C64 12 66 6 64 0 C62 7 58 11 53.5 16 Z" ${fill} ${tr}/>`);
+    frente.push(`<path d="M37 19.5 C36 11 43 7 51 7 C60 7 66 10.5 65 16 L62 20.5 L38.5 20.5 Z" ${fill} ${tr}/>`,
+      `<rect x="38.5" y="17.6" width="23.5" height="3" fill="${cor}" fill-opacity=".85"/>`,
+      `<path d="M36 20.5 L64 20.5 C61 24.5 41 24.5 36 20.5 Z" ${fill} ${tr}/>`,
+      `<path d="M50.5 9.6 L51.6 12.4 L54.6 12.5 L52.2 14.3 L53.1 17.2 L50.5 15.5 L47.9 17.2 L48.8 14.3 L46.4 12.5 L49.4 12.4 Z" fill="${cor}"/>`);
   }
   if (g === "marechal") {
     frente.push(`<path d="M40 15 L42 6 L46 11 L50 2 L54 11 L58 6 L60 15 Z" fill="${cor}" fill-opacity=".8"/>`);
