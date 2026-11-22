@@ -17,7 +17,8 @@ num WebView preso a esse endereço e adiciona o que o navegador não faz:
   localização com a notificação "Rastreando" soma a distância pelo GPS do aparelho, com as mesmas regras do app web
   (precisão até 35 m, ignora ruído parado e trechos rápidos demais: a pé 30 km/h, bike 70 km/h; `Percurso`,
   coberto por testes). Só roda enquanto você rastreia; não guarda o trajeto. Se o Android fechar o app no meio,
-  o percurso fica salvo e continua ao abrir de novo.
+  o percurso fica salvo e continua ao abrir de novo. **Pausar/Retomar** pelo app ou pelo botão da notificação: na
+  pausa o GPS desliga, o tempo parado não conta e, ao retomar, o percurso recomeça do ponto atual.
 - **Lembrete** à noite se a missão do dia não foi feita. Backup salvo em Downloads.
 
 Sem bibliotecas de terceiros: só o SDK do Android.

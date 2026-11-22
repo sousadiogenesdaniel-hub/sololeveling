@@ -180,11 +180,11 @@ views.loja = () => {
       <button class="btn ghost sm block" data-act="editShop" data-id="">+ Novo item</button>`, "", `<span class="gold num">◆ ${fmt(g)}</span>`)}
     ${panel("Missões bônus", (() => {
       const dw = dietWeek(), feitos = dw.filter(Boolean).length, passados = dw.filter(x => x !== null).length, limpa = cleanWeek();
-      return `<p class="small muted" style="margin-top:0">Ouro extra para quem já está cumprindo as missões. Semana do jogo: ${fmtDate(weekStart(), { day: "2-digit", month: "2-digit" })} a ${fmtDate(weekEnd(), { day: "2-digit", month: "2-digit" })}. Só valem em semana sem falta, até ${BONUS.teto} de Ouro por semana.</p>
+      return `<p class="small muted" style="margin-top:0">Ouro extra para quem já está cumprindo as missões. Semana do jogo: ${fmtDate(weekStart(), { day: "2-digit", month: "2-digit" })} a ${fmtDate(weekEnd(), { day: "2-digit", month: "2-digit" })}. Fora da Zona de Penalidade, até ${BONUS.teto} de Ouro por semana.</p>
       <ul class="list small">
-        <li><span class="grow">Atividade de ${BONUS.km.caminhada} km+ rastreada por GPS (bike ${BONUS.km.bike} km), depois da missão</span><b class="gold">+${BONUS.gpsOuro}</b></li>
+        <li><span class="grow">Atividade de ${BONUS.km.caminhada} km+ rastreada por GPS (bike ${BONUS.km.bike} km), depois da missão <span class="muted">(semana com falta: +${BONUS.gpsOuroSeq} depois de ${BONUS.seguidos} missões seguidas)</span></span><b class="gold">+${BONUS.gpsOuro}</b></li>
         <li><span class="grow">Semana inteira dentro da meta de calorias <span class="muted">(${passados ? `${feitos} de ${passados} dia${passados > 1 ? "s" : ""} fechado${passados > 1 ? "s" : ""}${feitos < passados ? ": esta semana já não vale" : ""}` : "começa a contar amanhã"})</span></span><b class="gold">+${BONUS.dietaOuro}</b></li></ul>
-      <div class="row between small"><span class="${limpa ? "ok" : "bad"}">${limpa ? "Semana limpa ✔" : "Semana com falta: bônus bloqueados"}</span><b class="gold num">${bonusWeek()}/${BONUS.teto}</b></div>
+      <div class="row between small"><span class="${limpa ? "ok" : "bad"}">${limpa ? "Semana limpa ✔" : "Semana com falta: só o bônus de GPS reduzido"}</span><b class="gold num">${bonusWeek()}/${BONUS.teto}</b></div>
       <a class="btn sm ghost block" style="margin-top:8px" href="#/extras">Rastrear atividade</a>`;
     })())}
     ${panel("Compras", compras.length ? `<ul class="list small">${compras.map(c => `<li><span class="muted num">${fmtShort(c.date)}</span>

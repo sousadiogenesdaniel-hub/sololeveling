@@ -170,6 +170,19 @@ final class NativeBridge {
     @JavascriptInterface
     public String trackStatus() { return Rastreio.status(a).toString(); }
 
+    /** Pausa (true) ou retoma (false). O serviço desliga o GPS na pausa e o religa ao retomar. */
+    @JavascriptInterface
+    public String trackPause(boolean pausar) {
+        if (!Rastreio.ativo(a)) return "inativo";
+        Rastreio.pausar(a, pausar); // já vale agora (a tela lê na hora); o serviço só liga/desliga o GPS
+        try {
+            a.startService(new Intent(a, TrackerService.class).setAction(pausar ? TrackerService.ACT_PAUSAR : TrackerService.ACT_RETOMAR));
+        } catch (Exception e) {
+            return "erro"; // a pausa ficou gravada; o serviço aplica ao religar
+        }
+        return "ok";
+    }
+
     /** Finaliza: devolve a distância e a subida somadas e desliga o GPS. */
     @JavascriptInterface
     public String trackStop() {

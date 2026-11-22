@@ -58,4 +58,15 @@ public class PercursoTest {
         p.add(LAT + 3 * PASSO, LON, 12, 5, 12000, A_PE); // desceu: não
         assertEquals(4, p.elev, 0.01);
     }
+
+    @Test public void retomarSemPontoAnterior_naoSomaOCaminhoDaPausa() {
+        Percurso p = new Percurso();
+        p.add(LAT, LON, Double.NaN, 5, 0, A_PE);
+        p.add(LAT + PASSO, LON, Double.NaN, 5, 4000, A_PE);
+        // pausa: o ponto anterior é apagado (Rastreio.pausar); retoma 500 m adiante
+        p.lastLat = Double.NaN; p.lastLon = Double.NaN;
+        p.add(LAT + 46 * PASSO, LON, Double.NaN, 5, 600_000, A_PE);
+        p.add(LAT + 47 * PASSO, LON, Double.NaN, 5, 604_000, A_PE);
+        assertEquals(22.2, p.dist, 0.5);
+    }
 }

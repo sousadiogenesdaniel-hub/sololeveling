@@ -1,6 +1,6 @@
 {
-  "versionCode": 6,
-  "versionName": "1.5",
-  "sha256": "f5396caec7fefd530cec4d7176f21b8350dd6e155ff2a5ea05881716bdec7a4a",
-  "novidades": "Caminhada, corrida e bike rastreadas pelo GPS com a tela bloqueada: pode guardar o celular no bolso."
+  "versionCode": 7,
+  "versionName": "1.6",
+  "sha256": "35f84d57f7c3e016539e1c49717f35ce620a7523d1d9a95b7dbf504780833b3f",
+  "novidades": "Pausar e retomar a atividade rastreada, pelo app ou pelo botão da notificação. O tempo parado não conta."
 }

@@ -344,9 +344,10 @@ export function dietVerdict(d, rec = S.days[d]) {
 
 // ---- semana do jogo e missões bônus -----------------------------------------------------
 // A semana do jogo começa no dia seguinte ao descanso (descanso na sexta → semana de sábado a sexta).
-// Missões bônus dão só Ouro (nunca XP), nunca substituem a missão do dia, só valem em semana limpa
-// e têm teto semanal.
-export const BONUS = { gpsOuro: 75, dietaOuro: 150, teto: 300, km: { caminhada: 5, corrida: 5, trilha: 5, bike: 15 } };
+// Missões bônus dão só Ouro (nunca XP), nunca substituem a missão do dia e têm teto semanal.
+// Atividade longa por GPS: semana limpa (sem falta) vale gpsOuro; semana com falta vale gpsOuroSeq se as
+// últimas `seguidos` missões estiverem cumpridas. Na Zona de Penalidade, nada.
+export const BONUS = { gpsOuro: 125, gpsOuroSeq: 75, seguidos: 3, dietaOuro: 150, teto: 300, km: { caminhada: 5, corrida: 5, trilha: 5, bike: 15 } };
 export function weekStart(date = today()) {
   const ini = ((S.profile?.restDay ?? 0) + 1) % 7;
   let d = date; while (weekday(d) !== ini) d = addDays(d, -1);
@@ -365,14 +366,39 @@ function payBonus(date, tipo, ouro, motivo) {
   return grant(0, v, motivo + (v < ouro ? " (limite semanal)" : ""), date);
 }
 
-// Por que a missão bônus de exercício está (ou não) disponível no dia
+// Missões cumpridas seguidas até `date` (a do próprio dia conta se já foi feita), pulando o descanso
+export function treinosSeguidos(date = today()) {
+  let n = 0;
+  for (let i = 0, d = date; i < 30; i++, d = addDays(d, -1)) {
+    if (S.days[d]?.workout?.done) { n++; continue; }
+    if (d === date || isRestDay(d)) continue; // hoje ainda dá tempo; descanso não quebra
+    break; // falta (ou antes de começar a trilha)
+  }
+  return n;
+}
+
+// Quanto a atividade longa vale no dia (contando a missão do dia como feita): 125, 75 ou 0
+export function gpsBonusValor(date = today()) {
+  if (pendingDebts().length) return 0;
+  if (cleanWeek(date)) return BONUS.gpsOuro;
+  const n = treinosSeguidos(date) + (S.days[date]?.workout?.done ? 0 : 1);
+  return n >= BONUS.seguidos ? BONUS.gpsOuroSeq : 0;
+}
+
+// Por que a missão bônus de exercício está (ou não) disponível no dia, e quanto vale
 export function gpsBonusStatus(date = today()) {
   if (isRestDay(date)) return { ok: false, motivo: "Dia de descanso não tem missão bônus de exercício: descansar faz parte do treino." };
-  if (!cleanWeek(date)) return { ok: false, motivo: `Semana com falta ou na Zona de Penalidade: bônus bloqueados até ${fmtDate(addDays(weekEnd(date), 1))}.` };
+  if (pendingDebts().length) return { ok: false, motivo: "Na Zona de Penalidade: bônus bloqueados até sair dela." };
   if (bonusLog().some(b => b.date === date && b.tipo === "gps")) return { ok: false, feito: true, motivo: "Missão bônus de hoje cumprida." };
   if (bonusWeek(date) >= BONUS.teto) return { ok: false, motivo: `Limite de ${BONUS.teto} de Ouro em bônus nesta semana atingido.` };
-  if (!S.days[date]?.workout?.done) return { ok: false, pendente: true, motivo: "Libera quando a missão do dia for concluída (pode fazer a atividade antes; o bônus entra ao concluir a missão)." };
-  return { ok: true, motivo: "Disponível hoje." };
+  const valor = gpsBonusValor(date), limpa = cleanWeek(date);
+  const porque = limpa ? "semana sem falta" : `semana com falta, mas ${BONUS.seguidos} missões seguidas`;
+  if (!valor) {
+    const faltam = BONUS.seguidos - treinosSeguidos(date) - (S.days[date]?.workout?.done ? 0 : 1);
+    return { ok: false, motivo: `Semana com falta: o bônus volta (+${BONUS.gpsOuroSeq}) depois de ${BONUS.seguidos} missões seguidas cumpridas. Falta${faltam > 1 ? "m" : ""} ${faltam} além da de hoje.` };
+  }
+  if (!S.days[date]?.workout?.done) return { ok: false, pendente: true, valor, motivo: `Vale +${valor} hoje (${porque}). Libera quando a missão do dia for concluída (pode fazer a atividade antes; o bônus entra ao concluir a missão).` };
+  return { ok: true, valor, motivo: `Disponível hoje: +${valor} (${porque}).` };
 }
 
 // Paga o bônus se houver no dia uma atividade rastreada por GPS longa o bastante (chamado ao salvar
@@ -381,7 +407,7 @@ export function checkGpsBonus(date = today()) {
   if (!gpsBonusStatus(date).ok) return null;
   const ex = (S.days[date]?.extras || []).find(e => e.gps && e.gps.km >= (BONUS.km[e.gps.tipo] ?? Infinity));
   if (!ex) return null;
-  const ev = payBonus(date, "gps", BONUS.gpsOuro, `Missão bônus: ${fmt(ex.gps.km, 1)} km rastreados por GPS`);
+  const ev = payBonus(date, "gps", gpsBonusValor(date), `Missão bônus: ${fmt(ex.gps.km, 1)} km rastreados por GPS`);
   if (ev) save();
   return ev;
 }

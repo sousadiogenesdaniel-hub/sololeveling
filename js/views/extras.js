@@ -66,14 +66,17 @@ views.extras = () => {
     <button class="item" data-act="editExtra" data-date="${d}" data-id="${e.id}"><div>${esc(typeOf(e.tipo)?.nome || e.tipo)}</div>
     <div class="small muted">${[e.dados.dist && fmt(e.dados.dist, 2) + " km", e.dados.tempo + " min", e.dados.elev && fmt(e.dados.elev) + " m ↑"].filter(Boolean).join(" · ")}</div></button>
     <span class="num">${d !== t ? `<span class="small muted">${fmtShort(d)}</span> ` : ""}~${fmt(e.kcal)} kcal</span></li>`;
-  const tracking = tr ? panel("Rastreando", `
+  const tracking = tr ? panel(tr.pausado ? "Pausado" : "Rastreando", `
       <p class="mid glow center num" id="tr-dist">${fmt(tr.dist / 1000, 2)} km</p>
-      <p class="center timer num glow" id="tr-time" style="font-size:1.8rem">00:00</p>
-      <p class="center small muted">${typeOf(tr.tipo).icone} ${typeOf(tr.tipo).nome} · <span id="tr-gps">aguardando GPS…</span></p>
-      ${tr.nativo ? `<p class="small ok">Pode bloquear a tela e guardar o celular: o Android continua medindo, com a notificação "Rastreando" aberta. Para encerrar, abra o app e toque em Finalizar.</p>`
+      <p class="center timer num ${tr.pausado ? "muted" : "glow"}" id="tr-time" style="font-size:1.8rem">${relogio(ativoMs(tr))}</p>
+      <p class="center small muted">${typeOf(tr.tipo).icone} ${typeOf(tr.tipo).nome} · <span id="tr-gps">${tr.pausado ? "pausado" : "aguardando GPS…"}</span></p>
+      ${tr.pausado ? `<p class="small warn">Pausado: nada é somado${tr.nativo ? " e o GPS fica desligado" : ""}. O tempo parado não conta, e ao retomar o percurso recomeça de onde você estiver.${tr.nativo ? " Dá para retomar pela notificação também." : ""}</p>`
+        : tr.nativo ? `<p class="small ok">Pode bloquear a tela e guardar o celular: o Android continua medindo, com a notificação "Rastreando" aberta (ela tem o botão Pausar). Para encerrar, abra o app e toque em Finalizar.</p>`
         : `<p class="small warn">Deixe o app aberto e a tela ligada: o navegador não lê o GPS com a tela apagada. Se a tela apagar, o tempo continua contando, mas a distância daquele trecho entra em linha reta.</p>`}
+      ${podePausar(tr) ? `<button class="btn block" style="margin-bottom:8px" data-act="${tr.pausado ? "resumeTrack" : "pauseTrack"}">${tr.pausado ? "▶ Retomar" : "⏸ Pausar"}</button>`
+        : `<p class="small muted">Pausar precisa do app Android 1.6. <a href="download/o-sistema.apk">Baixar</a></p>`}
       <div class="row"><button class="btn ghost grow" data-act="cancelTrack">Descartar</button>
-      <button class="btn primary grow" data-act="stopTrack">Finalizar</button></div>`, "", `<span class="chip warn">Ao vivo</span>`) : "";
+      <button class="btn primary grow" data-act="stopTrack">Finalizar</button></div>`, "", tr.pausado ? `<span class="chip">Pausado</span>` : `<span class="chip warn">Ao vivo</span>`) : "";
   return `${header()}<div class="stack">
     ${tracking}
     ${panel("Atividades extras", `<p class="small muted" style="margin-top:0">O que você fez além da missão diária. As calorias entram no gasto do dia (Início e Evolução).
@@ -89,7 +92,7 @@ views.extras = () => {
 // ---- missão bônus ----------------------------------------------------------------
 export function bonusPanel() {
   const st = gpsBonusStatus(), usado = bonusWeek();
-  return panel("Missão bônus", `<p style="margin-top:0">Caminhada, corrida ou trilha de <b>${BONUS.km.caminhada} km ou mais</b> (bike: ${BONUS.km.bike} km), <b>rastreada pelo GPS</b>: <b class="gold">+${BONUS.gpsOuro} Ouro</b>. Uma por dia, só Ouro.</p>
+  return panel("Missão bônus", `<p style="margin-top:0">Caminhada, corrida ou trilha de <b>${BONUS.km.caminhada} km ou mais</b> (bike: ${BONUS.km.bike} km), <b>rastreada pelo GPS</b>: <b class="gold">+${BONUS.gpsOuro} Ouro</b> em semana sem falta, ou <b class="gold">+${BONUS.gpsOuroSeq}</b> se a semana teve falta mas as últimas ${BONUS.seguidos} missões foram cumpridas. Uma por dia, só Ouro.</p>
     <p class="small ${st.ok ? "ok" : st.feito ? "ok" : "warn"}">${st.ok ? "✔ " : st.feito ? "✔ " : ""}${st.motivo}</p>
     <div class="row between small"><span class="muted">Bônus da semana (${fmtDate(weekStart(), { day: "2-digit", month: "2-digit" })} a ${fmtDate(weekEnd(), { day: "2-digit", month: "2-digit" })})</span><b class="gold num">${usado}/${BONUS.teto}</b></div>
     <div class="bar" style="margin-top:4px"><i style="width:${Math.min(100, usado / BONUS.teto * 100)}%;background:var(--gold);box-shadow:0 0 8px var(--gold)"></i></div>
@@ -168,6 +171,13 @@ const TRACK_ERR = {
   gpsoff: "A localização do celular está desligada. Ligue e toque de novo.",
 };
 const maxKmh = tipo => tipo === "bike" ? 70 : 30; // trecho mais rápido que isso (carro, ônibus) não conta
+// Tempo de atividade, sem as pausas
+const ativoMs = (tr, agora = Date.now()) => Math.max(0, agora - tr.start - (tr.pausadoMs || 0) - (tr.pausado ? agora - (tr.pausaInicio || agora) : 0));
+const relogio = ms => { const s = Math.floor(ms / 1000);
+  return (s >= 3600 ? Math.floor(s / 3600) + ":" : "") + String(Math.floor(s / 60) % 60).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); };
+const podePausar = tr => !tr.nativo || typeof nativo?.trackPause === "function";
+// Pausa/retomada do Android (a fonte da verdade quando é ele quem rastreia)
+const copiaPausa = (tr, st) => { tr.pausado = !!st.pausado; tr.pausadoMs = st.pausadoMs || 0; tr.pausaInicio = st.pausaInicio || 0; };
 
 // Rastreamento que está rodando no Android sem o app saber (ex.: dados restaurados): assume ele
 function adotar() {
@@ -175,6 +185,7 @@ function adotar() {
   const st = nativeTrack("trackStatus");
   if (!st?.ativo || !typeOf(st.tipo)) return;
   S.tracking = { tipo: st.tipo, start: st.start, date: iso(new Date(st.start)), dist: st.dist || 0, nativo: true };
+  copiaPausa(S.tracking, st);
   save();
 }
 
@@ -207,12 +218,23 @@ actions.cancelTrack = async () => {
   stopWatch(); keepScreenOn(false); delete S.tracking; save(); refresh();
 };
 
+function setPausa(on) {
+  const tr = S.tracking; if (!tr || !!tr.pausado === on) return;
+  if (tr.nativo && !["ok", "erro"].includes(nativeTrack("trackPause", on))) return toast("Não consegui pausar. Tente de novo.");
+  const agora = Date.now();
+  if (on) { tr.pausado = true; tr.pausaInicio = agora; }
+  else { tr.pausadoMs = (tr.pausadoMs || 0) + agora - (tr.pausaInicio || agora); tr.pausado = false; tr.last = null; } // retoma do ponto atual
+  save(); refresh();
+}
+actions.pauseTrack = () => setPausa(true);
+actions.resumeTrack = () => setPausa(false);
+
 actions.stopTrack = () => {
   const tr = S.tracking;
-  if (tr.nativo) { const st = nativeTrack("trackStop"); if (st) { tr.dist = st.dist || 0; tr.elev = st.elev || 0; } }
+  if (tr.nativo) { const st = nativeTrack("trackStop"); if (st) { tr.dist = st.dist || 0; tr.elev = st.elev || 0; copiaPausa(tr, st); } }
   stopWatch(); keepScreenOn(false);
   delete S.tracking; save(); refresh();
-  const tempo = Math.max(1, Math.round((Date.now() - tr.start) / 60000));
+  const tempo = Math.max(1, Math.round(ativoMs(tr) / 60000));
   form({ date: tr.date, tipo: tr.tipo, gps: { km: Math.round(tr.dist / 10) / 100, tipo: tr.tipo },
     dados: { dist: tr.dist >= 50 ? Math.round(tr.dist / 10) / 100 : "", tempo, elev: tr.elev >= 5 ? Math.round(tr.elev) : "" } });
 };
@@ -224,6 +246,7 @@ export function startWatch() {
   watch = navigator.geolocation.watchPosition(p => {
     const tr = S.tracking; if (!tr) return stopWatch();
     const c = p.coords, st = $("#tr-gps");
+    if (tr.pausado) { if (st) st.textContent = "pausado"; return; }
     if (st) st.textContent = `GPS ±${Math.round(c.accuracy)} m`;
     if (c.accuracy > 35) return; // leitura imprecisa demais: ignora
     const pt = { lat: c.latitude, lon: c.longitude, alt: c.altitude, t: p.timestamp };
@@ -255,14 +278,16 @@ views.extras.after = () => {
       // o Android fechou o app no meio do percurso: religa o GPS e continua de onde parou (uma tentativa por tela)
       if (st && (!st.ativo || !st.rodando) && !religou) { religou = true; nativeTrack("trackStart", tr.tipo, tr.start, !st.ativo); }
       if (st) {
+        const mudou = !!st.pausado !== !!tr.pausado; // pausado/retomado pela notificação
+        copiaPausa(tr, st);
+        if (mudou) { save(); return refresh(); }
         tr.dist = st.dist || 0;
         const d = $("#tr-dist"); if (d) d.textContent = `${fmt(tr.dist / 1000, 2)} km`;
-        if (gpsEl) gpsEl.textContent = st.gps === false ? "localização do celular desligada"
+        if (gpsEl) gpsEl.textContent = st.pausado ? "pausado" : st.gps === false ? "localização do celular desligada"
           : !st.fixAt ? "aguardando GPS…" : Date.now() - st.fixAt > 30000 ? "sem sinal de GPS" : `GPS ±${Math.round(st.acc)} m`;
       }
     }
-    const s = Math.floor((Date.now() - S.tracking.start) / 1000);
-    el.textContent = (s >= 3600 ? Math.floor(s / 3600) + ":" : "") + String(Math.floor(s / 60) % 60).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+    el.textContent = relogio(ativoMs(S.tracking));
   };
   upd(); tick = setInterval(upd, 1000);
 };

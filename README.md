@@ -27,9 +27,10 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   duas vezes) e concluir um treino. Cada dia com multa pendente custa 30 XP. As imagens não são guardadas.
 - **Loja:** só abre de sexta a domingo. Uma semana perfeita (6 treinos = 600 de Ouro) paga exatamente uma pizza.
 - **Missões bônus (só Ouro, nunca XP):** atividade de 5 km+ rastreada por GPS (bike 15 km) num dia de missão
-  cumprida: +75 (1 por dia; registro manual não vale). Semana inteira dentro da meta de calorias: +150. Só em
-  semana sem falta e fora da Zona de Penalidade, até 300 por semana. A semana do jogo começa no dia seguinte ao
-  descanso (descanso na sexta → sábado a sexta).
+  cumprida (1 por dia; registro manual não vale): **+125** em semana sem falta; em semana com falta, **+75** se as
+  últimas 3 missões foram cumpridas (o descanso não quebra a sequência). Semana inteira dentro da meta de calorias:
+  +150 (só em semana sem falta). Nada na Zona de Penalidade; até 300 por semana. A semana do jogo começa no dia
+  seguinte ao descanso (descanso na sexta → sábado a sexta). O rastreamento tem pausa (o tempo parado não conta).
 - **Nível e rank:** cada nível pede 34 XP a mais que o anterior. Cada rank exige o nível mínimo **e** o Teste
   de Rank da sua fase (em qualquer trilha); vale o que vier por último. D: nível 18 + teste Despertar (~2 meses),
   C: 28 + Fundação (~4 meses), B: 40 + Ascensão (~7 meses), A: 52 + Elite (~1 ano), S: 68 + Monarca (~20 meses).

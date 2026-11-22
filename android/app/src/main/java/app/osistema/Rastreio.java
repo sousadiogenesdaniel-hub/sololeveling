@@ -34,6 +34,30 @@ final class Rastreio {
         e.putBoolean("ativo", true).putString("tipo", tipo).putLong("start", start).commit();
     }
 
+    static boolean pausado(Context c) { return sp(c).getBoolean("pausado", false); }
+
+    /** Tempo de atividade em ms (sem as pausas). */
+    static long ativoMs(Context c, long agora) {
+        SharedPreferences p = sp(c);
+        long pausas = p.getLong("pausadoMs", 0) + (p.getBoolean("pausado", false) ? agora - p.getLong("pausaInicio", agora) : 0);
+        return Math.max(0, agora - p.getLong("start", agora) - pausas);
+    }
+
+    /**
+     * Pausa ou retoma. Na pausa nada é somado; ao retomar, o percurso recomeça do ponto onde você estiver
+     * (o caminho feito durante a pausa não conta) e o tempo parado sai do tempo da atividade.
+     */
+    static synchronized void pausar(Context c, boolean pausar) {
+        SharedPreferences p = sp(c);
+        if (!p.getBoolean("ativo", false) || p.getBoolean("pausado", false) == pausar) return;
+        long agora = System.currentTimeMillis();
+        SharedPreferences.Editor e = p.edit().putBoolean("pausado", pausar);
+        if (pausar) e.putLong("pausaInicio", agora);
+        else e.putLong("pausadoMs", p.getLong("pausadoMs", 0) + Math.max(0, agora - p.getLong("pausaInicio", agora)))
+            .remove("lat").remove("lon").remove("alt").remove("t");
+        e.commit();
+    }
+
     static synchronized Percurso carregar(Context c) {
         SharedPreferences p = sp(c);
         Percurso r = new Percurso();
@@ -48,7 +72,7 @@ final class Rastreio {
     /** Uma leitura do GPS chegou: soma no percurso (se o rastreamento ainda estiver ativo) e salva. */
     static synchronized void ponto(Context c, Percurso r, double lat, double lon, double alt, double acc, long t) {
         SharedPreferences p = sp(c);
-        if (!p.getBoolean("ativo", false)) return;
+        if (!p.getBoolean("ativo", false) || p.getBoolean("pausado", false)) return;
         SharedPreferences.Editor e = p.edit().putFloat("acc", (float) acc).putLong("fixAt", System.currentTimeMillis());
         if (r.add(lat, lon, alt, acc, t, Percurso.maxKmh(p.getString("tipo", "")))) {
             e.putFloat("dist", (float) r.dist).putFloat("elev", (float) r.elev)
@@ -66,6 +90,10 @@ final class Rastreio {
             o.put("rodando", rodando);
             o.put("tipo", p.getString("tipo", ""));
             o.put("start", p.getLong("start", 0));
+            o.put("pausado", p.getBoolean("pausado", false));
+            o.put("pausadoMs", p.getLong("pausadoMs", 0));
+            o.put("pausaInicio", p.getLong("pausaInicio", 0));
+            o.put("ativoMs", ativoMs(c, System.currentTimeMillis()));
             o.put("dist", p.getFloat("dist", 0));
             o.put("elev", p.getFloat("elev", 0));
             o.put("pontos", p.getInt("pontos", 0));
