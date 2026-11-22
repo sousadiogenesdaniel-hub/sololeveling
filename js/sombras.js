@@ -7,12 +7,14 @@ import { GRAUS, novoCorpo } from "./feitos.js";
 import { weekStart, levelInfo } from "./game.js";
 import { bonus, darItem, itemDoChefe } from "./premios.js";
 
+// Todo mundo começa como Humano; a classe é o prêmio do rank D. Só o Necromante está pronto: as outras
+// estão em construção (cada uma vai ter a sua coleção, como as sombras do Necromante).
 export const CLASSES = [
-  { id: "necromante", nome: "Necromante", ativo: true, desc: "Extrai sombras dos seus feitos e forma um exército que trabalha por você." },
-  { id: "mago", nome: "Mago", ativo: false, desc: "Domina feitiços que transformam treino em poder." },
-  { id: "curandeiro", nome: "Curandeiro", ativo: false, desc: "Faz da recuperação uma arma." },
-  { id: "assassino", nome: "Assassino", ativo: false, desc: "Velocidade e precisão acima de tudo." },
-  { id: "guerreiro", nome: "Guerreiro", ativo: false, desc: "Força bruta e resistência sem fim." },
+  { id: "necromante", nome: "Necromante", ativo: true, desc: "Extrai as sombras dos seus feitos e forma um exército: soldados, elites, cavaleiros, comandantes e, um dia, o Marechal." },
+  { id: "mago", nome: "Mago", ativo: false, desc: "O poder da magia." },
+  { id: "guerreiro", nome: "Guerreiro", ativo: false, desc: "Força bruta." },
+  { id: "assassino", nome: "Assassino", ativo: false, desc: "Velocidade e precisão." },
+  { id: "tanque", nome: "Tanque", ativo: false, desc: "Aguenta tudo." },
 ];
 export const classeAtual = () => CLASSES.find(c => c.id === S.classe) || null;
 export const necromante = () => S.classe === "necromante";

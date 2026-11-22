@@ -82,8 +82,9 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   registrado), Inteligência (dias na meta de calorias) e Disciplina (missões nos dias cobrados).
 - **Títulos** com raridade (Comum, Raro, Épico, Lendário, Mítico), alguns secretos, na Sala dos Títulos. O título
   escolhido aparece embaixo do nome; um título novo mais raro entra sozinho.
-- **Classe e Exército das Sombras:** ao conquistar o rank D o jogador muda de classe (Necromante; Mago, Curandeiro,
-  Assassino e Guerreiro "em breve"). Cada feito deixa um corpo: recorde (Soldado, no máximo 1 por prova a cada 7 dias),
+- **Classe e Exército das Sombras:** todo mundo começa como Humano; vencer o chefe do rank D libera a mudança de
+  classe (Necromante; Mago, Guerreiro, Assassino e Tanque "em construção"). O Necromante tem uma escada de títulos
+  própria (Aprendiz das Sombras → … → Monarca das Sombras). Cada feito deixa um corpo: recorde (Soldado, no máximo 1 por prova a cada 7 dias),
   marco (Soldado ou Elite), Portão (Elite/Cavaleiro) e chefe do Teste de Rank (Comandante, com nome próprio: o do D é o
   Cavaleiro Carmesim). "Levante-se!" extrai a sombra: Soldado 80%, Elite 50%, Cavaleiro 35% por tentativa, 3 tentativas
   (falhou 3 vezes, vira cinzas); Comandante nunca falha. As sombras ganham XP a cada missão (Soldado → Elite no nível 10,

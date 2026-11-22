@@ -33,7 +33,7 @@ actions.usarTitulo = ({ id }) => { if (S.conquistas?.[id]) { S.titulo = id; save
 // Janela de Status (usada no Perfil)
 export function janelaStatus() {
   const a = atributos(), cl = classeAtual(), t = tituloAtual();
-  return `<div class="row between small" style="margin-bottom:6px"><span>Classe: <b>${cl ? cl.nome : "Jogador"}</b></span>
+  return `<div class="row between small" style="margin-bottom:6px"><span>Classe: <b>${cl ? cl.nome : "Humano"}</b>${cl ? "" : ` <a href="#/exercito" class="muted">· escolhe no rank D</a>`}</span>
       <a href="#/titulos" style="color:${t ? RAR[t.rar].cor : "inherit"}">${t ? esc(t.nome) : "Títulos"} ›</a></div>
     ${a.map(x => `<div class="attr" title="${esc(x.como)}"><b>${x.id}</b><div class="bar"><i style="width:${x.v}%"></i></div><span class="num" style="text-align:right">${x.v}</span></div>`).join("")}
     <details class="small muted"><summary>Como cada atributo é calculado</summary><ul style="padding-left:18px;margin:6px 0 0">

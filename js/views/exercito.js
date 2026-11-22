@@ -9,7 +9,7 @@ import { RAR, SLOTS, ITENS, itemBase, inventario, equipados, equipar, efeitoTxt,
 import { necromante, precisaEscolherClasse, classeAtual, sombras, corpos, GRAU, COMANDANTES, arteSombra, nomeSombra, nivelSombra, poderSombra,
   poderTotal, levantar, chanceExtracao, invocar, podeInvocar, invocouNaSemana, invocacaoHoje } from "../sombras.js";
 import { checarConquistas } from "../conquistas.js";
-import { mostrarTitulos, escolhaDeClasse } from "./recompensas-ui.js";
+import { mostrarTitulos, escolhaDeClasse, listaClasses } from "./recompensas-ui.js";
 import { botaoCompartilhar } from "../cartao.js";
 
 const RANKS = ["D", "C", "B", "A", "S"];
@@ -31,11 +31,12 @@ function equipamentoPanel() {
 
 function bloqueado() {
   const n = corpos().length;
-  return panel("Exército das Sombras", `<div class="row" style="align-items:flex-start">${arteSombra({ grau: "comandante" }, { tam: 90, bloqueado: true })}
-    <div class="grow"><p style="margin-top:0">O exército nasce na <b>mudança de classe</b>, quando você conquista o rank <b>D</b> e vira <b>Necromante</b>.</p>
+  return `${panel("Exército das Sombras", `<div class="row" style="align-items:flex-start">${arteSombra({ grau: "comandante" }, { tam: 90, bloqueado: true })}
+    <div class="grow"><p style="margin-top:0">Você ainda é <b>Humano</b>. Ao vencer o chefe do rank <b>D</b>, o Sistema libera a <b>mudança de classe</b>. Como <b>Necromante</b>, você forma este exército.</p>
     <p class="small">Seus feitos já estão guardando corpos: <b class="glow">${n}</b> esperando a extração.</p></div></div>
     ${precisaEscolherClasse() ? `<button class="btn primary block" data-act="abrirClasse">Escolher a classe</button>` : ""}
-    <p class="small muted" style="margin-bottom:0">Cada recorde pessoal, marco (1.000 flexões, 100 km…), Portão vencido e chefe de Teste de Rank deixa um corpo. O chefe do rank D vira o seu primeiro Comandante.</p>`);
+    <p class="small muted" style="margin-bottom:0">Cada recorde pessoal, marco (1.000 flexões, 100 km…), Portão vencido e chefe de Teste de Rank deixa um corpo. O chefe do rank D vira o seu primeiro Comandante.</p>`)}
+    ${panel("Classes do rank D", `${listaClasses()}<p class="small muted" style="margin-bottom:0">As classes em construção chegam em atualizações futuras, cada uma com a sua coleção.</p>`)}`;
 }
 
 function exercitoPanel() {

@@ -51,7 +51,7 @@ export async function mostrarRecordes() {
   if (lista.length) {
     const novos = lista.length;
     toast(S.classe === "necromante" ? `${novos} recorde${novos > 1 ? "s" : ""}: corpo${novos > 1 ? "s" : ""} esperando extração no Exército.`
-      : `${novos} recorde${novos > 1 ? "s" : ""}! O corpo fica guardado até você virar Necromante (rank D).`, 4500);
+      : `${novos} recorde${novos > 1 ? "s" : ""}! O corpo fica guardado para quando você escolher a classe, no rank D.`, 4500);
   }
   await mostrarTitulos(checarConquistas());
   save();
@@ -67,15 +67,18 @@ export async function mostrarTitulos(lista) {
   }
 }
 
-// Mudança de classe (ao conquistar o rank D)
+// Mudança de classe: o prêmio do rank D (até lá, todo mundo é Humano)
+export const listaClasses = () => CLASSES.map(c => `<div class="classe ${c.ativo ? "" : "off"}"><div class="row between"><b>${c.nome}</b>
+    ${c.ativo ? (S.classe === c.id ? `<span class="chip ok">Sua classe</span>` : "") : `<span class="chip muted">Em construção</span>`}</div>
+    <p class="small muted" style="margin:4px 0 0">${c.desc}</p></div>`).join("");
 export function escolhaDeClasse() {
   return new Promise(res => {
     const o = modal(`<div class="ptitle"><h2>Mudança de classe</h2></div>
-      <p class="small">[ AVISO DO SISTEMA ] Você provou o seu valor. Escolha a sua classe.</p>
+      <p class="small">[ AVISO DO SISTEMA ] Você conquistou o rank D e deixou de ser um simples humano. Escolha a sua classe.</p>
       ${CLASSES.map(c => `<div class="classe ${c.ativo ? "" : "off"}"><div class="row between"><b>${c.nome}</b>
-        ${c.ativo ? `<button class="btn sm primary" data-classe="${c.id}">Escolher</button>` : `<span class="chip muted">Em breve</span>`}</div>
+        ${c.ativo ? `<button class="btn sm primary" data-classe="${c.id}">Escolher</button>` : `<span class="chip muted">Em construção</span>`}</div>
         <p class="small muted" style="margin:4px 0 0">${c.desc}</p></div>`).join("")}
-      <p class="small muted">Trocar de classe no futuro recomeça a classe do zero (sombras, poderes e títulos dela). Rank, nível e o resto ficam.</p>`,
+      <p class="small muted">No futuro dá para trocar de classe: a nova começa do zero e a antiga fica guardada (sombras e títulos dela). Rank, nível e o resto continuam.</p>`,
       { onEnd: res });
     o.querySelectorAll("[data-classe]").forEach(b => b.onclick = async () => {
       if (!escolherClasse(b.dataset.classe)) return;

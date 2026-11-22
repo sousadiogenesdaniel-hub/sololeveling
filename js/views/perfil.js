@@ -84,6 +84,7 @@ actions.saveProfile = d => {
     go("treino");
     sysMessage("Você despertou", `<p class="mid glow">Bem-vindo, ${esc(p.nome)}.</p>
       <p>Rank <b>E</b> · Nível 1. Escolha uma trilha, cumpra as missões diárias e evolua.</p>
+      <p class="small">Todo mundo começa como <b>Humano</b>. No rank <b>D</b>, vencendo o chefe, você escolhe a sua classe (Necromante e outras).</p>
       <p class="small muted">Próximos passos: escolher a trilha, montar a Dieta padrão em Comida e cadastrar sua casa no Perfil.</p>`);
   } else {
     toast(multaDigitada < MULTA_MIN ? `Perfil salvo. A multa mínima é R$ ${MULTA_MIN}.` : auto ? `Perfil salvo. Meta de calorias: ${auto.nova} kcal.` : "Perfil salvo.", 4000);

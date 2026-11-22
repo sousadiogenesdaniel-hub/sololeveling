@@ -19,14 +19,28 @@ Gastar Ouro em coisas fora da comida: equipamento (tênis, roupa, barra), experi
   no D, roupa de treino no C, relógio GPS no B). Fica trancado e abre com animação quando ele sobe de rank. Não
   usa Ouro.
 
-### Outras classes
-Além do Necromante: **Mago, Curandeiro, Assassino e Guerreiro** (aparecem como "Em breve" na escolha de
-classe). Cada uma precisa de uma mecânica própria, como o Exército das Sombras é a do Necromante.
-- **Regra de troca de classe (proposta do Daniel):** pode trocar, mas começa do zero na classe nova: sem
-  sombras, sem poderes e sem os títulos da classe. Rank, nível, XP, Ouro, recordes, títulos gerais e
-  trilhas continuam.
-- **A decidir:** se voltar para uma classe antiga, ela volta como estava (como as trilhas) ou do zero? Os
-  equipamentos são do jogador ou da classe?
+### Outras classes (em espera)
+Na escolha de classe do rank D aparecem **Mago, Guerreiro, Assassino e Tanque** como "Em construção". Só o
+Necromante está pronto.
+- **Princípio (Daniel):** cada classe tem que ser **colecionável**, como o Necromante coleciona sombras (o exército
+  com cavaleiros e, um dia, o Marechal). Falta definir o que Mago, Guerreiro, Assassino e Tanque colecionam. O
+  Daniel vai pensar.
+- **As 4 peças de cada classe:** combustível (o esforço real que alimenta), coleção, poderes (só mais recompensa ou
+  escolha; nunca treino mais leve nem penalidade menor) e escada de títulos própria.
+- **Pilares que foram propostos (rascunho, não aprovado):** Mago = constância (missões seguidas, impulsos) e
+  mana; Guerreiro = volume (repetições) e forja; Assassino = corrida (km e ritmo) e marcas de caça; Tanque =
+  resistência e corpo (prancha, séries longas, dias na meta de calorias) e armadura.
+- **Troca de classe (decidido):** liberada depois de X níveis (sugestão: 20) desde a última escolha; custa 1
+  nível; a classe nova começa do zero; dá para alternar, e a anterior fica guardada com os seus soldados e
+  conquistas; os títulos exibidos refletem a classe atual.
+- **A decidir:** o valor de X; se os equipamentos são do jogador (hoje) ou da classe.
+
+### Visual do app por classe e por rank (próxima conversa)
+Mudar as cores do layout conforme a classe do jogador e o rank. O Daniel quer pensar isso junto.
+
+### Grandes Recompensas por rank (próxima conversa)
+Além do Comandante e dos títulos, uma única **mega recompensa** a cada rank, para cada subida ter a empolgação
+que a mudança de classe no rank D tem. O Daniel ainda está pensando.
 
 ### Recompensas: próximos passos
 - **Portões de corrida:** hoje os Portões são de calistenia (peso do corpo). Com a Corrida ativa, poderiam pedir uma
