@@ -108,9 +108,12 @@ function parseOne(text, membros) {
   const toV = x => parseFloat(x.replace(/\s/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", "."));
   // 1º: número logo depois de "VALOR" (com ou sem R$; o comprovante SISBB do BB mostra "VALOR: 10,00")
   const lab = [...T.matchAll(/VALOR(?!\s*DA\s*TARIFA)[^\d]{0,14}?(\d{1,3}(?:\.\d{3})*,\s?\d{2})/g)].map(m => toV(m[1])).find(v => v > 0);
-  // 2º: o primeiro "R$ x,xx" diferente de zero
-  const rs = [...T.matchAll(/R\s?\$\s*(\d{1,3}(?:\.\d{3})*,\d{2})/g)].map(m => toV(m[1])).find(v => v > 0);
-  r.valor = lab ?? rs ?? null;
+  // 2º: o primeiro "R$ x,xx" diferente de zero. O leitor às vezes lê o "$" como S, 5 ou § (ex.: "RS 20,00"
+  // no comprovante novo do BB, em que o valor vem grande e colorido)
+  const rs = [...T.matchAll(/\bR\s?[$S5§]\s*(\d{1,3}(?:\.\d{3})*,\s?\d{2})(?!\d)/g)].map(m => toV(m[1])).find(v => v > 0);
+  // 3º: uma linha só com o valor (quando o "R$" sai ilegível)
+  const so = [...T.matchAll(/^[^\dA-Z\n]{0,3}(?:R\S{0,2})?\s*(\d{1,3}(?:\.\d{3})*,\d{2})\s*$/gm)].map(m => toV(m[1])).find(v => v > 0);
+  r.valor = lab ?? rs ?? so ?? null;
   const dm = T.match(/(\d{2})\/(\d{2})\/(\d{4})/);
   r.data = dm ? `${dm[3]}-${dm[2]}-${dm[1]}` : null;
   const hm = T.match(/(?<!\d)([01]\d|2[0-3])[:h]([0-5]\d)(?![\d\/])/);
