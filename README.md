@@ -69,6 +69,39 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 - **Dieta (conferida no dia seguinte, sem Zona de Penalidade):** até 100 kcal acima da meta, nada; acima disso,
   −10 XP e −10 Ouro a cada 100 kcal (máx. −150 XP e −100 Ouro por dia). Compra na Loja libera 2 kcal por Ouro gasto.
 
+## Recompensas
+
+- **Baú do Sistema:** toda missão concluída abre um baú com animação. Chances base: Comum 70% (10–40 Ouro), Raro 22%
+  (60–100 Ouro ou "XP em dobro na próxima missão"), Épico 7% (150–250 Ouro, 30% de equipamento), Lendário 1%
+  (350–500 Ouro e equipamento). Treino com todas as séries no alvo dá +5% de sorte.
+- **Recordes e marcos:** superar o melhor histórico numa prova (Avaliação ou Teste de Rank) mostra "Novo recorde!".
+  Contadores da vida inteira (flexões, agachamentos, abdominais, barras, mergulhos, remadas, prancha, km) têm marcos
+  (100, 500, 1.000…). **Relatório semanal** ao abrir o app no começo da semana do jogo, comparando com a anterior.
+- **Janela de Status:** atributos de 10 a 100 tirados dos dados reais: Força (máximos × metas do rank S), Agilidade
+  (maior distância corrida sem parar × maratona), Vitalidade (caminho até o peso-meta), Percepção (dias com peso
+  registrado), Inteligência (dias na meta de calorias) e Disciplina (missões nos dias cobrados).
+- **Títulos** com raridade (Comum, Raro, Épico, Lendário, Mítico), alguns secretos, na Sala dos Títulos. O título
+  escolhido aparece embaixo do nome; um título novo mais raro entra sozinho.
+- **Classe e Exército das Sombras:** ao conquistar o rank D o jogador muda de classe (Necromante; Mago, Curandeiro,
+  Assassino e Guerreiro "em breve"). Cada feito deixa um corpo: recorde (Soldado, no máximo 1 por prova a cada 7 dias),
+  marco (Soldado ou Elite), Portão (Elite/Cavaleiro) e chefe do Teste de Rank (Comandante, com nome próprio: o do D é o
+  Cavaleiro Carmesim). "Levante-se!" extrai a sombra: Soldado 80%, Elite 50%, Cavaleiro 35% por tentativa, 3 tentativas
+  (falhou 3 vezes, vira cinzas); Comandante nunca falha. As sombras ganham XP a cada missão (Soldado → Elite no nível 10,
+  Elite → Cavaleiro no 20). Por missão: +1 Ouro por Soldado e +3 por Cavaleiro (até +40), +1% de sorte no baú por Elite
+  (até +10%). **Invocação** de um Comandante 1 vez por semana (ex.: Cavaleiro Carmesim = baú da missão de hoje no mínimo
+  Raro). Nada disso alivia penalidade.
+- **Equipamentos** (arma, manto, acessório) caem de baús Épicos/Lendários, Portões e chefes; repetido vira Ouro.
+- **Portões:** um por semana, num dia sorteado e sem aviso, com desafio calculado pelos máximos (contra o relógio,
+  circuito ou resistência) e 48 h para entrar. Normal (73%, opcional: +100 XP, baú Épico+, corpo e 25% de item),
+  Vermelho (15%, mais difícil; depois de entrar, sair ou estourar o tempo custa 50 XP) e de Emergência (12%,
+  obrigatório: ignorar ou falhar custa 150 XP e 50 Ouro, sem Zona de Penalidade). Nunca na Zona de Penalidade nem
+  colado num Teste de Rank. Não substitui a missão do dia.
+- **Teste de Rank como chefe:** o card mostra o chefe com barra de vida; cada prova é uma parte da vida dele.
+- **Impulso:** bateu a vontade de um vício, o Sistema dá na hora um desafio de 1 a 10 min; os 3 primeiros do dia dão
+  +15 XP e todos contam para títulos.
+- **Card de conquista** para compartilhar no WhatsApp (rank, recorde, título, sombra, Portão, relatório). No app
+  Android precisa da versão 1.7.
+
 ## Como o treino é verificado
 
 1. Cadastre sua casa no Perfil (uma vez, estando em casa).

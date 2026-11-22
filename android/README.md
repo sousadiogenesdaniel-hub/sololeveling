@@ -20,6 +20,8 @@ num WebView preso a esse endereço e adiciona o que o navegador não faz:
   o percurso fica salvo e continua ao abrir de novo. **Pausar/Retomar** pelo app ou pelo botão da notificação: na
   pausa o GPS desliga, o tempo parado não conta e, ao retomar, o percurso recomeça do ponto atual.
 - **Lembrete** à noite se a missão do dia não foi feita. Backup salvo em Downloads.
+- **Compartilhar conquistas** (1.7): o card gerado pela página é salvo em Imagens/O Sistema e abre o "Compartilhar"
+  do Android (`shareImage`), porque o WebView não tem o compartilhamento da web.
 
 Sem bibliotecas de terceiros: só o SDK do Android.
 

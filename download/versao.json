@@ -1,6 +1,6 @@
 {
-  "versionCode": 7,
-  "versionName": "1.6",
-  "sha256": "35f84d57f7c3e016539e1c49717f35ce620a7523d1d9a95b7dbf504780833b3f",
-  "novidades": "Pausar e retomar a atividade rastreada, pelo app ou pelo botão da notificação. O tempo parado não conta."
+  "versionCode": 8,
+  "versionName": "1.7",
+  "sha256": "56a10dfe06477930f1c23934613fa0c4ba0ebf6b7aab3eae7a12bc61ce3d50f0",
+  "novidades": "Compartilhar conquistas (rank, recordes, títulos, sombras, Portões) direto no WhatsApp."
 }

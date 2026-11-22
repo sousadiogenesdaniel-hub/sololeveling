@@ -3,6 +3,7 @@ import { $, esc, fmt } from "./util.js";
 import { S } from "./store.js";
 import { levelInfo, rankDe } from "./game.js";
 import { multi, ativas, trackById } from "./tracks.js";
+import { tituloAtual, corRar } from "./conquistas.js";
 import { celebrate, RANK_COLORS } from "./fx.js";
 
 export function toast(msg, ms = 2600) {
@@ -12,28 +13,33 @@ export function toast(msg, ms = 2600) {
   setTimeout(() => t.remove(), ms);
 }
 
-export function closeModal() { $(".overlay")?.remove(); }
+// Fecha o modal aberto. onEnd (de quem esperava por ele) é avisado mesmo quando outro modal toma o lugar.
+export function closeModal() { const o = $(".overlay"); if (o) { o.remove(); o._fim?.(); } }
 
 // Abre um modal com HTML. Fecha ao clicar fora ou em [data-close].
-export function modal(html, { sys = false, onClose } = {}) {
+// onClose: o usuário fechou. onEnd: o modal sumiu por qualquer motivo (para encadear telas com await).
+export function modal(html, { sys = false, onClose, onEnd } = {}) {
   closeModal();
   const o = document.createElement("div");
   o.className = "overlay";
   o.innerHTML = `<div class="panel ${sys ? "sysmsg" : ""}" role="dialog" aria-modal="true">${html}</div>`;
+  o._fim = onEnd;
   o.addEventListener("click", e => {
-    if (e.target === o || e.target.closest("[data-close]")) { o.remove(); onClose?.(); }
+    if (e.target === o || e.target.closest("[data-close]")) { o.remove(); onClose?.(); onEnd?.(); }
   });
   document.body.append(o);
   return o;
 }
 
 // Janela no estilo "notificação do Sistema"
-export function sysMessage(titulo, corpoHtml, { botao = "Entendido", onClose } = {}) {
+export function sysMessage(titulo, corpoHtml, { botao = "Entendido", onClose, onEnd } = {}) {
   return modal(`
     <div class="ptitle"><span class="bang">!</span><h2>${esc(titulo)}</h2></div>
     <div class="stack center">${corpoHtml}</div>
-    <button class="btn primary block" data-close style="margin-top:14px">${esc(botao)}</button>`, { sys: true, onClose });
+    <button class="btn primary block" data-close style="margin-top:14px">${esc(botao)}</button>`, { sys: true, onClose, onEnd });
 }
+// Como sysMessage, mas devolve uma Promise que resolve quando a janela fecha
+export const aviso = (titulo, corpoHtml, opts = {}) => new Promise(res => sysMessage(titulo, corpoHtml, { ...opts, onEnd: res }));
 
 export function confirmBox(titulo, texto, sim = "Confirmar") {
   return new Promise(resolve => {
@@ -48,7 +54,7 @@ export function confirmBox(titulo, texto, sim = "Confirmar") {
 
 // Mostra os eventos de XP/Ouro (vindos de game.grant) como notificação
 export function showEvents(titulo, events, extra = "") {
-  if (!events.length) return;
+  if (!events.length) return Promise.resolve();
   const linhas = events.map(e => {
     const parts = [];
     if (e.xp) parts.push(`<b class="${e.xp > 0 ? "ok" : "bad"}">${e.xp > 0 ? "+" : ""}${e.xp} XP</b>`);
@@ -62,17 +68,18 @@ export function showEvents(titulo, events, extra = "") {
     + (up ? `<p class="${rUp ? "" : "mid "}glow">SUBIU DE NÍVEL! Nível ${up.levelUp}</p>`
       : down ? `<p class="${rDown ? "" : "mid "}bad">Você caiu para o nível ${down.levelDown}</p>` : "");
   // comemoração antes da janela do Sistema (só para subir; cair não tem festa)
-  celebrate(events).then(() => sysMessage(titulo, `${lvl}<ul class="list">${linhas}</ul>${extra}`));
+  return celebrate(events).then(() => aviso(titulo, `${lvl}<ul class="list">${linhas}</ul>${extra}`));
 }
 
 export function header() {
-  const li = levelInfo(), g = S.game;
+  const li = levelInfo(), g = S.game, tit = tituloAtual();
   // com 2+ trilhas: o rank de cada uma em selos pequenos (o grande é o melhor)
   const selos = multi() ? ` · ${ativas().map(id => `<span title="${esc(trackById(id).nome)}: rank ${rankDe(id)}">${trackById(id).icone}<b>${rankDe(id)}</b></span>`).join(" ")}` : "";
   return `<header class="topbar">
     <div class="rank" title="Rank ${li.rank}"><span>${li.rank}</span></div>
     <div class="grow">
       <div class="row between"><h1>${esc(S.profile?.nome || "Jogador")}</h1><span class="gold num" title="Ouro">◆ ${fmt(g.gold)}</span></div>
+      ${tit ? `<a href="#/titulos" class="titulo-tag" style="color:${corRar(tit.rar)};text-decoration:none;display:block">${esc(tit.nome)}</a>` : ""}
       <div class="row between small muted"><span>Nível <b class="glow">${li.level}</b>${selos}</span><span class="num">${fmt(li.into)} / ${fmt(li.need)} XP</span></div>
       <div class="xpbar" role="progressbar" aria-valuenow="${Math.round(li.pct)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${li.pct}%"></i></div>
     </div></header>`;

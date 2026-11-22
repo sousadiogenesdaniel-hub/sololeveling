@@ -28,6 +28,14 @@ classe). Cada uma precisa de uma mecânica própria, como o Exército das Sombra
 - **A decidir:** se voltar para uma classe antiga, ela volta como estava (como as trilhas) ou do zero? Os
   equipamentos são do jogador ou da classe?
 
+### Recompensas: próximos passos
+- **Portões de corrida:** hoje os Portões são de calistenia (peso do corpo). Com a Corrida ativa, poderiam pedir uma
+  distância rastreada pelo GPS.
+- **Aviso no Android quando um Portão abrir** (hoje ele aparece ao abrir o app).
+- **Arte das sombras:** desenhada em SVG pelo próprio app (silhuetas originais). Dá para trocar por imagens feitas
+  pelo Daniel no futuro.
+- **Comandantes dos ranks C a S:** nomes e poderes já definidos no código (aparecem como "???" até o chefe cair).
+
 ### Trilhas em construção
 Academia, Ciclismo, Natação e Híbrido aparecem como "Building…".
 

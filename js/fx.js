@@ -100,3 +100,95 @@ export function celebrate(events) {
   if (ups.length) return levelUpFx(ups[0].levelFrom, ups[ups.length - 1].levelUp);
   return Promise.resolve();
 }
+
+// ---- recompensas: baú, recorde, título, extração de sombra, invocação, portão ---------------------
+function playBau(rar) {
+  const ctx = soundOn() && audio(); if (!ctx) return;
+  [0, .18, .36, .54].forEach(t => tone(ctx, { f: 140, t, d: .09, type: "square", v: .05 })); // chacoalhar
+  const acorde = { comum: [523.25, 659.25], raro: [523.25, 659.25, 783.99], epico: [392, 523.25, 659.25, 783.99, 1046.5],
+    lendario: [261.63, 392, 523.25, 659.25, 783.99, 1046.5, 1318.5] }[rar] || [523.25];
+  acorde.forEach((f, i) => tone(ctx, { f, t: 1.45 + i * .07, d: 1.2, v: .07 }));
+  if (rar === "lendario" || rar === "epico") tone(ctx, { f: 2093, t: 1.9, d: 1, type: "sine", v: .05 });
+}
+function playArise() {
+  const ctx = soundOn() && audio(); if (!ctx) return;
+  tone(ctx, { f: 55, t: 0, d: 2.2, type: "sawtooth", v: .06, slide: 110 });
+  noise(ctx, .2, 1.6, .18);
+  tone(ctx, { f: 110, t: 1.6, d: 1.4, type: "sine", v: .3, slide: 55 });
+  [196, 233.08, 293.66].forEach(f => tone(ctx, { f, t: 1.8, d: 1.8, v: .05 }));
+}
+function playPortao() {
+  const ctx = soundOn() && audio(); if (!ctx) return;
+  tone(ctx, { f: 80, t: 0, d: 2, type: "sawtooth", v: .05, slide: 320 });
+  noise(ctx, 0, 2, .12);
+  tone(ctx, { f: 659.25, t: 1.6, d: 1, type: "sine", v: .06 });
+}
+const premiosHtml = l => `<ul class="fx-premios">${l.map((p, i) => `<li style="animation-delay:${(2 + i * .25).toFixed(2)}s">${p}</li>`).join("")}</ul>`;
+
+export function bauFx(rar, nomeRar, cor, premios) {
+  navigator.vibrate?.(rar === "lendario" ? [40, 40, 40, 40, 200, 80, 300] : [30, 30, 30, 30, 120]);
+  playBau(rar);
+  return overlay(`fx-bau r-${rar}`, `<div class="fx-dark"></div>
+    <div class="fx-bau-stage" style="--c:${cor}">
+      <div class="bau-luz"></div>
+      <svg class="bau" viewBox="0 0 120 100" aria-hidden="true">
+        <g class="bau-tampa"><path d="M12 46 Q12 16 60 16 Q108 16 108 46 Z" fill="#0b1426" stroke="${cor}" stroke-width="3"/>
+          <path d="M30 46 Q30 22 60 22 Q90 22 90 46" fill="none" stroke="${cor}" stroke-opacity=".5" stroke-width="2"/></g>
+        <rect x="12" y="46" width="96" height="46" fill="#0b1426" stroke="${cor}" stroke-width="3"/>
+        <rect x="12" y="58" width="96" height="5" fill="${cor}" fill-opacity=".35"/>
+        <rect x="52" y="48" width="16" height="20" rx="2" fill="${cor}"/><circle cx="60" cy="58" r="3" fill="#04070f"/>
+      </svg>
+    </div>
+    <div class="fx-bau-rar" style="--c:${cor}">${nomeRar.toUpperCase()}</div>
+    <div class="fx-burst">${particles(rar === "comum" ? 12 : rar === "raro" ? 24 : 44, cor)}</div>
+    ${premiosHtml(premios)}
+    <div class="fx-lvl fx-continua">toque para continuar</div>`, 60000);
+}
+
+export function recordeFx(nome, de, para) {
+  navigator.vibrate?.([50, 40, 120]);
+  playLevel();
+  return overlay("fx-rec", `${particles(26, "var(--gold)")}<div class="fx-flash" style="background:rgba(255,209,102,.4)"></div>
+    <div class="fx-box"><div class="fx-title" style="text-shadow:0 0 14px var(--gold),0 0 40px var(--gold)">NOVO RECORDE</div>
+      <div class="fx-rec-nome">${nome}</div>
+      <div class="fx-rec-num"><span class="de">${de}</span><span class="seta">→</span><span class="para">${para}</span></div></div>`, 2800);
+}
+
+export function tituloFx(nome, nomeRar, cor, rar) {
+  const grande = rar === "lendario" || rar === "mitico";
+  navigator.vibrate?.(grande ? [80, 50, 80, 50, 300] : [60, 40, 90]);
+  grande ? playRank() : playLevel();
+  return overlay(`fx-tit${grande ? " grande" : ""}`, `<div class="fx-dark"></div>
+    <div class="fx-type">${typing("[ AVISO DO SISTEMA ] Título conquistado.")}</div>
+    <div class="fx-tit-nome" style="--c:${cor}">${nome}</div>
+    <div class="fx-tit-rar" style="--c:${cor}">${nomeRar.toUpperCase()}</div>
+    ${grande ? `<div class="fx-burst">${particles(40, cor)}</div>` : ""}
+    <div class="fx-lvl">toque para continuar</div>`, grande ? 5200 : 3600);
+}
+
+export function levantarFx(arte, nome, grau, cor, palavra = "LEVANTE-SE") {
+  navigator.vibrate?.([100, 60, 100, 60, 400]);
+  playArise();
+  return overlay("fx-arise", `<div class="fx-dark" style="background:radial-gradient(circle at 50% 70%,#0b0f1f,#000 70%)"></div>
+    <div class="fx-arise-txt" style="--c:${cor}">${palavra}</div>
+    <div class="fx-arise-fumaca" style="--c:${cor}"></div>
+    <div class="fx-arise-arte">${arte}</div>
+    <div class="fx-arise-nome" style="--c:${cor}">${nome}</div>
+    <div class="fx-arise-grau">${grau}</div>`, 5600);
+}
+
+export function falhaFx(texto, sub = "") {
+  navigator.vibrate?.([200]);
+  const ctx = soundOn() && audio(); if (ctx) tone(ctx, { f: 180, t: 0, d: .6, type: "sawtooth", v: .08, slide: 70 });
+  return overlay("fx-falha", `<div class="fx-dark"></div><div class="fx-falha-txt">${texto}</div><div class="fx-lvl" style="top:calc(50% + 40px);opacity:1">${sub}</div>`, 2400);
+}
+
+export function portaoFx(nome, cor, linha) {
+  navigator.vibrate?.([60, 60, 60, 60, 300]);
+  playPortao();
+  return overlay("fx-portao", `<div class="fx-dark"></div>
+    <div class="fx-type">${typing("[ AVISO DO SISTEMA ] Um Portão se abriu.")}</div>
+    <div class="fx-portal" style="--c:${cor}"></div>
+    <div class="fx-name" style="--c:${cor};top:calc(50% + 110px);letter-spacing:.1em;font-size:1.4rem">${nome.toUpperCase()}</div>
+    <div class="fx-lvl" style="top:calc(50% + 190px)">${linha}</div>`, 5000);
+}

@@ -1,11 +1,29 @@
 // Início: resumo rápido do dia
 import { nativeStatus } from "../native.js";
-import { views } from "../core.js";
+import { views, actions, refresh } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
 import { header, panel } from "../ui.js";
 import { mealsOf, totals, spent, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToShop, monthDebt, weightOn, weightGoal, cotaKcal, R } from "../game.js";
 import { workoutFor, currentTrack } from "../tracks.js";
+import { portaoAberto, TIPOS } from "../portoes.js";
+import { bauPendente } from "../recompensas.js";
+import { abrirBauAnimado } from "./recompensas-ui.js";
+
+// Portão aberto (ou em andamento) e baú da missão ainda fechado
+function portaoCard() {
+  const p = portaoAberto(); if (!p) return "";
+  const T = TIPOS[p.tipo];
+  return panel(p.status === "ativo" ? "Portão em andamento" : "Um Portão se abriu", `<p class="mid" style="color:${T.cor};margin-top:0">${T.nome} · rank ${p.rank}</p>
+    <p class="small muted">${p.status === "ativo" ? "Você está dentro. Volte e conclua antes do tempo acabar."
+      : `Fecha em ${fmtDate(p.fecha, { day: "2-digit", month: "2-digit" })} à meia-noite. ${p.tipo === "emergencia" ? "Obrigatório." : "Opcional: só prêmio."}`}</p>
+    <a class="btn primary block" href="#/portao">${p.status === "ativo" ? "Voltar ao Portão" : "Ver o Portão"}</a>`, "portao").replace('class="panel portao"', `class="panel portao" style="--pc:${T.cor}"`);
+}
+function bauCard() {
+  if (!bauPendente()) return "";
+  return panel("Baú do Sistema", `<p style="margin-top:0">O baú da missão de hoje ainda está fechado.</p><button class="btn primary block" data-act="abrirBauHoje">Abrir o baú</button>`);
+}
+actions.abrirBauHoje = () => abrirBauAnimado().then(refresh);
 
 function penaltyBanner() {
   if (!inPenalty()) return "";
@@ -115,5 +133,6 @@ views.inicio = () => {
   const t = today();
   return `${header()}
     <p class="small muted" style="margin-top:-6px">${WEEKDAYS[new Date(t + "T12:00").getDay()]}, ${fmtDate(t, { day: "numeric", month: "long" })}</p>
-    <div class="stack">${penaltyBanner()}${questCard()}${kcalCard()}${reminders()}${statusTiles()}</div>`;
+    <div class="stack">${penaltyBanner()}${portaoCard()}${bauCard()}${questCard()}${kcalCard()}${reminders()}
+      <a class="btn ghost block" href="#/impulso">⚡ Bateu a vontade? Vença um impulso</a>${statusTiles()}</div>`;
 };

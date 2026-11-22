@@ -6,6 +6,8 @@ import { views, actions, refresh } from "../core.js";
 import { S, day, save } from "../store.js";
 import { today, iso, esc, fmt, num, uid, fmtDate, fmtShort, addDays, distM, $ } from "../util.js";
 import { header, panel, modal, closeModal, toast, confirmBox, showEvents } from "../ui.js";
+import { checarMarcos, checarConquistas } from "../conquistas.js";
+import { mostrarTitulos } from "./recompensas-ui.js";
 import { tmb, weightOn, grant, extrasKcal, BONUS, gpsBonusStatus, checkGpsBonus, bonusWeek, weekStart, weekEnd } from "../game.js";
 
 export const EXTRA_XP = 10; // uma vez por dia, só pelo hábito de se mexer
@@ -144,7 +146,9 @@ function form({ date = today(), tipo = "caminhada", dados = {}, intensidade = "m
     const ev = [];
     if (!dd.extraXp) { dd.extraXp = true; ev.push(grant(EXTRA_XP, 0, "Atividade extra registrada", date)); }
     const bonus = checkGpsBonus(date); if (bonus) ev.push(bonus);
+    checarMarcos(); const titulos = checarConquistas(); // km somados: marcos e títulos
     save(); closeModal(); refresh();
+    if (titulos.length) setTimeout(() => mostrarTitulos(titulos), 1200);
     ev.length ? showEvents("Atividade registrada", ev, `<p class="small muted">~${fmt(est.kcal)} kcal somadas ao gasto de ${date === today() ? "hoje" : fmtDate(date)}.</p>`)
       : toast(`Atividade salva: ~${fmt(est.kcal)} kcal.`);
   };

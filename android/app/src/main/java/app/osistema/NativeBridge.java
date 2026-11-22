@@ -218,6 +218,27 @@ final class NativeBridge {
         } catch (Exception e) { return false; }
     }
 
+    /** Compartilha o card de conquista (PNG em base64): salva em Imagens/O Sistema e abre o "Compartilhar" do Android. */
+    @JavascriptInterface
+    public boolean shareImage(String base64, String texto) {
+        if (Build.VERSION.SDK_INT < 29) return false;
+        try {
+            byte[] png = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
+            ContentValues v = new ContentValues();
+            v.put(MediaStore.Images.Media.DISPLAY_NAME, "o-sistema-" + System.currentTimeMillis() + ".png");
+            v.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+            v.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/O Sistema");
+            Uri uri = a.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
+            if (uri == null) return false;
+            try (OutputStream os = a.getContentResolver().openOutputStream(uri)) { os.write(png); }
+            Intent send = new Intent(Intent.ACTION_SEND).setType("image/png")
+                .putExtra(Intent.EXTRA_STREAM, uri).putExtra(Intent.EXTRA_TEXT, texto)
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            a.runOnUiThread(() -> a.startActivity(Intent.createChooser(send, "Compartilhar conquista")));
+            return true;
+        } catch (Exception e) { return false; }
+    }
+
     @JavascriptInterface
     public void copy(String text) {
         a.runOnUiThread(() -> a.getSystemService(ClipboardManager.class).setPrimaryClip(ClipData.newPlainText("O Sistema", text)));

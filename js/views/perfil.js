@@ -5,6 +5,7 @@ import { S, save, resetAll, replaceState } from "../store.js";
 import { today, addDays, esc, fmt, num, fmtDate, WEEKDAYS, getPreciseFix, $ } from "../util.js";
 import { header, panel, toast, sysMessage, confirmBox, modal, closeModal } from "../ui.js";
 import { levelInfo, nextRank, tmb, weightOn, applyAutoKcal, KCAL_AUTO, pendingDebts, revalidateDebts, grant, MULTA_MIN, rankDe } from "../game.js";
+import { janelaStatus } from "./titulos.js";
 import { currentTrack, TRACKS, trackById, ativas, multi, setFoco, progress } from "../tracks.js";
 
 function profileForm(p = {}, first = false) {
@@ -110,13 +111,9 @@ views.perfil = () => {
   const done = Object.values(S.days).filter(d => d.workout?.done);
   const stat = (n, v) => `<div class="tile"><div class="lbl">${n}</div><div class="val num">${v}</div></div>`;
   return `${header()}<div class="stack">
-    ${panel("Status", `<div class="grid3">
-      ${stat("Rank", li.rank)}${stat("Nível", li.level)}${stat("XP total", fmt(S.game.xp))}
-      ${stat("Força", done.filter(d => d.trackId === "calistenia").length)}
-      ${stat("Agilidade", done.filter(d => d.trackId === "corrida").length)}
-      ${stat("Disciplina", S.game.bestStreak)}</div>
-      <p class="small muted">Força = treinos de calistenia · Agilidade = treinos de corrida · Disciplina = maior sequência.
-      </p>${multi() ? `<div class="tile" style="margin-top:8px"><div class="lbl">Rank por trilha</div>
+    ${panel("Janela de Status", `${janelaStatus()}<div class="grid3" style="margin-top:10px">
+      ${stat("Rank", li.rank)}${stat("Nível", li.level)}${stat("XP total", fmt(S.game.xp))}</div>
+      ${multi() ? `<div class="tile" style="margin-top:8px"><div class="lbl">Rank por trilha</div>
         <div class="small">${ativas().map(id => `${trackById(id).icone} ${trackById(id).nome}: <b class="glow">${rankDe(id)}</b>`).join(" · ")}</div></div>` : ""}
       ${nr ? `<div class="tile" style="margin-top:8px"><div class="lbl">Para o rank ${nr.rank}</div>
         <div class="small">○ Passar no Teste do rank ${nr.rank}${multi() ? " (em qualquer trilha)" : ""}</div></div>` : `<p class="glow">Rank máximo alcançado.</p>`}

@@ -5,6 +5,7 @@
 // No fim da fase, o Teste de Rank libera o rank seguinte e revela a próxima meta.
 import { S } from "./store.js";
 import { today, addDays, daysBetween } from "./util.js";
+import { registrarRecorde } from "./feitos.js";
 
 export const SESSIONS_PER_STAGE = 6;
 export const DELOAD_EVERY = 4, DELOAD_FACTOR = 0.7;
@@ -531,11 +532,17 @@ const EX_KEY = {
 };
 export const testKey = nome => TEST_KEY[nome] || null;
 export const pr = key => S.pr?.[key]?.v ?? null;
+// Grava o máximo de uma prova. Se superar o melhor histórico (e já havia um), é RECORDE: devolve o recorde.
 export function setPR(key, v, date = today()) {
-  if (!key || !(v > 0)) return;
+  if (!key || !(v > 0)) return null;
   S.pr ||= {};
   const old = S.pr[key];
   S.pr[key] = { v, d: date, best: Math.max(v, old?.best ?? 0) };
+  if (old?.best != null && v > old.best) {
+    const nome = Object.keys(TEST_KEY).find(n => TEST_KEY[n] === key) || key;
+    return registrarRecorde(key, nome.replace(/ seguid[oa]s$/, ""), old.best, v);
+  }
+  return null;
 }
 
 // Séries normais: de ~70% a ~85% do seu máximo ao longo da fase. Série longa (sem parar): de ~90% a ~115%.

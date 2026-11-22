@@ -3,7 +3,8 @@
 import { views, actions, go, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { today, addDays, daysBetween, fmt, fmtDate, num, esc } from "../util.js";
-import { header, panel, sysMessage, toast } from "../ui.js";
+import { header, panel, sysMessage, toast, aviso } from "../ui.js";
+import { mostrarRecordes } from "./recompensas-ui.js";
 import { currentPhase, currentTrack, testKey, pr, setPR, unitLabel } from "../tracks.js";
 
 export const AVALIACAO_DIAS = 7;
@@ -57,6 +58,7 @@ actions.savePR = ({ key, nome }, el) => {
   save();
   refresh();
   toast(`${nome}: ${fmt(v, v % 1 ? 1 : 0)} salvo.`);
+  mostrarRecordes();
 };
 
 views.avaliacao = () => {
@@ -85,7 +87,7 @@ actions.saveAvaliacao = d => {
   save();
   const missao = S.days[today()]?.workout?.plano?.modo === "avaliacao" && !S.days[today()].workout.done;
   go(missao ? "treino" : "avaliacao");
-  sysMessage("Status atualizado", `<p>${vals.length} prova${vals.length > 1 ? "s" : ""} registrada${vals.length > 1 ? "s" : ""}.</p>
+  aviso("Status atualizado", `<p>${vals.length} prova${vals.length > 1 ? "s" : ""} registrada${vals.length > 1 ? "s" : ""}.</p>
     <p class="small muted">Os treinos já estão ajustados aos seus máximos. Próxima avaliação em ${fmtDate(proximaAvaliacao())}.</p>
-    ${missao ? `<p class="glow">Agora bata o ponto de saída para concluir a missão de hoje.</p>` : ""}`);
+    ${missao ? `<p class="glow">Agora bata o ponto de saída para concluir a missão de hoje.</p>` : ""}`).then(mostrarRecordes);
 };

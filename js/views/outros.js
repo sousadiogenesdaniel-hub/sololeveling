@@ -12,7 +12,13 @@ views.mais = () => {
   const item = (rota, ic, nome, desc, extra = "") => `<li><span style="font-size:1.4rem">${ic}</span>
     <a class="grow" href="#/${rota}" style="text-decoration:none;color:inherit"><b>${nome}</b><br><span class="small muted">${desc}</span></a>${extra}<span class="muted">›</span></li>`;
   const pend = pendingDebts().length;
+  const corpos = (S.corpos || []).length, portao = Object.values(S.portoes || {}).some(p => p.status === "aberto" || p.status === "ativo");
   return `${header()}<div class="stack">${panel("Menu", `<ul class="list">
+    ${item("exercito", "🗡️", "Exército das Sombras", S.classe ? "Sombras, invocação e equipamentos" : "Classe, corpos guardados e equipamentos", corpos ? `<span class="chip">${corpos}</span>` : "")}
+    ${item("titulos", "🏆", "Sala dos Títulos", "Títulos por raridade, do Comum ao Mítico")}
+    ${item("portao", "🌀", "Portões", "Um por semana, sem aviso", portao ? `<span class="chip warn">Aberto</span>` : "")}
+    ${item("impulso", "⚡", "Impulso", "Bateu a vontade? Um desafio na hora")}
+    ${item("relatorio", "📊", "Relatório semanal", "A sua semana comparada com a anterior")}
     ${item("extras", "🚶", "Atividades extras", "Caminhada, bike, esporte... somam no gasto do dia", S.tracking ? `<span class="chip warn">Ao vivo</span>` : "")}
     ${item("condicao", "🌙", "Condição", "Sono, foco, energia e celular na cama")}
     ${item("medidas", "📏", "Medidas", "Peso e abdômen diários, medidas semanais")}

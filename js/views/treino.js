@@ -2,11 +2,17 @@
 import { views, actions, refresh } from "../core.js";
 import { S, day, save, photos } from "../store.js";
 import { today, addDays, esc, fmt, fmtTime, fmtDate, getPosition, getPreciseFix, distM, shrinkImage, uid, $, num } from "../util.js";
-import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox } from "../ui.js";
+import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox, aviso } from "../ui.js";
+import { panel as panelBase } from "../ui.js";
 import { completeWorkout, passTest, isRestDay, workoutKcal, grant, R, rankDe } from "../game.js";
 import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, testStatus, TEST_COOLDOWN, JANELA_2A, trackFinished, unitLabel, SESSIONS_PER_STAGE, testKey, setPR,
   ativas, multi, setFoco, trilhaSugerida, pesaPernas } from "../tracks.js";
 import { statusList, avaliacaoLiberada, avaliacaoForm, provasHoje, avaliouHoje } from "./avaliacao.js";
+import { posMissao } from "../recompensas.js";
+import { COMANDANTES, arteSombra, derrotarChefe } from "../sombras.js";
+import { RAR } from "../premios.js";
+import { telaMissaoConcluida, mostrarRecordes, mostrarClasseSePreciso } from "./recompensas-ui.js";
+import { botaoCompartilhar } from "../cartao.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
 const PUNCH_EXPIRES_H = 5;    // ponto de entrada vence depois disso
@@ -74,8 +80,19 @@ const precisaNa2a = (ph, t1) => ph.tests.map(([n, meta, un], i) => ({ n, un, v1:
 const listaPrecisa = ph => l => `<ul class="list small">${l.map(x => `<li><span class="grow">${esc(x.n)} <span class="muted">(1ª: ${fmtV(x.v1 || 0, x.un)})</span></span>
   <b class="num">${x.min ? "≥ " + fmtV(x.min, x.un) : "já garantido"}</b></li>`).join("")}</ul>`;
 
+// Dano no chefe: média de (resultado / meta) em cada prova, até 100% por prova
+const dano = (ph, vals) => ph.tests.reduce((n, [, meta], i) => n + Math.min(1, (vals[i] || 0) / meta), 0) / ph.tests.length;
+function chefeHtml(ph, st) {
+  const k = COMANDANTES[ph.rank], hp = st.tentativa === 2 ? Math.max(0, 1 - dano(ph, st.t1.vals)) : 1;
+  return `<div class="cmd" style="margin-bottom:10px">${arteSombra({ grau: k.grau || "comandante", cmd: ph.rank }, { tam: 72 })}
+    <div class="grow"><div class="small muted">Chefe do Portão do rank ${ph.rank}</div><b style="color:${k.cor}">${k.nome}</b>
+    <div class="hp" style="margin-top:6px"><i style="width:${Math.round(hp * 100)}%"></i></div>
+    <div class="small muted">${st.tentativa === 2 ? `A 1ª tentativa causou ${Math.round((1 - hp) * 100)}% de dano. Cada prova é uma parte da vida dele.` : "Cada prova é uma parte da vida dele. Bata todas as metas para derrotá-lo."}</div></div></div>`;
+}
+
 function testCard() {
   const ph = currentPhase(), st = testStatus(), t = currentTrack();
+  const panel = (titulo, corpo, cls) => panelBase(titulo, chefeHtml(ph, st) + corpo, cls);
   const titulo = st.nivel ? "Nivelamento" : st.early ? "Teste antecipado" : "Teste de Rank";
   const sobre = `<p class="small glow">Passou: rank ${ph.rank}${multi() ? ` na ${t.nome}` : ""} na hora, em qualquer nível. A fase seguinte começa (os treinos mudam) e você ganha +${R.testeXp} XP e +${R.testeOuro} Ouro.</p>`;
   const form = (precisa) => `<form data-act="submitTest" data-rascunho="teste">${ph.tests.map(([n, v, un], i) => `<div class="field">
@@ -122,8 +139,9 @@ actions.submitTest = data => {
   if (st.tentativa === 1) {
     p.antecipada = { d: today(), fase: p.phase, vals };
     save(); refresh();
-    return sysMessage("1ª tentativa registrada", `<p>Agora descanse. A 2ª tentativa abre em <b>${fmtDate(addDays(today(), JANELA_2A.de))}</b> e vai até <b>${fmtDate(addDays(today(), JANELA_2A.ate))}</b>.</p>
-      <p class="small muted">Passa se a média das duas bater a meta em cada prova. Na 2ª, você vai precisar de:</p>${listaPrecisa(ph)(precisaNa2a(ph, p.antecipada))}`);
+    return aviso("1ª tentativa registrada", `<p>Agora descanse. A 2ª tentativa abre em <b>${fmtDate(addDays(today(), JANELA_2A.de))}</b> e vai até <b>${fmtDate(addDays(today(), JANELA_2A.ate))}</b>.</p>
+      <p class="small muted">Passa se a média das duas bater a meta em cada prova. Na 2ª, você vai precisar de:</p>${listaPrecisa(ph)(precisaNa2a(ph, p.antecipada))}
+      <p class="small muted">O chefe levou ${Math.round(dano(ph, vals) * 100)}% de dano.</p>`).then(mostrarRecordes);
   }
   const media = st.tentativa === 2;
   const finais = media ? vals.map((v, i) => (v + (st.t1.vals[i] || 0)) / 2) : vals;
@@ -131,16 +149,21 @@ actions.submitTest = data => {
   const falhas = ph.tests.map(([n, meta, un], i) => ({ n, meta, un, v: finais[i] })).filter(x => x.v < x.meta);
   if (falhas.length) {
     p.lastTestTry = today(); save(); refresh();
-    return sysMessage("Teste não superado", `<p>${media ? "Na média das duas tentativas, ainda" : "Ainda"} falta em:</p>
+    return aviso("Teste não superado", `<p>${COMANDANTES[ph.rank].nome} resistiu com ${Math.round((1 - dano(ph, finais)) * 100)}% da vida. ${media ? "Na média das duas tentativas, ainda" : "Ainda"} falta em:</p>
       <ul class="list small">${falhas.map(f => `<li><span class="grow">${esc(f.n)}</span><b class="num">${fmtV(f.v, f.un)} de ${unitLabel(f.meta, f.un)}</b></li>`).join("")}</ul>
-      <p class="small muted">${st.early ? "Sem problema: continue a fase normalmente." : "Continue treinando na etapa final."} Próxima tentativa em ${fmtDate(addDays(today(), TEST_COOLDOWN))}.</p>`);
+      <p class="small muted">${st.early ? "Sem problema: continue a fase normalmente." : "Continue treinando na etapa final."} Próxima tentativa em ${fmtDate(addDays(today(), TEST_COOLDOWN))}.</p>`).then(mostrarRecordes);
   }
+  const trilha = currentTrack().nome;
   const ev = passTest(st.early);
-  const acabou = trackFinished(), prox = currentPhase();
-  showEvents("Meta conquistada", [ev], acabou
+  const ch = derrotarChefe(ph.rank); save();
+  const acabou = trackFinished(), prox = currentPhase(), k = COMANDANTES[ph.rank];
+  const chefe = `<p>${ch.corpo.cmd ? `Chefe derrotado: <b style="color:${k.cor}">${k.nome}</b>. O corpo dele aguarda a extração no Exército.` : "Chefe derrotado de novo: um corpo de Cavaleiro aguarda no Exército."}
+    ${ch.item?.item ? `<br>Largou: <b style="color:${RAR[ch.item.item.rar].cor}">${ch.item.item.nome}</b>` : ""}</p>${botaoCompartilhar("rank", { rank: ph.rank, trilha })}`;
+  showEvents("Meta conquistada", [ev], chefe + (acabou
     ? `<p class="glow">Você concluiu a trilha inteira. O Sistema reconhece um Monarca.</p>`
     : `<p>Rank <b class="glow">${ph.rank}</b>${multi() ? ` na ${currentTrack().nome}` : ""}${media ? " (pela média das duas tentativas)" : ""}. Nova meta revelada: <b class="glow">${prox.nome}</b>, rumo ao rank ${prox.rank}. Os treinos já são os da fase nova.</p>
-      ${progress().nivelamento ? `<p class="small muted">O nivelamento continua aberto: se quiser, já pode tentar o rank ${prox.rank} também.</p>` : ""}`);
+      ${progress().nivelamento ? `<p class="small muted">O nivelamento continua aberto: se quiser, já pode tentar o rank ${prox.rank} também.</p>` : ""}`))
+    .then(mostrarRecordes).then(mostrarClasseSePreciso);
   refresh();
 };
 
@@ -380,8 +403,9 @@ function finish(w) {
   w.durMin = Math.round(((w.out?.t ?? Date.now()) - w.in.t) / 60000);
   w.kcal = workoutKcal(today(), w.durMin, w.indoor);
   const events = completeWorkout();
+  const pos = posMissao(w, today()); // baú, exército, marcos e títulos
   refresh();
-  showEvents("Missão concluída", events);
+  return telaMissaoConcluida(events, pos);
 }
 
 actions.cancelWorkout = async () => {

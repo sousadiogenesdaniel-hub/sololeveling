@@ -4,7 +4,7 @@ import { S, load, save } from "./store.js";
 import { actions, views, setRender } from "./core.js";
 import { processDays, inPenalty, applyAutoKcal, migrarCurva } from "./game.js";
 import { aplicarFoco } from "./tracks.js";
-import { showEvents, toast, sysMessage } from "./ui.js";
+import { showEvents, toast, sysMessage, aviso } from "./ui.js";
 import { celebrate } from "./fx.js";
 import "./views/home.js";
 import "./views/treino.js";
@@ -15,6 +15,11 @@ import "./views/penalidade.js";
 import "./views/condicao.js";
 import "./views/bloqueio.js";
 import "./views/avaliacao.js";
+import "./views/exercito.js";
+import "./views/titulos.js";
+import "./views/portao.js";
+import "./cartao.js";
+import { avisosDoSistema } from "./views/recompensas-ui.js";
 import { syncNative, keepScreenOn } from "./native.js";
 import { startWatch } from "./views/extras.js";
 import { onboarding } from "./views/perfil.js";
@@ -71,9 +76,23 @@ function closeDays() {
   if (kcal) setTimeout(() => toast(`Meta de calorias ajustada: ${kcal.antes} → ${kcal.nova} kcal`, 5000), report.length ? 800 : 0);
   if (!report.length) return !!kcal;
   const falhou = report.some(r => r.falta);
-  showEvents(falhou ? "Missão diária falhou" : "Relatório do Sistema", report,
-    falhou ? `<p class="bad">Você entrou na <b>Zona de Penalidade</b>.</p><a class="btn primary block" href="#/penalidade" data-close>Resolver agora</a>` : "");
-  return true;
+  return showEvents(falhou ? "Missão diária falhou" : "Relatório do Sistema", report,
+    falhou ? `<p class="bad">Você entrou na <b>Zona de Penalidade</b>.</p><a class="btn primary block" href="#/penalidade" data-close>Resolver agora</a>` : ""); // Promise
+}
+
+// Ao abrir ou voltar para o app: fecha os dias e mostra, em sequência, o relatório do dia e os avisos do Sistema
+// (Portão, relatório semanal, mudança de classe). Só redesenha se algo mudou (ou se pedido).
+let avisando = false;
+async function aoAbrir(sempre = false) {
+  if (!S.profile) { if (sempre) render(); return; }
+  if (avisando) return;
+  avisando = true;
+  try {
+    const r = closeDays();
+    if (r || sempre) render();
+    if (r instanceof Promise) await r;
+    if (await avisosDoSistema()) render();
+  } finally { avisando = false; }
 }
 
 // Faixa atrás da barra de status (criada aqui também, caso o index.html em cache seja de uma versão antiga)
@@ -110,28 +129,25 @@ async function boot() {
   await load();
   const mig = S.profile ? migrarCurva() : null; // curva de 100 níveis: avisa uma vez, antes do relatório do dia
   if (mig) save();
-  if (S.profile && !mig) closeDays();
   render();
   if (mig) {
-    celebrate([mig]).then(() => sysMessage("O Sistema evoluiu", `<p>Agora são <b>100 níveis</b>, e eles sobem mais rápido no começo.
+    await celebrate([mig]);
+    await aviso("O Sistema evoluiu", `<p>Agora são <b>100 níveis</b>, e eles sobem mais rápido no começo.
       Seu XP continua o mesmo (${S.game.xp.toLocaleString("pt-BR")} XP); o nível foi recalculado: <b>${mig.levelFrom} → <span class="glow">${mig.levelTo}</span></b>.</p>
       <p><b>Rank e nível agora são separados.</b> O rank vem só do Teste de Rank: passou, sobe na hora, em qualquer nível. O nível mede a sua constância.</p>
-      <p class="small muted">O teste antecipado (a partir da metade da fase) passa a valer pela média de 2 tentativas em dias diferentes. No fim da fase, uma tentativa basta.</p>`,
-      { onClose: () => { closeDays(); render(); } }));
+      <p class="small muted">O teste antecipado (a partir da metade da fase) passa a valer pela média de 2 tentativas em dias diferentes. No fim da fase, uma tentativa basta.</p>`);
   }
+  aoAbrir();
   if (S.tracking && !S.tracking.nativo) { startWatch(); keepScreenOn(true); } // no app Android 1.5+, quem rastreia é o Android
   // app Android: ao voltar dos Ajustes (permissões), fecha dias e atualiza a tela
   window.__nativeResume = () => {
     // voltou do seletor de arquivos: NÃO redesenhar, senão o campo que está recebendo o arquivo é trocado
     // e o arquivo escolhido se perde (backup, foto, comprovante PIX)
     if (escolhendoArquivo) { escolhendoArquivo = false; return; }
-    if (S.profile) closeDays();
-    render();
+    aoAbrir(true);
   };
   // virou o dia com o app aberto (ou voltou para o app): fecha o dia e atualiza
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && S.profile && closeDays()) render();
-  });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) aoAbrir(); });
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
     // Versão nova instalada: recarrega UMA vez para já abrir atualizado (sem precisar abrir o app duas vezes)
     const eraAtualizacao = !!navigator.serviceWorker.controller;
