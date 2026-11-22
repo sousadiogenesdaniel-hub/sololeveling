@@ -1,6 +1,6 @@
 {
-  "versionCode": 5,
-  "versionName": "1.4",
-  "sha256": "0964064d40f3bc5ff658ed7af233221aa90c2eca720c593baae0b08d84d9c5fe",
-  "novidades": "Sem vigia sempre ligado: fora da penalidade nada fica rodando. A falta do dia anterior é conferida às 07:05, depois do modo dormir."
+  "versionCode": 6,
+  "versionName": "1.5",
+  "sha256": "f5396caec7fefd530cec4d7176f21b8350dd6e155ff2a5ea05881716bdec7a4a",
+  "novidades": "Caminhada, corrida e bike rastreadas pelo GPS com a tela bloqueada: pode guardar o celular no bolso."
 }

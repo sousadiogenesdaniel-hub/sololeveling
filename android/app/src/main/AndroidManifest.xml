@@ -16,6 +16,9 @@
     <!-- serviço que mantém o bloqueio ativo enquanto houver Zona de Penalidade -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- rastrear caminhada/corrida/bike com a tela bloqueada (só enquanto você estiver rastreando) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- "Acesso ao uso": saber QUAL app está aberto (só o nome do pacote; nunca o conteúdo) -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
@@ -83,6 +86,11 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Bloqueio de apps escolhidos pelo usuário durante a Zona de Penalidade" />
         </service>
+
+        <service
+            android:name=".TrackerService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
         <receiver android:name=".AlarmReceiver" android:exported="false" />
 

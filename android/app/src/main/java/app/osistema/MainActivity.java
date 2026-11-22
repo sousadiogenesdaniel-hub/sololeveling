@@ -33,6 +33,7 @@ public class MainActivity extends Activity {
     static final String HOST = "sousadiogenesdaniel-hub.github.io";
     static final String BASE = "https://" + HOST + "/sololeveling/";
     private static final int REQ_FILE = 10, REQ_GEO = 11, REQ_NOTIF = 12;
+    static final int REQ_LOC = 13; // localização pedida pelo rastreamento de atividade
 
     private WebView web;
     private ValueCallback<Uri[]> fileCb;

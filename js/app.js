@@ -107,7 +107,7 @@ async function boot() {
   await load();
   if (S.profile) closeDays();
   render();
-  if (S.tracking) { startWatch(); keepScreenOn(true); }
+  if (S.tracking && !S.tracking.nativo) { startWatch(); keepScreenOn(true); } // no app Android 1.5+, quem rastreia é o Android
   // app Android: ao voltar dos Ajustes (permissões), fecha dias e atualiza a tela
   window.__nativeResume = () => {
     // voltou do seletor de arquivos: NÃO redesenhar, senão o campo que está recebendo o arquivo é trocado

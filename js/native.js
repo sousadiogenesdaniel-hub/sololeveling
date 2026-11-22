@@ -44,6 +44,12 @@ export function syncNative() {
   catch (e) { ultimoSync = { em: new Date().toLocaleTimeString("pt-BR"), penalty: payload.penalty, ok: false, erro: String(e?.message || e) }; }
 }
 
+// Rastreamento de atividade pelo Android (app 1.5+): continua medindo com a tela bloqueada
+export const gpsNativo = () => typeof nativo?.trackStart === "function";
+export function nativeTrack(cmd, ...args) {
+  try { const r = nativo[cmd](...args); return typeof r === "string" && r.startsWith("{") ? JSON.parse(r) : r; } catch { return null; }
+}
+
 export function keepScreenOn(on) { try { nativo?.keepScreenOn(!!on); } catch { /* sem suporte */ } }
 
 // Copiar texto: no WebView o clipboard da web às vezes falha; aí usa o do Android

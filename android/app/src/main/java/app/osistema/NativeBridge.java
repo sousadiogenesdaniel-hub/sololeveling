@@ -8,6 +8,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -146,7 +147,41 @@ final class NativeBridge {
         Scheduler.evaluate(a);
     }
 
-    /** Mantém a tela ligada (rastreamento por GPS). */
+    // ---- rastreamento de atividade por GPS, com a tela bloqueada (TrackerService) ----
+
+    /**
+     * Liga o rastreamento. novo = false continua o percurso salvo (ex.: o Android fechou o app no meio).
+     * Devolve "ok", "permissao" (pede a localização; toque de novo depois), "gpsoff" ou "erro".
+     */
+    @JavascriptInterface
+    public String trackStart(String tipo, long start, boolean novo) {
+        if (a.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            a.runOnUiThread(() -> a.requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION}, MainActivity.REQ_LOC));
+            return "permissao";
+        }
+        if (!a.getSystemService(LocationManager.class).isProviderEnabled(LocationManager.GPS_PROVIDER)) return "gpsoff";
+        Rastreio.iniciar(a, tipo, start, novo);
+        try { a.startForegroundService(new Intent(a, TrackerService.class)); }
+        catch (Exception e) { Prefs.logError(a, "GPS: " + e.getClass().getSimpleName() + ": " + e.getMessage()); return "erro"; }
+        return "ok";
+    }
+
+    @JavascriptInterface
+    public String trackStatus() { return Rastreio.status(a).toString(); }
+
+    /** Finaliza: devolve a distância e a subida somadas e desliga o GPS. */
+    @JavascriptInterface
+    public String trackStop() {
+        String s = Rastreio.status(a).toString();
+        Rastreio.parar(a);
+        return s;
+    }
+
+    @JavascriptInterface
+    public void trackCancel() { Rastreio.parar(a); }
+
+    /** Mantém a tela ligada (rastreamento por GPS no app web, sem o Android). */
     @JavascriptInterface
     public void keepScreenOn(boolean on) {
         a.runOnUiThread(() -> {

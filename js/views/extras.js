@@ -1,9 +1,10 @@
 // Atividades extras: tudo o que você faz além da missão diária (caminhada, bike, futebol...).
-// Entra no gasto calórico do dia. Pode ser lançada à mão ou rastreada por GPS com o app aberto.
-import { keepScreenOn } from "../native.js";
+// Entra no gasto calórico do dia. Pode ser lançada à mão ou rastreada por GPS (no app Android 1.5+, com a
+// tela bloqueada: quem mede é o Android; no navegador, só com o app aberto).
+import { keepScreenOn, nativo, gpsNativo, nativeTrack } from "../native.js";
 import { views, actions, refresh } from "../core.js";
 import { S, day, save } from "../store.js";
-import { today, esc, fmt, num, uid, fmtDate, fmtShort, addDays, distM, $ } from "../util.js";
+import { today, iso, esc, fmt, num, uid, fmtDate, fmtShort, addDays, distM, $ } from "../util.js";
 import { header, panel, modal, closeModal, toast, confirmBox, showEvents } from "../ui.js";
 import { tmb, weightOn, grant, extrasKcal, BONUS, gpsBonusStatus, checkGpsBonus, bonusWeek, weekStart, weekEnd } from "../game.js";
 
@@ -57,6 +58,7 @@ export const extrasOf = date => S.days[date]?.extras || [];
 
 // ---- tela -----------------------------------------------------------------------
 views.extras = () => {
+  adotar();
   const t = today(), hoje = extrasOf(t), tr = S.tracking;
   const recentes = [];
   for (let i = 1; i <= 30; i++) { const d = addDays(t, -i); extrasOf(d).forEach(e => recentes.push([d, e])); }
@@ -68,7 +70,8 @@ views.extras = () => {
       <p class="mid glow center num" id="tr-dist">${fmt(tr.dist / 1000, 2)} km</p>
       <p class="center timer num glow" id="tr-time" style="font-size:1.8rem">00:00</p>
       <p class="center small muted">${typeOf(tr.tipo).icone} ${typeOf(tr.tipo).nome} · <span id="tr-gps">aguardando GPS…</span></p>
-      <p class="small warn">Deixe o app aberto e a tela ligada: o navegador não lê o GPS com a tela apagada. Se a tela apagar, o tempo continua contando, mas a distância daquele trecho entra em linha reta.</p>
+      ${tr.nativo ? `<p class="small ok">Pode bloquear a tela e guardar o celular: o Android continua medindo, com a notificação "Rastreando" aberta. Para encerrar, abra o app e toque em Finalizar.</p>`
+        : `<p class="small warn">Deixe o app aberto e a tela ligada: o navegador não lê o GPS com a tela apagada. Se a tela apagar, o tempo continua contando, mas a distância daquele trecho entra em linha reta.</p>`}
       <div class="row"><button class="btn ghost grow" data-act="cancelTrack">Descartar</button>
       <button class="btn primary grow" data-act="stopTrack">Finalizar</button></div>`, "", `<span class="chip warn">Ao vivo</span>`) : "";
   return `${header()}<div class="stack">
@@ -160,15 +163,35 @@ actions.editExtra = ({ date, id }) => {
 // ---- rastreamento por GPS -----------------------------------------------------------
 let watch = null, wake = null, tick = null;
 
+const TRACK_ERR = {
+  permissao: "Permita a localização (precisa, durante o uso do app) e toque de novo.",
+  gpsoff: "A localização do celular está desligada. Ligue e toque de novo.",
+};
+const maxKmh = tipo => tipo === "bike" ? 70 : 30; // trecho mais rápido que isso (carro, ônibus) não conta
+
+// Rastreamento que está rodando no Android sem o app saber (ex.: dados restaurados): assume ele
+function adotar() {
+  if (S.tracking || !gpsNativo()) return;
+  const st = nativeTrack("trackStatus");
+  if (!st?.ativo || !typeOf(st.tipo)) return;
+  S.tracking = { tipo: st.tipo, start: st.start, date: iso(new Date(st.start)), dist: st.dist || 0, nativo: true };
+  save();
+}
+
 actions.startTrack = () => {
-  const gps = TYPES.filter(t => t.gps);
+  const gps = TYPES.filter(t => t.gps), nat = gpsNativo();
   const o = modal(`<div class="ptitle"><h2>Rastrear com GPS</h2></div>
-    <p class="small muted">O app soma a distância do percurso enquanto estiver aberto. No fim, você confere os valores antes de salvar.</p>
+    <p class="small muted">${nat ? "O Android mede o percurso mesmo com a tela bloqueada: pode guardar o celular no bolso." : "O app soma a distância do percurso enquanto estiver aberto."} No fim, você confere os valores antes de salvar.</p>
+    ${nativo && !nat ? `<p class="small warn">Para rastrear com a tela bloqueada, atualize o app Android para a versão 1.5. <a href="download/o-sistema.apk">Baixar</a></p>` : ""}
     <div class="grid2">${gps.map(t => `<button class="btn" data-tipo="${t.id}">${t.icone} ${t.nome}</button>`).join("")}</div>
     <button class="btn ghost block" style="margin-top:10px" data-close>Cancelar</button>`);
   o.querySelectorAll("[data-tipo]").forEach(b => b.onclick = () => {
-    S.tracking = { tipo: b.dataset.tipo, start: Date.now(), date: today(), dist: 0, last: null };
-    keepScreenOn(true);
+    const tipo = b.dataset.tipo, start = Date.now();
+    if (nat) {
+      const r = nativeTrack("trackStart", tipo, start, true);
+      if (r !== "ok") return toast(TRACK_ERR[r] || "Não consegui ligar o GPS. Tente de novo.", 5000);
+    } else keepScreenOn(true);
+    S.tracking = { tipo, start, date: today(), dist: 0, last: null, ...(nat ? { nativo: true } : {}) };
     save(); closeModal(); refresh();
   });
 };
@@ -180,11 +203,14 @@ function stopWatch() {
 
 actions.cancelTrack = async () => {
   if (!await confirmBox("Descartar", "O percurso rastreado será descartado.", "Descartar")) return;
+  if (S.tracking?.nativo) nativeTrack("trackCancel");
   stopWatch(); keepScreenOn(false); delete S.tracking; save(); refresh();
 };
 
 actions.stopTrack = () => {
-  const tr = S.tracking; stopWatch(); keepScreenOn(false);
+  const tr = S.tracking;
+  if (tr.nativo) { const st = nativeTrack("trackStop"); if (st) { tr.dist = st.dist || 0; tr.elev = st.elev || 0; } }
+  stopWatch(); keepScreenOn(false);
   delete S.tracking; save(); refresh();
   const tempo = Math.max(1, Math.round((Date.now() - tr.start) / 60000));
   form({ date: tr.date, tipo: tr.tipo, gps: { km: Math.round(tr.dist / 10) / 100, tipo: tr.tipo },
@@ -192,7 +218,7 @@ actions.stopTrack = () => {
 };
 
 export function startWatch() {
-  if (watch !== null || !S.tracking || !navigator.geolocation) return;
+  if (watch !== null || !S.tracking || S.tracking.nativo || !navigator.geolocation) return;
   navigator.wakeLock?.request("screen").then(w => { wake = w; }).catch(() => {});
   let lastSave = 0;
   watch = navigator.geolocation.watchPosition(p => {
@@ -204,8 +230,10 @@ export function startWatch() {
     if (tr.last) {
       const d = distM(tr.last, pt);
       if (d < Math.max(8, c.accuracy * 0.6)) return; // parado / ruído do GPS
-      tr.dist += d;
-      if (pt.alt != null && tr.last.alt != null && pt.alt - tr.last.alt > 2) tr.elev = (tr.elev || 0) + pt.alt - tr.last.alt;
+      if (d / Math.max(1, (pt.t - tr.last.t) / 1000) * 3.6 <= maxKmh(tr.tipo)) {
+        tr.dist += d;
+        if (pt.alt != null && tr.last.alt != null && pt.alt - tr.last.alt > 2) tr.elev = (tr.elev || 0) + pt.alt - tr.last.alt;
+      }
     }
     tr.last = pt;
     const el = $("#tr-dist"); if (el) el.textContent = `${fmt(tr.dist / 1000, 2)} km`;
@@ -219,8 +247,20 @@ views.extras.after = () => {
   if (!S.tracking) return stopWatch();
   startWatch();
   const el = $("#tr-time");
+  let religou = false;
   const upd = () => {
     if (!S.tracking || !el.isConnected) return clearInterval(tick);
+    if (S.tracking.nativo) {
+      const tr = S.tracking, st = nativeTrack("trackStatus"), gpsEl = $("#tr-gps");
+      // o Android fechou o app no meio do percurso: religa o GPS e continua de onde parou (uma tentativa por tela)
+      if (st && (!st.ativo || !st.rodando) && !religou) { religou = true; nativeTrack("trackStart", tr.tipo, tr.start, !st.ativo); }
+      if (st) {
+        tr.dist = st.dist || 0;
+        const d = $("#tr-dist"); if (d) d.textContent = `${fmt(tr.dist / 1000, 2)} km`;
+        if (gpsEl) gpsEl.textContent = st.gps === false ? "localização do celular desligada"
+          : !st.fixAt ? "aguardando GPS…" : Date.now() - st.fixAt > 30000 ? "sem sinal de GPS" : `GPS ±${Math.round(st.acc)} m`;
+      }
+    }
     const s = Math.floor((Date.now() - S.tracking.start) / 1000);
     el.textContent = (s >= 3600 ? Math.floor(s / 3600) + ":" : "") + String(Math.floor(s / 60) % 60).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
   };
@@ -230,5 +270,5 @@ views.extras.after = () => {
 // ao voltar para o app com a tela ligada, o navegador reativa o GPS e o wake lock
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) { if (watch !== null) { navigator.geolocation.clearWatch(watch); watch = null; } }
-  else if (S.tracking) startWatch();
+  else if (S.tracking && !S.tracking.nativo) startWatch();
 });

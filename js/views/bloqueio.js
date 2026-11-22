@@ -14,8 +14,9 @@ const APK = "download/o-sistema.apk";
 
 function instalar() {
   return `${header()}<div class="stack">
-    ${panel("App Android", `<p style="margin-top:0">O app Android é o mesmo Sistema, com três coisas a mais:</p>
+    ${panel("App Android", `<p style="margin-top:0">O app Android é o mesmo Sistema, com quatro coisas a mais:</p>
       <ul><li><b>Zona de Penalidade fora do app:</b> WhatsApp e Gmail ficam bloqueados enquanto houver penalidade. Bancos e telefone continuam liberados.</li>
+      <li><b>Caminhada, corrida e bike com a tela bloqueada:</b> o rastreamento por GPS continua com o celular no bolso.</li>
       <li><b>Lembrete</b> à noite quando a missão do dia ainda não foi feita.</li>
       <li>Seus dados ficam a salvo de "limpar dados do navegador".</li></ul>
       <a class="btn primary block" href="${APK}" download>Baixar o app Android</a>
@@ -27,6 +28,7 @@ function instalar() {
     ${panel("O que o app pode e não pode fazer", `<ul class="small" style="padding-left:18px;margin:0">
       <li><b>Acesso ao uso:</b> sabe <i>qual</i> app está aberto, para cobrir WhatsApp e Gmail. Não vê o conteúdo de nenhum app.</li>
       <li><b>Sobrepor a outros apps:</b> desenha a tela da Zona de Penalidade por cima dos apps bloqueados. Nunca por cima de banco.</li>
+      <li><b>Localização:</b> só no ponto e enquanto você rastreia uma atividade (com a notificação "Rastreando" aberta). Não guarda o trajeto, só a distância.</li>
       <li><b>Não pede:</b> Acessibilidade (ler a tela), acesso a notificações, SMS, contatos ou microfone.</li>
       <li>Nada é enviado para servidor nenhum: não existe servidor.</li></ul>`)}</div>`;
 }

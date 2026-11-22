@@ -13,8 +13,12 @@ num WebView preso a esse endereço e adiciona o que o navegador não faz:
   saber qual app já está aberto.
 - **Desbloqueio de emergência**: espera de 10 min depois do pedido (dá para desistir), libera 15 min, 1 por dia,
   custa XP e Ouro. **Desligar o bloqueio só vale 24 h depois** do pedido.
-- **Lembrete** à noite se a missão do dia não foi feita. Backup salvo em Downloads. Tela ligada durante o
-  rastreamento por GPS.
+- **Rastreamento de atividade com a tela bloqueada** (caminhada, corrida, trilha, bike): um serviço de
+  localização com a notificação "Rastreando" soma a distância pelo GPS do aparelho, com as mesmas regras do app web
+  (precisão até 35 m, ignora ruído parado e trechos rápidos demais: a pé 30 km/h, bike 70 km/h; `Percurso`,
+  coberto por testes). Só roda enquanto você rastreia; não guarda o trajeto. Se o Android fechar o app no meio,
+  o percurso fica salvo e continua ao abrir de novo.
+- **Lembrete** à noite se a missão do dia não foi feita. Backup salvo em Downloads.
 
 Sem bibliotecas de terceiros: só o SDK do Android.
 
@@ -24,7 +28,7 @@ Sem bibliotecas de terceiros: só o SDK do Android.
 |---|---|---|
 | Acesso ao uso | Saber qual app está na frente (nome do pacote) | Ver conteúdo, mensagens ou senhas |
 | Sobrepor a outros apps | Desenhar a tela da Zona de Penalidade por cima dos apps bloqueados | Ler a tela ou tocar por você |
-| Localização | Ponto e rastreamento (o app web já usava) | — |
+| Localização (durante o uso) | Ponto e rastreamento de atividade, com a tela bloqueada só enquanto a notificação "Rastreando" estiver aberta | Localização em segundo plano: o app não pede "permitir o tempo todo" |
 | Notificações | Lembrete e aviso da penalidade | Ler notificações de outros apps |
 
 O app **não pede** Acessibilidade, acesso a notificações, SMS, contatos, microfone nem câmera própria.
@@ -56,4 +60,7 @@ NativeBridge.java   os únicos comandos que a página pode chamar
 Prefs.java          estado do bloqueio e as regras (quando bloquear, emergência, desligar em 24 h)
 BlockerService.java serviço que cobre os apps bloqueados enquanto houver penalidade
 Scheduler.java      virada do dia, fim do desbloqueio, lembrete; notificações
+TrackerService.java GPS da atividade rastreada, com a tela bloqueada
+Rastreio.java       estado do rastreamento (salvo a cada ponto)
+Percurso.java       soma da distância e da subida (as mesmas regras do app web)
 ```

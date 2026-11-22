@@ -17,7 +17,7 @@ import java.time.ZoneId;
 final class Scheduler {
     private Scheduler() {}
 
-    static final String CH_BLOQUEIO = "bloqueio", CH_LEMBRETE = "lembrete";
+    static final String CH_BLOQUEIO = "bloqueio", CH_LEMBRETE = "lembrete", CH_RASTREIO = "rastreio";
     /** Hora da conferência diária da falta do dia anterior: logo depois do fim do modo dormir do jogador. */
     static final int CONFERE_HORA = 7, CONFERE_MIN = 5;
 
@@ -32,6 +32,7 @@ final class Scheduler {
         NotificationManager nm = c.getSystemService(NotificationManager.class);
         nm.createNotificationChannel(new NotificationChannel(CH_BLOQUEIO, "Zona de Penalidade", NotificationManager.IMPORTANCE_LOW));
         nm.createNotificationChannel(new NotificationChannel(CH_LEMBRETE, "Lembretes de missão", NotificationManager.IMPORTANCE_DEFAULT));
+        nm.createNotificationChannel(new NotificationChannel(CH_RASTREIO, "Rastreamento por GPS", NotificationManager.IMPORTANCE_LOW));
         nm.deleteNotificationChannel("vigia"); // canal da versão 1.3, que tinha o vigia sempre ligado
     }
 
