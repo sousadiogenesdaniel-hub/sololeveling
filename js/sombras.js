@@ -4,7 +4,7 @@
 import { S } from "./store.js";
 import { today, uid, addDays } from "./util.js";
 import { GRAUS, novoCorpo } from "./feitos.js";
-import { weekStart, levelInfo } from "./game.js";
+import { weekStart, levelInfo, RANK_ORDER } from "./game.js";
 import { bonus, darItem, arsenalMarechal, equipado } from "./premios.js";
 
 // Todo mundo começa como Humano; a classe é o prêmio do rank D. Só o Necromante está pronto: as outras
@@ -32,32 +32,48 @@ export const GRAU = {
 };
 // Um comandante por rank: é o chefe do Teste de Rank. Os ainda não vencidos aparecem como "???".
 export const COMANDANTES = {
-  D: { nome: "Cavaleiro Carmesim", cor: "#ff2e4d", poder: "Guarda Carmesim", efeito: "o baú da missão de hoje é no mínimo Raro", missao: true },
+  D: { nome: "O Carmesim", cor: "#ff2e4d", poder: "Guarda Carmesim", efeito: "o baú da missão de hoje é no mínimo Raro", missao: true },
   C: { nome: "O Devorador", cor: "#7dff6b", poder: "Fome Sem Fim", efeito: "o XP da missão de hoje vem em dobro", missao: true },
-  B: { nome: "Asa Negra", cor: "#3fb8ff", poder: "Voo Sobre o Tesouro", efeito: "o Ouro do baú de hoje vem em dobro", missao: true },
-  A: { nome: "General das Mil Lâminas", cor: "#ffc94d", poder: "Ordem de Ataque", efeito: "+1 tentativa em todos os corpos esperando extração", missao: false },
-  S: { nome: "O Primeiro Marechal", grau: "marechal", cor: "#f4f6ff", poder: "Marcha do Monarca", efeito: "o baú da missão de hoje é no mínimo Épico", missao: true },
+  B: { nome: "O Asa Negra", cor: "#3fb8ff", poder: "Voo Sobre o Tesouro", efeito: "o Ouro do baú de hoje vem em dobro", missao: true },
+  A: { nome: "O General das Mil Lâminas", cor: "#ffc94d", poder: "Ordem de Ataque", efeito: "+1 tentativa em todos os corpos esperando extração", missao: false },
+  S: { nome: "O Marechal das Trevas", grau: "marechal", cor: "#f4f6ff", poder: "Marcha do Monarca", efeito: "o baú da missão de hoje é no mínimo Épico", missao: true },
 };
 
-const NOMES = {
-  soldado: ["Brasa", "Corvo", "Vigia", "Presa", "Fumaça", "Eco", "Ferrão", "Cinza", "Grito", "Trovão", "Lince", "Garra", "Névoa",
-    "Ferro", "Raiz", "Faísca", "Lobo", "Vulto", "Breu", "Sílex", "Urso", "Dente", "Faro", "Granito", "Sombra Rasa"],
-  elite: ["Serpente", "Martelo", "Uivo", "Foice", "Escudo Negro", "Caçadora", "Besta", "Arauto", "Lâmina Fria", "Víbora"],
-  cavaleiro: ["da Lua Morta", "Sem Nome", "de Ônix", "do Véu", "Errante", "de Cinzas", "do Eclipse", "de Ferro Negro"],
+// ---- Registro das Sombras: 100 sombras com nome e número, liberadas por rank ----------------
+// 65 Soldados, 20 Elites, 10 Cavaleiros, 4 Comandantes e o Marechal. O grau do catálogo é o de nascimento: Soldado
+// pode evoluir para Elite e depois Cavaleiro; Elite, para Cavaleiro (o nome fica; Cavaleiro ganha "Cavaleiro" antes).
+// Uma sombra de rank X só pode ser extraída com rank X ou maior: a coleção só fecha no S.
+const LISTA = {
+  D: { soldado: ["Brasa", "Corvo", "Vigia", "Presa", "Fumaça", "Eco", "Ferrão", "Cinza", "Grito", "Trovão", "Lince", "Garra", "Névoa", "Ferro"],
+    elite: ["Serpente", "Martelo", "Uivo", "Foice"], cavaleiro: ["Fantasma"] },
+  C: { soldado: ["Raiz", "Faísca", "Lobo", "Vulto", "Breu", "Sílex", "Urso", "Dente", "Faro", "Granito", "Sombra Rasa", "Açoite", "Basalto", "Bruma", "Cascalho", "Carvão", "Cicatriz"],
+    elite: ["Escudo Negro", "Caçadora", "Besta", "Arauto", "Lâmina Fria"], cavaleiro: ["de Cinzas", "Errante"] },
+  B: { soldado: ["Corisco", "Coruja", "Espinho", "Estilha", "Falcão", "Fenda", "Ferrugem", "Fuligem", "Geada", "Gume", "Javali", "Lasca", "Lodo", "Lume", "Malho", "Musgo"],
+    elite: ["Víbora", "Sentinela", "Carrasco", "Mandíbula", "Harpia"], cavaleiro: ["do Véu", "de Ônix", "da Lua Morta"] },
+  A: { soldado: ["Pedregulho", "Rocha", "Rugido", "Salitre", "Silvo", "Sopro", "Tição", "Tocha", "Trapo", "Abutre", "Chacal", "Escaravelho"],
+    elite: ["Tempestade", "Algoz", "Escorpião", "Pantera"], cavaleiro: ["de Ferro Negro", "do Eclipse", "do Abismo"] },
+  S: { soldado: ["Mariposa", "Tremor", "Talho", "Bigorna", "Estaca", "Poeira"], elite: ["Machado Rubro", "Grilhão"], cavaleiro: ["da Última Vigília"] },
 };
-function nomeNovo(grau) {
-  const usados = new Set(sombras().map(s => s.nome));
-  const lista = NOMES[grau] || NOMES.soldado;
-  const livre = lista.filter(n => !usados.has(n));
-  if (livre.length) return livre[Math.floor(Math.random() * livre.length)];
-  const base = lista[Math.floor(Math.random() * lista.length)];
-  let i = 2; while (usados.has(`${base} ${i}`)) i++;
-  return `${base} ${i}`;
+export const RANKS_REG = ["D", "C", "B", "A", "S"];
+export const CATALOGO = [];
+for (const r of RANKS_REG) {
+  for (const g of ["soldado", "elite", "cavaleiro"]) for (const nome of LISTA[r][g]) CATALOGO.push({ nome, grau: g, rank: r });
+  CATALOGO.push({ nome: COMANDANTES[r].nome, grau: COMANDANTES[r].grau || "comandante", rank: r, cmd: r });
 }
+CATALOGO.forEach((c, i) => { c.n = i + 1; c.id = "s" + String(i + 1).padStart(3, "0"); });
+export const catBase = id => CATALOGO.find(c => c.id === id);
+const ri = r => RANK_ORDER.indexOf(r);
+// Vagas livres de um grau de nascimento, no seu rank ou abaixo
+export const vagasLivres = grau => {
+  const tem = new Set(sombras().map(s => s.cat)), r = ri(levelInfo().rank);
+  return CATALOGO.filter(c => !c.cmd && c.grau === grau && ri(c.rank) <= r && !tem.has(c.id));
+};
 
 export const sombras = () => (S.sombras ||= []);
 export const corpos = () => (S.corpos ||= []);
-export const nivelSombra = s => Math.min(30, 1 + Math.floor((s.xp || 0) / 60));
+// Nível: +10 XP por missão, 1 nível a cada 100 XP (10 missões), até o 30
+export const NIVEL = { xpMissao: 10, porNivel: 100, max: 30, absorver: 20 };
+export const nivelSombra = s => Math.min(NIVEL.max, 1 + Math.floor((s.xp || 0) / NIVEL.porNivel));
 export const poderSombra = s => Math.round(GRAU[s.grau].base * (1 + (nivelSombra(s) - 1) / 10));
 export const poderTotal = () => sombras().reduce((n, s) => n + poderSombra(s), 0);
 export const nomeSombra = s => s.cmd ? s.nome : s.grau === "cavaleiro" ? `Cavaleiro ${s.nome}` : `${GRAU[s.grau].nome} ${s.nome}`;
@@ -82,6 +98,8 @@ export function escolherClasse(id) {
 
 // "Levante-se!": tenta extrair a sombra de um corpo. Comandante nunca falha.
 // Soldado 80%, Elite 50%, Cavaleiro 35% por tentativa (+ pontos de extração do livro equipado). 3 tentativas.
+// A sombra extraída é uma vaga livre do Registro (do mesmo grau, no seu rank ou abaixo). Sem vaga livre, o corpo é
+// absorvido: +20 XP para todas as sombras. Esquadrão (qtd > 1): só de Soldados, cada um tenta sozinho.
 // O Marechal tem regra própria (statusMarechal): só com os 6 livros e o Manto, pode falhar e nunca vira cinzas.
 export const MARECHAL = { base: .4, porFalha: .2, espera: 14 };
 export function statusMarechal(c) {
@@ -94,6 +112,13 @@ export function chanceExtracao(c) {
   if (c.grau === "marechal") return statusMarechal(c).chance ?? 0;
   return Math.min(.95, GRAU[c.grau].chance + bonus().extracao / 100);
 }
+const novaSombra = (cat, c) => {
+  const s = { id: uid(), cat: cat.id, nome: cat.nome, grau: cat.grau, cmd: cat.cmd || null, origem: c.origem, d: today(), xp: 0 };
+  sombras().push(s);
+  return s;
+};
+// O corpo vai virar sombra, ou não há vaga e ele vai ser absorvido?
+export const destinoCorpo = c => c.cmd ? "sombra" : vagasLivres(c.grau).length ? "sombra" : "absorver";
 export function levantar(id) {
   const c = corpos().find(x => x.id === id);
   if (!c || !necromante()) return null;
@@ -105,28 +130,73 @@ export function levantar(id) {
       return { ok: false, marechal: true, volta: c.esperaAte, corpo: c };
     }
   }
-  if (c.grau === "comandante" || c.grau === "marechal" || Math.random() < chanceExtracao(c)) {
+  if (c.cmd) {
     S.corpos = corpos().filter(x => x !== c);
-    const s = { id: uid(), nome: c.cmd ? COMANDANTES[c.cmd].nome : nomeNovo(c.grau), grau: c.grau, cmd: c.cmd || null, origem: c.origem, d: today(), xp: 0 };
-    sombras().push(s);
-    return { ok: true, sombra: s };
+    return { ok: true, sombra: novaSombra(CATALOGO.find(x => x.cmd === c.cmd), c) };
   }
-  c.tentativas--;
-  if (c.tentativas <= 0) { S.corpos = corpos().filter(x => x !== c); S.cinzas = (S.cinzas || 0) + 1; return { ok: false, cinzas: true, corpo: c }; }
-  return { ok: false, restantes: c.tentativas, corpo: c };
+  const qtd = c.qtd || 1;
+  if (!vagasLivres(c.grau).length) { // sem vaga no Registro: o exército absorve o corpo
+    S.corpos = corpos().filter(x => x !== c);
+    return { ok: false, absorvido: true, corpo: c, ...crescerSombras(NIVEL.absorver * qtd) };
+  }
+  const novas = [];
+  let restam = 0;
+  for (let i = 0; i < qtd; i++) {
+    const livres = vagasLivres(c.grau);
+    if (!livres.length) break;
+    if (Math.random() < chanceExtracao(c)) novas.push(novaSombra(livres[Math.floor(Math.random() * livres.length)], c));
+    else restam++;
+  }
+  const sobra = qtd - novas.length - restam; // sem vaga para o resto do esquadrão
+  const extra = sobra > 0 ? crescerSombras(NIVEL.absorver * sobra) : null;
+  if (!restam) { S.corpos = corpos().filter(x => x !== c); return { ok: novas.length > 0, sombra: novas[0], novas, esquadrao: qtd > 1, absorvidos: sobra, ...(extra || {}) }; }
+  c.qtd = restam; c.tentativas--;
+  if (c.tentativas <= 0) { S.corpos = corpos().filter(x => x !== c); S.cinzas = (S.cinzas || 0) + restam; return { ok: novas.length > 0, sombra: novas[0], novas, esquadrao: qtd > 1, cinzas: true, perdidos: restam, corpo: c }; }
+  return { ok: novas.length > 0, sombra: novas[0], novas, esquadrao: qtd > 1, restantes: c.tentativas, falharam: restam, corpo: c };
 }
 
-// Toda missão cumprida dá XP às sombras. Soldado vira Elite no nível 10; Elite vira Cavaleiro no 20.
-export function crescerSombras(xp = 10) {
-  if (!necromante()) return [];
-  const promo = [];
+// Toda missão cumprida dá XP às sombras (1 nível a cada 10 missões). Evolução: Soldado vira Elite no nível 10 (com o
+// jogador no rank C ou acima); Elite vira Cavaleiro no 20 (com o jogador no B ou acima). Devolve quem subiu de nível
+// e quem evoluiu, para os avisos.
+export const EVOLUI = { elite: { nivel: 10, rank: "C" }, cavaleiro: { nivel: 20, rank: "B" } };
+export function crescerSombras(xp = NIVEL.xpMissao) {
+  const niveis = [], evolucoes = [];
+  if (!necromante()) return { niveis, evolucoes };
+  const r = ri(levelInfo().rank);
   for (const s of sombras()) {
+    const antes = nivelSombra(s);
     s.xp = (s.xp || 0) + xp;
     const n = nivelSombra(s);
-    if (s.grau === "soldado" && n >= 10) { s.grau = "elite"; promo.push(`${s.nome} evoluiu: Soldado → Elite`); }
-    else if (s.grau === "elite" && n >= 20) { s.grau = "cavaleiro"; promo.push(`${s.nome} evoluiu: Elite → Cavaleiro`); }
+    if (n > antes) niveis.push({ id: s.id, nome: nomeSombra(s), de: antes, para: n });
+    const prox = s.grau === "soldado" ? "elite" : s.grau === "elite" ? "cavaleiro" : null;
+    if (prox && n >= EVOLUI[prox].nivel && r >= ri(EVOLUI[prox].rank)) {
+      const de = s.grau; s.grau = prox;
+      evolucoes.push({ id: s.id, nome: s.nome, de, para: prox });
+    }
   }
-  return promo;
+  return { niveis, evolucoes };
+}
+
+// Sombras de antes do Registro: ganham o número pelo nome (ou uma vaga livre do mesmo grau); sem vaga, o exército
+// absorve. Os Comandantes ficam com os nomes novos.
+export function migrarRegistro() {
+  if (S.registroV) return null;
+  S.registroV = 1;
+  const usados = new Set(), sem = [];
+  for (const s of sombras()) if (s.cmd) { const c = CATALOGO.find(x => x.cmd === s.cmd); s.cat = c.id; s.nome = c.nome; usados.add(c.id); }
+  for (const s of sombras()) if (!s.cmd) {
+    const nome = s.nome === "Sem Nome" ? "Fantasma" : s.nome;
+    const c = CATALOGO.find(x => !x.cmd && x.nome === nome && !usados.has(x.id));
+    if (c) { s.cat = c.id; s.nome = c.nome; usados.add(c.id); } else sem.push(s);
+  }
+  let absorvidos = 0;
+  for (const s of sem) {
+    const c = vagasLivres(s.grau === "cavaleiro" ? "cavaleiro" : s.grau).find(x => !usados.has(x.id))
+      || vagasLivres("soldado").find(x => !usados.has(x.id));
+    if (c) { s.cat = c.id; s.nome = c.nome; usados.add(c.id); } else { S.sombras = sombras().filter(x => x !== s); absorvidos++; }
+  }
+  if (absorvidos) crescerSombras(NIVEL.absorver * absorvidos);
+  return { total: sombras().length, absorvidos };
 }
 
 // ---- invocação: 1 por semana do jogo -----------------------------------------------------

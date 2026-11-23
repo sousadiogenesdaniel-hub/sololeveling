@@ -2,14 +2,15 @@
 import { views, actions, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { esc, fmt, fmtDate, addDays, today } from "../util.js";
-import { header, panel, toast, confirmBox, aviso } from "../ui.js";
+import { header, panel, toast, confirmBox, aviso, modal } from "../ui.js";
 import { extracaoFx, falhaFx } from "../fx.js";
-import { weekStart } from "../game.js";
+import { weekStart, levelInfo, RANK_ORDER } from "../game.js";
 import { RAR, SLOTS, itemBase, equipados, efeitoTxt, bonus, arsenalMarechal } from "../premios.js";
 import { necromante, precisaEscolherClasse, classeAtual, sombras, corpos, GRAU, COMANDANTES, arteSombra, nomeSombra, nivelSombra, poderSombra,
-  poderTotal, levantar, chanceExtracao, invocar, podeInvocar, invocouNaSemana, invocacaoHoje, statusMarechal, podeInvocarTodos } from "../sombras.js";
+  poderTotal, levantar, chanceExtracao, invocar, podeInvocar, invocouNaSemana, invocacaoHoje, statusMarechal, podeInvocarTodos,
+  CATALOGO, catBase, RANKS_REG, destinoCorpo, NIVEL, EVOLUI } from "../sombras.js";
 import { checarConquistas } from "../conquistas.js";
-import { mostrarTitulos, escolhaDeClasse, listaClasses } from "./recompensas-ui.js";
+import { mostrarTitulos, escolhaDeClasse, listaClasses, mostrarCrescimento } from "./recompensas-ui.js";
 import { botaoCompartilhar } from "../cartao.js";
 
 const RANKS = ["D", "C", "B", "A", "S"];
@@ -36,10 +37,10 @@ function bloqueado() {
 function exercitoPanel() {
   const ss = sombras(), b = bonus();
   const cont = g => ss.filter(s => s.grau === g).length;
-  return panel(`${classeAtual().nome}`, `<div class="row between"><div><div class="small muted">Poder total do exército</div><div class="big glow num">${fmt(poderTotal())}</div></div>
+  return panel(`${classeAtual().nome}`, `<div class="row between"><div><div class="small muted">Poder total do exército</div><div class="big glow num">${fmt(poderTotal())}</div><div class="small">Registro: <b>${ss.filter(x => x.cat).length}/100</b></div></div>
       <div class="small" style="text-align:right">${["comandante", "cavaleiro", "elite", "soldado"].map(g => `${GRAU[g].nome}s: <b>${cont(g) + (g === "comandante" ? cont("marechal") : 0)}</b>`).join("<br>")}</div></div>
     <p class="small muted" style="margin-bottom:0">Por missão: <b class="gold">+${b.ouroSombras} Ouro</b> do exército (Soldado +1, Cavaleiro +3, até +40) · sorte no baú <b>+${b.sorteSombras}%</b> (Elite +1%, até +10%).
-      ${S.cinzas ? `<br>${S.cinzas} sombra${S.cinzas > 1 ? "s viraram" : " virou"} cinzas.` : ""} As sombras ganham experiência a cada missão: Soldado vira Elite no nível 10, Elite vira Cavaleiro no 20.</p>`);
+      ${S.cinzas ? `<br>${S.cinzas} corpo${S.cinzas > 1 ? "s viraram" : " virou"} cinzas.` : ""} Cada sombra sobe 1 nível a cada 10 missões. Soldado vira Elite no nível ${EVOLUI.elite.nivel} (com você no rank ${EVOLUI.elite.rank} ou acima); Elite vira Cavaleiro no ${EVOLUI.cavaleiro.nivel} (rank ${EVOLUI.cavaleiro.rank} ou acima).</p>`);
 }
 
 function invocacaoPanel() {
@@ -78,23 +79,53 @@ function corposPanel() {
   };
   const pode = c => c.grau !== "marechal" || statusMarechal(c).ok;
   return panel("Corpos esperando", `<ul class="list">${cs.map(c => {
-    const nome = c.cmd ? `Chefe do rank ${c.cmd}` : GRAU[c.grau].nome;
+    const nome = c.cmd ? `Chefe do rank ${c.cmd}` : c.qtd ? `Esquadrão de ${c.qtd} Soldados` : GRAU[c.grau].nome, absorve = destinoCorpo(c) === "absorver";
     return `<li><span style="width:46px;flex:none">${arteSombra(c.cmd ? { grau: c.grau, cmd: c.cmd } : { grau: c.grau }, { tam: 46, bloqueado: true })}</span>
-      <span class="grow"><b>${nome}</b><br><span class="small muted">${esc(c.origem)} · ${linha(c)}</span></span>
-      <button class="btn sm ${pode(c) ? "primary" : "ghost"}" data-act="levantar" data-id="${c.id}" ${pode(c) ? "" : "disabled"}>Levante-se</button></li>`;
-  }).join("")}</ul>`, "", `<span class="chip">${cs.length}</span>`);
+      <span class="grow"><b>${nome}</b><br><span class="small muted">${esc(c.origem)} · ${absorve
+        ? `sem ${GRAU[c.grau].nome} livre no Registro para o seu rank: o exército absorve o corpo (+${NIVEL.absorver * (c.qtd || 1)} XP para cada sombra)` : linha(c)}</span></span>
+      <button class="btn sm ${pode(c) ? "primary" : "ghost"}" data-act="levantar" data-id="${c.id}" ${pode(c) ? "" : "disabled"}>${absorve ? "Absorver" : "Levante-se"}</button></li>`;
+  }).join("")}</ul>`, "", `<span class="chip">${cs.reduce((n, c) => n + (c.qtd || 1), 0)}</span>`);
 }
 
-function sombrasPanel() {
-  const ss = sombras().filter(s => !s.cmd).sort((a, b) => poderSombra(b) - poderSombra(a));
-  if (!ss.length) return panel("Sombras", `<p class="muted" style="margin:0">Nenhuma sombra ainda. Extraia os corpos esperando acima.</p>`);
-  return panel("Sombras", `<div class="sombras">${ss.map(s => `<div class="sombra">${arteSombra(s, { tam: 90 })}
-    <div class="nm" style="color:${GRAU[s.grau].cor}">${esc(nomeSombra(s))}</div><div class="gr">Nv ${nivelSombra(s)} · ${fmt(poderSombra(s))}</div></div>`).join("")}</div>`,
-    "", `<span class="chip">${ss.length}</span>`);
+// Registro das Sombras: as 100, por rank; as que faltam aparecem como silhueta "???" do grau de nascimento
+const REG_COR = { D: "#3dffb5", C: "#3fb8ff", B: "#9257ff", A: "#ff2e4d", S: "#f0c45c" };
+function registroPanel() {
+  const minhas = new Map(sombras().map(s => [s.cat, s])), meu = RANK_ORDER.indexOf(levelInfo().rank);
+  const blocos = RANKS_REG.map(r => {
+    const lista = CATALOGO.filter(c => c.rank === r), fechado = RANK_ORDER.indexOf(r) > meu; // ranks ainda não alcançados ficam recolhidos
+    const titulo = `<span class="lt" style="color:${REG_COR[r]}"><b>${r}</b></span>Rank ${r}<small>${lista.filter(c => minhas.has(c.id)).length}/${lista.length}${fechado ? ` · libera no rank ${r}` : ""}</small>`;
+    return `${fechado ? `<details class="reg-det"><summary class="ars-rank">${titulo}</summary>` : `<div class="ars-rank">${titulo}</div>`}
+      <div class="reg-grade">${lista.map(c => { const s = minhas.get(c.id);
+        return s ? `<button type="button" class="reg-item" data-act="fichaSombra" data-id="${s.id}" style="--r:${s.cmd ? COMANDANTES[s.cmd].cor : GRAU[s.grau].cor}">
+            <span class="num">#${String(c.n).padStart(3, "0")}</span>${arteSombra(s, { tam: 54 })}<span class="nm">${esc(s.cmd ? s.nome : s.nome)}</span><span class="nv">${s.cmd ? GRAU[s.grau].nome : `${GRAU[s.grau].nome} · Nv ${nivelSombra(s)}`}</span></button>`
+          : `<div class="reg-item bloq"><span class="num">#${String(c.n).padStart(3, "0")}</span>${arteSombra({ grau: c.grau }, { tam: 54, bloqueado: true })}<span class="nm">???</span><span class="nv">${GRAU[c.grau].nome}</span></div>`;
+      }).join("")}</div>${fechado ? "</details>" : ""}`;
+  }).join("");
+  return panel("Registro das Sombras", `<p class="small muted" style="margin-top:0">As 100 sombras do Necromante. As de cada rank só se levantam com você naquele rank ou acima: o Registro fecha no S.</p>${blocos}`,
+    "", `<span class="chip">${minhas.size}/100</span>`);
 }
+
+actions.fichaSombra = ({ id }) => {
+  const s = sombras().find(x => x.id === id); if (!s) return;
+  const c = catBase(s.cat), cor = s.cmd ? COMANDANTES[s.cmd].cor : GRAU[s.grau].cor, n = nivelSombra(s);
+  const prox = s.grau === "soldado" ? "elite" : s.grau === "elite" ? "cavaleiro" : null;
+  const faltaXp = n >= NIVEL.max ? 0 : n * NIVEL.porNivel - (s.xp || 0);
+  modal(`<div class="row between"><span class="raro-chip" style="color:${cor}">${c ? "#" + String(c.n).padStart(3, "0") : ""} · ${GRAU[s.grau].nome}</span><button class="btn sm ghost" data-close>Fechar</button></div>
+    <div style="display:grid;place-items:center;margin:6px 0">${arteSombra(s, { tam: 170 })}</div>
+    <h3 class="center" style="margin:0;color:${cor};text-transform:none">${esc(nomeSombra(s))}</h3>
+    <ul class="list small" style="margin-top:10px">
+      ${s.cmd ? `<li><span class="grow">Poder</span><b>${COMANDANTES[s.cmd].poder}</b></li><li><span class="grow muted">${COMANDANTES[s.cmd].efeito}</span></li>`
+        : `<li><span class="grow">Nível</span><b class="num">${n}${n < NIVEL.max ? ` · faltam ${faltaXp} XP (${Math.ceil(faltaXp / NIVEL.xpMissao)} missões)` : " (máximo)"}</b></li>
+        ${prox ? `<li><span class="grow">Evolui para ${GRAU[prox].nome}</span><b>no nível ${EVOLUI[prox].nivel}, com você no rank ${EVOLUI[prox].rank}+</b></li>` : ""}
+        ${c && c.grau !== s.grau ? `<li><span class="grow">Nasceu</span><b>${GRAU[c.grau].nome}</b></li>` : ""}`}
+      <li><span class="grow">Poder de combate</span><b class="num">${fmt(poderSombra(s))}</b></li>
+      <li><span class="grow">Origem</span><span class="muted">${esc(s.origem || "—")}</span></li>
+      <li><span class="grow">Extraída em</span><span class="muted">${s.d ? fmtDate(s.d) : "—"}</span></li></ul>
+    ${botaoCompartilhar("sombra", { nome: nomeSombra(s), grau: GRAU[s.grau].nome, cor, arte: arteSombra(s, { tam: 200 }) }, "Compartilhar")}`);
+};
 
 views.exercito = () => `${header()}<div class="stack">
-  ${necromante() ? `${exercitoPanel()}${corposPanel()}${invocacaoPanel()}${comandantesPanel()}${sombrasPanel()}` : bloqueado()}
+  ${necromante() ? `${exercitoPanel()}${corposPanel()}${invocacaoPanel()}${comandantesPanel()}${registroPanel()}` : bloqueado()}
   ${necromante() ? equipamentoPanel() : ""}</div>`;
 
 actions.abrirClasse = () => escolhaDeClasse();
@@ -108,10 +139,25 @@ actions.levantar = async ({ id }) => {
     await falhaFx("O MARECHAL RECUOU", `Nova tentativa em ${fmtDate(r.volta)} · a chance sobe a cada vez`);
     return refresh();
   }
+  if (r.absorvido) {
+    await aviso("Corpo absorvido", `<p>Não há ${GRAU[r.corpo.grau].nome} livre no Registro para o seu rank. O exército absorveu ${r.corpo.qtd ? `o esquadrão` : "o corpo"}: <b>+${NIVEL.absorver * (r.corpo.qtd || 1)} XP</b> para cada sombra.</p>`);
+    await mostrarCrescimento(r.niveis, r.evolucoes); save();
+    return refresh();
+  }
+  if (r.esquadrao) {
+    for (const s of r.novas) await extracaoFx({ grau: s.grau, arte: arteSombra(s, { tam: 300 }), nome: esc(nomeSombra(s)), cor: GRAU[s.grau].cor, sub: `${GRAU[s.grau].nome} · nível 1`, faixa: "" });
+    await aviso("Esquadrão", `<ul class="list">${r.novas.map(s => `<li><span class="grow" style="text-align:left">${esc(nomeSombra(s))} se levantou</span></li>`).join("")}
+      ${r.falharam ? `<li><span class="grow bad" style="text-align:left">${r.falharam} não se levant${r.falharam > 1 ? "aram" : "ou"}: ${r.restantes} tentativa${r.restantes > 1 ? "s" : ""} restante${r.restantes > 1 ? "s" : ""}</span></li>` : ""}
+      ${r.perdidos ? `<li><span class="grow bad" style="text-align:left">${r.perdidos} vir${r.perdidos > 1 ? "aram" : "ou"} cinzas</span></li>` : ""}
+      ${r.absorvidos ? `<li><span class="grow" style="text-align:left">${r.absorvidos} sem vaga no Registro: absorvido${r.absorvidos > 1 ? "s" : ""} pelo exército</span></li>` : ""}</ul>`);
+    if (r.niveis || r.evolucoes) await mostrarCrescimento(r.niveis, r.evolucoes);
+    await mostrarTitulos(checarConquistas()); save();
+    return refresh();
+  }
   if (r.ok) {
-    const s = r.sombra, cor = s.cmd ? COMANDANTES[s.cmd].cor : GRAU[s.grau].cor;
+    const s = r.sombra, cor = s.cmd ? COMANDANTES[s.cmd].cor : GRAU[s.grau].cor, c = catBase(s.cat);
     await extracaoFx({ grau: s.grau, arte: arteSombra(s, { tam: 300 }), nome: esc(nomeSombra(s)), cor,
-      sub: s.cmd ? COMANDANTES[s.cmd].poder : `${GRAU[s.grau].nome} · nível 1`, faixa: s.cmd ? GRAU[s.grau].nome.toUpperCase() : "" });
+      sub: s.cmd ? COMANDANTES[s.cmd].poder : `${GRAU[s.grau].nome} · nível 1${c ? ` · #${String(c.n).padStart(3, "0")}` : ""}`, faixa: s.cmd ? GRAU[s.grau].nome.toUpperCase() : "" });
     if (s.cmd) await aviso("Comandante extraído", `<p class="mid" style="color:${cor}">${esc(s.nome)}</p><p>${COMANDANTES[s.cmd].poder}: ${COMANDANTES[s.cmd].efeito}.</p>
       <p class="small muted">Invoque uma vez por semana na tela do Exército.</p>${botaoCompartilhar("sombra", { nome: s.nome, grau: GRAU[s.grau].nome, cor, arte: arteSombra(s, { tam: 200 }) })}`);
   } else if (r.cinzas) await falhaFx("A SOMBRA VIROU CINZAS", esc(r.corpo.origem));

@@ -73,7 +73,7 @@ actions.concluirNomeado = async ({ k }) => {
   const it = itemBase(r.item);
   await celebrate(r.eventos);
   await itemFx({ arte: arteItem(it, { tam: 260 }), nome: esc(it.nome), cor: RAR[it.rar].cor, sub: `${SLOTS[it.slot]} · Lendário`, lendario: true });
-  await aviso(`${N.nome} vencido`, `<ul class="list">${r.eventos.map(linhaEv).join("")}</ul><p>${esc(it.nome)} agora está no seu Arsenal.</p>
+  await aviso(`${N.nome} vencido`, `<ul class="list">${r.eventos.map(linhaEv).join("")}</ul><p>${esc(it.nome)} agora está no seu Arsenal, e um esquadrão de 5 Soldados espera no Exército.</p>
     ${botaoCompartilhar("portao", { nome: N.nome, cor: N.cor, rank: g.fase })}`);
   await mostrarTitulos(checarConquistas()); save(); refresh();
 };
@@ -153,7 +153,7 @@ async function resultado(r, p) {
   if (r.bau) await bauFx(r.bau.raridade, RAR[r.bau.raridade].nome, RAR[r.bau.raridade].cor, r.bau.premios);
   await aviso(`${T.nome} vencido`, `<p>Em <b>${p.minutos} min</b> (limite ${p.desafio.limite}).</p>
     <ul class="list">${r.eventos.filter(e => e.xp || e.hp).map(linhaEv).join("")}
-      <li><span class="grow" style="text-align:left">Corpo de ${r.corpo.grau === "cavaleiro" ? "Cavaleiro" : r.corpo.grau === "elite" ? "Elite" : "Soldado"} esperando no Exército</span></li>
+      <li><span class="grow" style="text-align:left">${r.corpo.qtd ? `Esquadrão de ${r.corpo.qtd} Soldados` : `Corpo de ${r.corpo.grau === "cavaleiro" ? "Cavaleiro" : r.corpo.grau === "elite" ? "Elite" : "Soldado"}`}${r.esquadrao ? ` e um esquadrão de ${r.esquadrao.qtd} Soldados` : ""} esperando no Exército</span></li>
       ${r.item ? `<li><span class="grow" style="text-align:left">Arsenal: <b style="color:${RAR[r.item.rar].cor}">${esc(r.item.nome)}</b>${r.bau ? "" : " (só a joia desta vez)"}</span></li>` : ""}</ul>
     ${botaoCompartilhar("portao", { nome: T.nome, cor: T.cor, rank: p.rank, tempo: p.minutos })}`);
   await mostrarTitulos(checarConquistas()); save();

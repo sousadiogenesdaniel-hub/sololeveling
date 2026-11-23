@@ -88,16 +88,25 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   escolhido aparece embaixo do nome; um título novo mais raro entra sozinho.
 - **Classe e Exército das Sombras:** todo mundo começa como Humano; vencer o chefe do rank D libera a mudança de
   classe (Necromante; Mago, Guerreiro, Assassino e Tanque "em construção"). O Necromante tem uma escada de títulos
-  própria (Aprendiz das Sombras → … → Monarca das Sombras). Cada feito deixa um corpo: recorde (Soldado, no máximo 1 por prova a cada 7 dias),
-  marco (Soldado ou Elite), Portão (Elite/Cavaleiro) e chefe do Teste de Rank (Comandante, com nome próprio: o do D é o
-  Cavaleiro Carmesim). "Levante-se!" extrai a sombra: Soldado 80%, Elite 50%, Cavaleiro 35% por tentativa, 3 tentativas
-  (falhou 3 vezes, vira cinzas); Comandante nunca falha. O **Marechal** (chefe do S) só se levanta com os 6 livros e o
-  Manto no Arsenal: 40% de chance (+ pontos do livro equipado), +20% a cada falha, nova tentativa 14 dias depois e
-  nunca vira cinzas. As sombras ganham XP a cada missão (Soldado → Elite no nível 10,
-  Elite → Cavaleiro no 20). Por missão: +1 Ouro por Soldado e +3 por Cavaleiro (até +40), +1% de sorte no baú por Elite
-  (até +10%). **Invocação** de um Comandante 1 vez por semana (ex.: Cavaleiro Carmesim = baú da missão de hoje no mínimo
-  Raro). Com o Anel do Domínio equipado, a invocação da semana pode chamar todos os seus Comandantes de uma vez. Nada
-  disso alivia penalidade.
+  própria (Aprendiz das Sombras → … → Monarca das Sombras).
+- **Registro das Sombras:** 100 sombras com nome e número (#001–#100): 65 Soldados, 20 Elites, 10 Cavaleiros, 4
+  Comandantes (O Carmesim, O Devorador, O Asa Negra, O General das Mil Lâminas) e O Marechal das Trevas. Por rank:
+  D 20, C 25, B 25, A 20, S 10; uma sombra só se levanta com o jogador no rank dela ou acima, então o Registro só fecha
+  no S (título Mítico "Rei dos Mil Soldados"). As que faltam aparecem como silhueta "???" com o grau.
+  Cada feito deixa um corpo: recorde (Soldado, no máximo 1 por prova a cada 7 dias), marco (Soldado ou Elite), Portão
+  comum (Elite, às vezes Cavaleiro), Vermelho (Cavaleiro + esquadrão de 3 Soldados), de Emergência (esquadrão de 2),
+  Inferno e Trono (esquadrão de 5) e chefe do Teste de Rank (Comandante). Só Soldados vêm em esquadrão. "Levante-se!"
+  extrai: Soldado 80%, Elite 50%, Cavaleiro 35% por tentativa (+ pontos do livro), 3 tentativas (falhou 3 vezes, o
+  corpo vira cinzas; a sombra com nome continua disponível); Comandante nunca falha. Sem sombra livre daquele grau no
+  seu rank, o corpo é absorvido: +20 XP para cada sombra. O **Marechal** só se levanta com os 6 livros e o Manto no
+  Arsenal: 40% (+ pontos do livro), +20% a cada falha, nova tentativa 14 dias depois, nunca vira cinzas.
+  **Nível e evolução:** +10 XP por missão, 1 nível a cada 10 missões (até o 30). Soldado vira Elite no nível 10 com o
+  jogador no rank C+; Elite vira Cavaleiro no 20 com o jogador no B+. O nome fica (Cavaleiro ganha "Cavaleiro" antes).
+  A evolução tem animação própria (a silhueta pisca entre as duas formas e revela a nova); as subidas de nível vêm
+  numa janela só, depois da missão. Por missão: +1 Ouro por Soldado e +3 por Cavaleiro (até +40), +1% de sorte no baú
+  por Elite (até +10%). **Invocação** de um Comandante 1 vez por semana (ex.: O Carmesim = baú da missão de hoje no
+  mínimo Raro). Com o Anel do Domínio equipado, a invocação da semana pode chamar todos os seus Comandantes de uma vez.
+  Nada disso alivia penalidade.
 - **Visual por classe e rank:** o losango do rank tem a cor do rank (E cinza, D verde, C azul, B roxo, A vermelho,
   S dourado). Humano usa o azul de sempre; o Necromante tem fundo preto-arroxeado com fumaça e destaque em roxos do D
   (claro) ao A (roxo imperial com brilho); no S, preto e dourado. A Zona de Penalidade (vermelha) vence tudo. A

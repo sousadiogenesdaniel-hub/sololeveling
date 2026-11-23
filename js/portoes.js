@@ -125,10 +125,12 @@ export function concluirPortao(tudoFeito) {
     bau = abrirBau({ sorte: b.sorteTotal + (p.tipo === "vermelho" ? 30 : 0), minimo: p.tipo === "emergencia" ? "raro" : "epico", motivo: `Baú do ${T.nome}` });
     eventos.push(...bau.eventos);
   }
+  // corpos: comum = Elite (20% Cavaleiro); Vermelho = Cavaleiro + esquadrão de 3 Soldados; Emergência = esquadrão de 2
   const grau = p.tipo === "vermelho" ? "cavaleiro" : p.tipo === "emergencia" ? "soldado" : Math.random() < .2 ? "cavaleiro" : "elite";
-  const corpo = novoCorpo({ grau, origem: `${T.nome} rank ${p.rank}` });
+  const corpo = novoCorpo({ grau, origem: `${T.nome} rank ${p.rank}`, qtd: p.tipo === "emergencia" ? 2 : 1 });
+  const esquadrao = p.tipo === "vermelho" ? novoCorpo({ grau: "soldado", qtd: 3, origem: `${T.nome} rank ${p.rank}` }) : null;
   if (item) p.item = item.id;
-  return { venceu: true, eventos, bau, corpo, item };
+  return { venceu: true, eventos, bau, corpo, esquadrao, item };
 }
 
 // ---- Portões nomeados ---------------------------------------------------------------------
@@ -214,6 +216,7 @@ export function concluirNomeado(k) {
   if (!forca || !gps) { const dia = g.dia; falhaNomeado(k, !gps ? "Faltaram quilômetros no GPS" : "Faltaram provas"); return { venceu: false, dia }; }
   g.status = "vencido"; g.vencidoEm = today();
   darItem(N.item, `${N.nome} (rank ${g.fase})`);
+  novoCorpo({ grau: "soldado", qtd: 5, origem: N.nome });
   const eventos = [grant(NOM.xp, NOM.ouro, `${N.nome} vencido`), ...bonusEquip(NOM.xp, NOM.ouro, "no Portão")];
   const hp = eventoHp(HP.portao, `Manto do Necromante: ${N.nome} vencido`); if (hp) eventos.push(hp);
   return { venceu: true, item: N.item, eventos };

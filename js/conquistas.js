@@ -106,7 +106,7 @@ export const TITULOS = [
   // ---- a jornada do Necromante (só aparecem para quem é da classe) ----
   { id: "aprendiz-sombras", nome: "Aprendiz das Sombras", rar: "comum", classe: "necromante", desc: "Escolher a classe Necromante.", cond: c => c.classe === "necromante" },
   { id: "ergue-mortos", nome: "Aquele que Ergue os Mortos", rar: "raro", classe: "necromante", desc: "Extrair a primeira sombra.", prog: c => [c.sombras, 1] },
-  { id: "guarda-carmesim", nome: "Senhor da Guarda Carmesim", rar: "raro", classe: "necromante", desc: "Ter o Cavaleiro Carmesim no exército.", cond: c => c.cmdD },
+  { id: "guarda-carmesim", nome: "Senhor da Guarda Carmesim", rar: "raro", classe: "necromante", desc: "Ter O Carmesim no exército.", cond: c => c.cmdD },
   { id: "comandante-sombras", nome: "Comandante de Sombras", rar: "raro", classe: "necromante", desc: "10 sombras no exército.", prog: c => [c.sombras, 10] },
   { id: "senhor-cavaleiros", nome: "Senhor dos Cavaleiros Negros", rar: "epico", classe: "necromante", desc: "5 Cavaleiros no exército.", prog: c => [c.cavaleiros, 5] },
   { id: "matador-chefes", nome: "Matador de Chefes", rar: "epico", desc: "Vencer 3 Testes de Rank.", prog: c => [c.testes, 3] },
@@ -120,7 +120,7 @@ export const TITULOS = [
   { id: "dez-mil", nome: "Dez Mil Golpes", rar: "lendario", desc: "10.000 flexões no total.", prog: c => [c.t.flexoes, 10000] },
   { id: "monstro-disciplina", nome: "Monstro da Disciplina", rar: "lendario", desc: "180 missões seguidas sem falta.", prog: c => [c.streak, 180] },
   { id: "exercito-silencioso", nome: "General do Exército Silencioso", rar: "lendario", classe: "necromante", desc: "3 Comandantes no exército.", prog: c => [c.comandantes, 3] },
-  { id: "mil-soldados", nome: "Rei dos Mil Soldados", rar: "lendario", classe: "necromante", desc: "100 sombras no exército.", prog: c => [c.sombras, 100] },
+  { id: "mil-soldados", nome: "Rei dos Mil Soldados", rar: "mitico", classe: "necromante", desc: "As 100 sombras do Registro (o exército completo).", prog: c => [c.sombras, 100] },
   { id: "transcendeu", nome: "Aquele que Transcendeu", rar: "mitico", desc: "Chegar ao nível 100.", prog: c => [c.nivel, 100] },
   { id: "monarca-sombras", nome: "Monarca das Sombras", rar: "mitico", classe: "necromante", desc: "Rank S como Necromante.", cond: c => c.classe === "necromante" && c.rankIdx >= 5 },
 ];

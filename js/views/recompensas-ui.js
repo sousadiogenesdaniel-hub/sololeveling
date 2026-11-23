@@ -3,11 +3,11 @@ import { go, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { today, esc, fmt, iso } from "../util.js";
 import { aviso, modal, closeModal, toast } from "../ui.js";
-import { celebrate, bauFx, recordeFx, tituloFx, portaoFx, itemFx } from "../fx.js";
+import { celebrate, bauFx, recordeFx, tituloFx, portaoFx, itemFx, evolucaoFx } from "../fx.js";
 import { arteItem } from "../arte-itens.js";
 import { levelInfo, grant } from "../game.js";
 import { RAR, itemBase, migrarArsenal, possui, HP } from "../premios.js";
-import { CLASSES, escolherClasse, precisaEscolherClasse, corpos } from "../sombras.js";
+import { CLASSES, escolherClasse, precisaEscolherClasse, corpos, sombras, migrarRegistro, arteSombra, GRAU } from "../sombras.js";
 import { checarConquistas, relatorioPendente } from "../conquistas.js";
 import { recordesNaoVistos } from "../feitos.js";
 import { bauPendente, marcarBauAberto, iniciarRecompensas } from "../recompensas.js";
@@ -74,9 +74,21 @@ export async function telaMissaoConcluida(events, pos) {
     <p class="small muted">Nível ${li.level} · ${fmt(li.into)} / ${fmt(li.need)} XP${corposNovos ? ` · ${corposNovos} corpo${corposNovos > 1 ? "s" : ""} novo${corposNovos > 1 ? "s" : ""} esperando no Exército` : ""}</p>`,
     { botao: "Abrir o Baú do Sistema" });
   await abrirBauAnimado();
+  await mostrarCrescimento(pos.niveis, pos.evolucoes);
   await mostrarTitulos(pos.titulos);
   await mostrarClasseSePreciso();
   refresh();
+}
+
+// Sombras que subiram de nível (uma janela só) e que evoluíram (uma animação para cada)
+export async function mostrarCrescimento(niveis = [], evolucoes = []) {
+  for (const e of evolucoes) {
+    const s = sombras().find(x => x.id === e.id); if (!s) continue;
+    await evolucaoFx({ arteDe: arteSombra({ grau: e.de }, { tam: 220 }), artePara: arteSombra(s, { tam: 220 }), nome: esc(e.nome),
+      para: GRAU[e.para].nome, cor: GRAU[e.para].cor });
+  }
+  const sobe = niveis.filter(n => !evolucoes.some(e => e.id === n.id));
+  if (sobe.length) await aviso("Seu exército cresceu", `<ul class="list small">${sobe.map(n => `<li><span class="grow" style="text-align:left">${esc(n.nome)}</span><b class="num">Nv ${n.de} → ${n.para}</b></li>`).join("")}</ul>`);
 }
 
 export async function abrirBauAnimado(date = today()) {
@@ -143,6 +155,7 @@ export async function mostrarClasseSePreciso() {
 export async function avisosDoSistema() {
   iniciarRecompensas();
   const mig = migrarArsenal(); save();
+  const reg = migrarRegistro(); save();
   const antes = !!atualizacao;
   const atual = nativo ? !!(await conferirAtualizacao()) : false;
   const { eventos, abriu } = atualizarPortoes();
@@ -151,7 +164,12 @@ export async function avisosDoSistema() {
   const rel = relatorioPendente(); save();
   const toque = await toqueDeRecolher();
   const arsenal = mig && (mig.ouro || possui("manto-necromante"));
-  const mostrou = !!(toque || eventos.length || rel || abriu || nomeados.length || arsenal || precisaEscolherClasse() || atual !== antes);
+  const registro = reg && S.classe === "necromante";
+  const mostrou = !!(toque || eventos.length || rel || abriu || nomeados.length || arsenal || registro || precisaEscolherClasse() || atual !== antes);
+  if (registro) await aviso("Registro das Sombras", `<p>O exército agora tem <b>100 sombras com nome e número</b>: 65 Soldados, 20 Elites, 10 Cavaleiros, 4 Comandantes e o Marechal.
+      As de cada rank só se levantam com você naquele rank ou acima, então o Registro só fecha no S.</p>
+    <p>Elas sobem 1 nível a cada 10 missões e evoluem: Soldado → Elite → Cavaleiro.</p>
+    ${reg.total ? `<p class="small muted">As suas ${reg.total} sombras já entraram no Registro${reg.absorvidos ? ` (${reg.absorvidos} sem vaga foram absorvidas pelo exército)` : ""}.</p>` : ""}`, { botao: "Ver o Registro" });
   if (arsenal) {
     if (mig.ev) await celebrate([mig.ev]);
     await aviso("O Arsenal chegou", `${possui("manto-necromante") ? `<p>São <b>21 peças do Necromante</b> para colecionar: 9 armas, 6 livros de invocação, 5 anéis e o seu Manto. Elas caem dos Portões, nunca repetidas.</p>

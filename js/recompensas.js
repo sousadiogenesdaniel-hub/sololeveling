@@ -19,14 +19,14 @@ export function posMissao(w, date = today()) {
   ev.push(...bonusEquip(R.treinoXp + (w.full ? R.completoXp : 0), R.treinoOuro, "na missão", date));
   const hp = eventoHp(HP.missao, "Manto do Necromante: missão cumprida"); if (hp) ev.push(hp);
   if (necromante() && S.sombras?.length) linhas.push(`Suas ${S.sombras.length} sombras ganharam experiência`);
-  linhas.push(...crescerSombras());
+  const cres = crescerSombras();
   const minimo = invocado("S") ? "epico" : invocado("D") ? "raro" : "comum";
   const bau = abrirBau({ sorte: b.sorteTotal + (w.hit ? 5 : 0), minimo, ouroX: invocado("B") ? 2 : 1 });
   S.days[date].bau = { raridade: bau.raridade, premios: bau.premios, aberto: false, ...(inv ? { invocacao: inv.cmd } : {}) };
   const marcos = checarMarcos();
   const titulos = checarConquistas();
   save();
-  return { ev, linhas, bau, marcos, titulos };
+  return { ev, linhas, bau, marcos, titulos, niveis: cres.niveis, evolucoes: cres.evolucoes };
 }
 
 // Baú da missão de hoje ainda não aberto (o app foi fechado antes da animação)

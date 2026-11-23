@@ -7,9 +7,9 @@ import { today, uid, daysBetween } from "./util.js";
 export const GRAUS = ["soldado", "elite", "cavaleiro", "comandante", "marechal"];
 
 // Corpo de um "inimigo derrotado" (um feito real). Fica guardado até o Necromante extrair a sombra.
-// cmd = rank do chefe (só comandantes)
-export function novoCorpo({ grau, origem, cmd = null }) {
-  const c = { id: uid(), grau, origem, d: today(), tentativas: 3, ...(cmd ? { cmd } : {}) };
+// cmd = rank do chefe (só comandantes); qtd = esquadrão (só Soldados vêm mais de um de uma vez)
+export function novoCorpo({ grau, origem, cmd = null, qtd = 1 }) {
+  const c = { id: uid(), grau, origem, d: today(), tentativas: 3, ...(cmd ? { cmd } : {}), ...(qtd > 1 && grau === "soldado" ? { qtd } : {}) };
   (S.corpos ||= []).push(c);
   return c;
 }

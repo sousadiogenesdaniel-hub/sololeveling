@@ -42,6 +42,11 @@ Ficaram para depois:
   Comandantes). Dá para mudar qualquer poder depois, inclusive o do Anel: o poder é calculado na hora, então o
   item que você já tem passa a valer a regra nova.
 
+### Desenho único para cada sombra (em conversa)
+O Daniel quer que cada uma das 100 sombras tenha um desenho só dela, "quase uma NFT". A identidade (corpo, arma,
+marcas, cor dos olhos) continua igual quando ela evolui; o grau muda o capacete e a armadura. Ver a conversa antes de
+implementar.
+
 ### Recompensas: próximos passos
 - **Portões de corrida:** hoje os Portões são de calistenia (peso do corpo). Com a Corrida ativa, poderiam pedir uma
   distância rastreada pelo GPS.

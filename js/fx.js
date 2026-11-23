@@ -275,3 +275,23 @@ export function itemFx({ arte, nome, sub, cor, lendario = false, item = null }) 
     ${lendario ? `<div class="fx-burst">${particles(40, cor)}</div>` : ""}
     <div class="fx-lvl">toque para continuar</div>`, lendario ? 5600 : 4200);
 }
+
+// ---- evolução de uma sombra ---------------------------------------------------------------
+// Bipes cada vez mais rápidos enquanto a silhueta pisca; impacto e acorde na revelação (aos 4,4 s).
+export function playEvolucao() {
+  const ctx = soundOn() && audio(); if (!ctx) return;
+  const notas = [392, 440, 494, 523.25];
+  let t = 1.2, gap = .55;
+  for (let i = 0; t < 4.35; i++) { tone(ctx, { f: notas[i % 4] * (1 + Math.floor(i / 4) * .25), t, d: .12, v: .06, type: "square" }); t += gap; gap = Math.max(.06, gap * .82); }
+  tone(ctx, { f: 70, t: 4.4, d: 1.1, type: "sine", v: .3, slide: 40 }); noise(ctx, 4.4, .6, .25);
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(ctx, { f, t: 4.5 + i * .08, d: 1.3, v: .07 }));
+}
+export function evolucaoFx({ arteDe, artePara, nome, para, cor }) {
+  navigator.vibrate?.([50, 80, 50, 80, 50, 60, 50, 40, 400]);
+  playEvolucao();
+  return overlay("fx-evo", `<div class="fx-dark"></div>
+    <div class="fx-type">${typing(`[ AVISO DO SISTEMA ] ${nome} está evoluindo…`)}</div>
+    <div class="fx-evo-palco" style="--c:${cor}"><div class="fx-evo-a">${arteDe}</div><div class="fx-evo-b">${artePara}</div><div class="fx-evo-flash"></div></div>
+    <div class="fx-evo-txt" style="--c:${cor}">${nome} evoluiu para ${para}!</div>
+    <div class="fx-lvl">toque para continuar</div>`, 8200);
+}
