@@ -1,6 +1,6 @@
 {
-  "versionCode": 9,
-  "versionName": "1.8",
-  "sha256": "ded193e7a58bd8c3406f1109f70c788bddc982fdb73d62d2b07e41ebeb9d5cbc",
-  "novidades": "Toque de recolher: das 20h às 8h, os apps de vício (e o Chrome) custam Ouro e XP. Depois das 5h, abrindo O Sistema, dá para liberar a manhã. O bloqueio também passa a dormir com a tela apagada (menos bateria)."
+  "versionCode": 10,
+  "versionName": "1.9",
+  "sha256": "a7bd29839e0453c723c89209b8525e3880a021ba5ec1787966d7667790cf5e98",
+  "novidades": "O Chrome também fica bloqueado na Zona de Penalidade. E traz o toque de recolher da 1.8 (20h às 8h)."
 }

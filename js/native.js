@@ -10,7 +10,7 @@ export const nativo = window.SistemaNative || null;
 // Lista fixa de apps bloqueados (o app 1.2+ já ignora a lista enviada; o 1.1 usa esta, para bloquear todos também)
 export const APPS_TODOS = ["com.whatsapp", "com.whatsapp.w4b", "com.google.android.gm", "com.instagram.android", "com.zhiliaoapp.musically",
   "com.ss.android.ugc.trill", "com.google.android.youtube", "com.facebook.katana", "com.facebook.lite", "com.netflix.mediaclient",
-  "com.crunchyroll.crunchyroid", "com.amazon.avod.thirdpartyclient", "com.spotify.music"];
+  "com.crunchyroll.crunchyroid", "com.amazon.avod.thirdpartyclient", "com.spotify.music", "com.android.chrome"];
 export let ultimoSync = null; // diagnóstico: o que foi enviado ao Android por último
 
 export function nativeStatus() {

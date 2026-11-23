@@ -26,7 +26,7 @@ views.mais = () => {
     ${item("loja", "🛒", "Loja", "Sexta a domingo: troque Ouro pelo direito de comer besteira")}
     ${item("penalidade", "⚠️", "Penalidades", "Multas por PIX e pessoas do grupo", pend ? `<span class="chip bad">${pend}</span>` : "")}
     ${item("historico", "📜", "Registro do Sistema", "Histórico de XP e Ouro")}
-    ${item("bloqueio", "🔒", nativo ? "Bloqueio de apps" : "App Android", nativo ? "WhatsApp e Gmail bloqueados na Zona de Penalidade" : "Bloqueio de apps na Zona de Penalidade e lembretes")}
+    ${item("bloqueio", "🔒", nativo ? "Bloqueio de apps" : "App Android", nativo ? "Zona de Penalidade e toque de recolher (20h às 8h)" : "Bloqueio de apps na Zona de Penalidade e lembretes")}
     ${item("perfil", "👤", "Perfil e ajustes", "Status, metas, casa, trilha e backup")}
   </ul>`)}</div>`;
 };

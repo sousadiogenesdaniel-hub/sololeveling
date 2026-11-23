@@ -37,6 +37,7 @@ final class Prefs {
         BLOQUEAVEIS.put("com.crunchyroll.crunchyroid", "Crunchyroll");
         BLOQUEAVEIS.put("com.amazon.avod.thirdpartyclient", "Prime Video");
         BLOQUEAVEIS.put("com.spotify.music", "Spotify");
+        BLOQUEAVEIS.put("com.android.chrome", "Chrome");
     }
     /** Lista FIXA: todos são bloqueados na Zona de Penalidade, sem opção de desmarcar (é o pedido do jogador). */
     static final Set<String> PADRAO = Collections.unmodifiableSet(new HashSet<>(BLOQUEAVEIS.keySet()));

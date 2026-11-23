@@ -114,7 +114,7 @@ function toquePanel(st) {
     : t.desligarEm ? `<p class="small warn">Desliga em ${fmtDate(iso(new Date(t.desligarEm)), { day: "2-digit", month: "2-digit" })} às ${fmtTime(t.desligarEm)}.</p><button class="btn block" data-act="toqueCancelarDesligar">Cancelar o pedido</button>`
     : `<button class="btn ghost block" data-act="toqueDesligar">Pedir para desligar</button>`;
   return panel("Toque de recolher", `${estado}
-    <p class="small" style="margin-bottom:4px">Todo dia, das <b>20h às 8h</b>. Vale para os apps da Zona de Penalidade e o Chrome${st.chrome === false ? " (não instalado)" : ""}.</p>
+    <p class="small" style="margin-bottom:4px">Todo dia, das <b>20h às 8h</b>. Vale para os mesmos apps da Zona de Penalidade, Chrome incluído${st.chrome === false ? " (não instalado)" : ""}.</p>
     <p class="small muted">Preço por 15 min na mesma noite: ${precos.join(", ")}… Ouro e o mesmo em XP (até 640). Sem saldo, não libera. Na tela do bloqueio dá para vencer o impulso em vez de pagar. Depois das 5h, abrir O Sistema oferece liberar a manhã.</p>
     ${!st.usageAccess || !st.overlay ? `<p class="small bad">Sem as permissões acima, o toque de recolher não funciona.</p>` : ""}
     ${des}<p class="small muted" style="margin-bottom:0">Desligar só vale 24 horas depois do pedido.</p>`);

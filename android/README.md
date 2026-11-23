@@ -4,7 +4,7 @@ Casca nativa do app web. Abre o app publicado (`https://sousadiogenesdaniel-hub.
 num WebView preso a esse endereço e adiciona o que o navegador não faz:
 
 - **Bloqueio de apps na Zona de Penalidade**: WhatsApp, WhatsApp Business, Gmail, Instagram, TikTok, YouTube,
-  Facebook, Netflix, Crunchyroll, Prime Video e Spotify. A lista é **fixa** no código Android: não dá para
+  Facebook, Netflix, Crunchyroll, Prime Video, Spotify e Chrome (1.9). A lista é **fixa** no código Android: não dá para
   desmarcar apps pela página, e bancos, telefone e Ajustes nunca podem entrar nela.
 - **Bloqueio mesmo sem abrir o app:** todo dia às 07:05 (logo depois do modo dormir do jogador) o Android confere
   os dias anteriores: se algum dia cobrado passou sem missão, deduz a falta sozinho e bloqueia
@@ -21,7 +21,7 @@ num WebView preso a esse endereço e adiciona o que o navegador não faz:
   pausa o GPS desliga, o tempo parado não conta e, ao retomar, o percurso recomeça do ponto atual.
 - **Lembrete** à noite se a missão do dia não foi feita. Backup salvo em Downloads.
 - **Toque de recolher** (1.8): 20h às 8h, o vigia cobre os apps de vício (lista da penalidade + Chrome) com a opção de
-  pagar Ouro e XP (15 min, preço dobrando por noite; regras em `Toque`, cobertas por `ToqueTest`), vencer o impulso
+  pagar Ouro e XP (15 min, preço dobrando por noite; mesma lista da penalidade; regras em `Toque`, cobertas por `ToqueTest`), vencer o impulso
   ou sair. As cobranças ficam guardadas e o app web as lança no jogo (`toqueCobrancas`/`toqueConfirmar`). Alarmes às
   20h e às 8h; o vigia dorme com a tela apagada.
 - **Compartilhar conquistas** (1.7): o card gerado pela página é salvo em Imagens/O Sistema e abre o "Compartilhar"

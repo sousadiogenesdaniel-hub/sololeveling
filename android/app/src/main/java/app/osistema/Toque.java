@@ -26,7 +26,7 @@ final class Toque {
 
     static final int INICIO_H = 20, FIM_H = 8, MANHA_H = 5, MINUTOS = 15, PRECO_BASE = 20, PRECO_MAX = 640;
     static final long ESPERA_DESLIGAR_MS = 24L * 60 * 60 * 1000;
-    /** Apps do toque de recolher: os da Zona de Penalidade + o navegador Chrome. */
+    /** Apps do toque de recolher: os mesmos da Zona de Penalidade (o Chrome já está nela desde a 1.9). */
     static final Set<String> APPS;
     static {
         Set<String> s = new HashSet<>(Prefs.PADRAO);
