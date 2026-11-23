@@ -76,6 +76,8 @@ final class NativeBridge {
                     .put("instalado", installed(e.getKey())).put("bloqueado", bl.contains(e.getKey())));
             }
             o.put("apps", apps);
+            o.put("toque", Toque.status(a));
+            o.put("chrome", installed("com.android.chrome"));
             return o.toString();
         } catch (Exception e) { return "{}"; }
     }
@@ -92,6 +94,9 @@ final class NativeBridge {
                 .putString("lastDone", o.optString("lastDone", ""))
                 .putString("lastSync", LocalDate.now().toString());
             if (o.has("reminderHour")) ed.putInt("reminderHour", Math.max(-1, Math.min(23, o.optInt("reminderHour", 20))));
+            // saldo do jogador: o toque de recolher só libera se der para pagar
+            if (o.has("gold")) ed.putInt("saldoOuro", o.optInt("gold", 0));
+            if (o.has("xp")) ed.putInt("saldoXp", o.optInt("xp", 0));
             // "blocked" é ignorado de propósito: a lista é fixa e a página não consegue tirar apps dela
             ed.remove("blocked").apply();
             Scheduler.evaluate(a);
@@ -193,6 +198,41 @@ final class NativeBridge {
 
     @JavascriptInterface
     public void trackCancel() { Rastreio.parar(a); }
+
+    // ---- toque de recolher (20h às 8h) ----
+
+    /** Cobranças feitas no vigia e ainda não lançadas no jogo (JSON: [{id, t, app, ouro, xp, min}]) */
+    @JavascriptInterface
+    public String toqueCobrancas() { return Toque.cobrancas(a).toString(); }
+
+    /** O app lançou estas cobranças no XP e no Ouro: tira da lista. */
+    @JavascriptInterface
+    public void toqueConfirmar(String idsJson) {
+        try {
+            JSONArray arr = new JSONArray(idsJson);
+            Set<String> ids = new HashSet<>();
+            for (int i = 0; i < arr.length(); i++) ids.add(arr.optString(i));
+            Toque.confirmar(a, ids);
+        } catch (Exception ignored) {}
+    }
+
+    /** Depois das 5h: libera os apps até as 8h. */
+    @JavascriptInterface
+    public boolean toqueLiberarManha() {
+        boolean ok = Toque.liberarManha(a);
+        Scheduler.evaluate(a);
+        return ok;
+    }
+
+    /** Pede para desligar o toque de recolher: só vale 24 h depois. */
+    @JavascriptInterface
+    public long toqueDesligar() { long at = Toque.pedirDesligar(a); Scheduler.scheduleNext(a); return at; }
+
+    @JavascriptInterface
+    public void toqueCancelarDesligar() { Toque.cancelarDesligar(a); }
+
+    @JavascriptInterface
+    public void toqueLigar() { Toque.ligar(a); Scheduler.evaluate(a); }
 
     /** Mantém a tela ligada (rastreamento por GPS no app web, sem o Android). */
     @JavascriptInterface

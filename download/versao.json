@@ -1,6 +1,6 @@
 {
-  "versionCode": 8,
-  "versionName": "1.7",
-  "sha256": "56a10dfe06477930f1c23934613fa0c4ba0ebf6b7aab3eae7a12bc61ce3d50f0",
-  "novidades": "Compartilhar conquistas (rank, recordes, títulos, sombras, Portões) direto no WhatsApp."
+  "versionCode": 9,
+  "versionName": "1.8",
+  "sha256": "ded193e7a58bd8c3406f1109f70c788bddc982fdb73d62d2b07e41ebeb9d5cbc",
+  "novidades": "Toque de recolher: das 20h às 8h, os apps de vício (e o Chrome) custam Ouro e XP. Depois das 5h, abrindo O Sistema, dá para liberar a manhã. O bloqueio também passa a dormir com a tela apagada (menos bateria)."
 }

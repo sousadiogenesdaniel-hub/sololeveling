@@ -5,13 +5,6 @@ feita, ela sai daqui e vira regra no README.
 
 ## Guardadas para o futuro
 
-### Pedágio para apps viciantes
-Fora da Zona de Penalidade, ao abrir Instagram, TikTok etc., o Sistema cobraria um "pedágio" (ex.: 15
-agachamentos) antes de liberar o app por alguns minutos.
-- **Por que ficou para depois:** exige o vigia do Android ligado o tempo todo (o mesmo da versão 1.3, que foi
-  descartado por ser invasivo e gastar bateria), e o app não tem como saber se o exercício foi feito.
-- **O que ficou no lugar:** o botão Impulso (você aperta quando bate a vontade).
-
 ### Loja com recompensas da vida real
 Gastar Ouro em coisas fora da comida: equipamento (tênis, roupa, barra), experiências (cinema, massagem).
 - **Problema:** o Ouro de hoje mal dá para a comida de sexta a domingo; itens caros levariam meses.

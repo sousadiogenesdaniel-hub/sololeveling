@@ -105,6 +105,11 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 - **Teste de Rank como chefe:** o card mostra o chefe com barra de vida; cada prova é uma parte da vida dele.
 - **Impulso:** bateu a vontade de um vício, o Sistema dá na hora um desafio de 1 a 10 min; os 3 primeiros do dia dão
   +15 XP e todos contam para títulos.
+- **Toque de recolher** (app Android 1.8): todo dia das 20h às 8h, os apps da Zona de Penalidade e o Chrome custam
+  Ouro e XP para usar: 15 min por vez, 20 + 20 na primeira liberação da noite e dobrando a cada vez (até 640). Sem
+  saldo, não libera. A tela do bloqueio oferece "Vencer o impulso" no lugar de pagar. Depois das 5h, abrir O Sistema
+  pergunta se quer liberar a manhã. As cobranças entram no Registro na próxima abertura do app. Na Zona de
+  Penalidade vale o bloqueio total. Desligar leva 24 h.
 - **Card de conquista** para compartilhar no WhatsApp (rank, recorde, título, sombra, Portão, relatório). No app
   Android precisa da versão 1.7.
 

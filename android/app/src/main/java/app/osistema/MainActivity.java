@@ -112,11 +112,25 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF);
         }
-        if (b != null) web.restoreState(b); else web.loadUrl(BASE);
+        if (b != null) web.restoreState(b); else web.loadUrl(BASE + rotaDe(getIntent()));
         checkUpdate();
     }
 
     @Override protected void onSaveInstanceState(Bundle out) { super.onSaveInstanceState(out); web.saveState(out); }
+
+    /** Tela do app pedida por quem abriu (ex.: "Vencer o impulso" no toque de recolher abre #/impulso) */
+    private static String rotaDe(Intent i) {
+        String r = i == null ? null : i.getStringExtra("rota");
+        return r != null && r.matches("[a-z]{1,20}") ? "#/" + r : "";
+    }
+
+    @Override
+    protected void onNewIntent(Intent i) {
+        super.onNewIntent(i);
+        setIntent(i);
+        String r = rotaDe(i);
+        if (!r.isEmpty() && web != null) web.evaluateJavascript("location.hash='" + r + "'", null);
+    }
 
     @Override
     protected void onResume() {

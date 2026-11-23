@@ -58,9 +58,9 @@ final class Scheduler {
 
     /** Liga o bloqueio se houver penalidade (informada pelo app ou deduzida) e agenda as próximas conferências. */
     static void evaluate(Context c) {
-        boolean bloq = Prefs.shouldBlock(c);
-        Prefs.logEval(c, bloq ? "bloqueando" : "armado");
-        if (bloq && Prefs.canRun(c)) startBlocker(c);
+        boolean bloq = Prefs.shouldBlock(c), toque = !bloq && Toque.ativo(c) && !Toque.manhaLiberada(c);
+        Prefs.logEval(c, bloq ? "bloqueando" : toque ? "toque de recolher" : "armado");
+        if ((bloq && Prefs.canRun(c)) || (toque && Prefs.permissoes(c))) startBlocker(c);
         scheduleNext(c);
     }
 
@@ -71,6 +71,7 @@ final class Scheduler {
             // O Android pode impedir de iniciar em segundo plano: registra e, se houver penalidade, avisa.
             Prefs.logError(c, e.getClass().getSimpleName() + ": " + e.getMessage());
             if (Prefs.shouldBlock(c)) notify(c, 3, CH_BLOQUEIO, "Zona de Penalidade", "Toque para abrir O Sistema e ativar a Zona de Penalidade.");
+            else if (Toque.ativo(c)) notify(c, 3, CH_BLOQUEIO, "Toque de recolher", "Toque para abrir O Sistema e ativar o toque de recolher.");
         }
     }
 
@@ -82,6 +83,11 @@ final class Scheduler {
         if (unlock > now) set(c, 2, ACT_EVAL, unlock + 1000);
         long disable = Prefs.sp(c).getLong("disableAt", 0);
         if (disable > now) set(c, 3, ACT_EVAL, disable + 1000);
+        // toque de recolher: liga às 20h e desliga às 8h (o vigia também se desliga sozinho ao passar das 8h)
+        set(c, 6, ACT_EVAL, Toque.ms(Toque.proximoInicio(LocalDateTime.now())) + 1000);
+        set(c, 7, ACT_EVAL, Toque.ms(Toque.fim(LocalDateTime.now())) + 1000);
+        long toqueDes = Prefs.sp(c).getLong("toqueDesligarEm", 0);
+        if (toqueDes > now) set(c, 8, ACT_EVAL, toqueDes + 1000);
         int hora = Prefs.sp(c).getInt("reminderHour", 20);
         if (hora >= 0) {
             LocalDateTime r = LocalDate.now().atTime(hora, 0);

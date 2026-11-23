@@ -20,6 +20,10 @@ num WebView preso a esse endereço e adiciona o que o navegador não faz:
   o percurso fica salvo e continua ao abrir de novo. **Pausar/Retomar** pelo app ou pelo botão da notificação: na
   pausa o GPS desliga, o tempo parado não conta e, ao retomar, o percurso recomeça do ponto atual.
 - **Lembrete** à noite se a missão do dia não foi feita. Backup salvo em Downloads.
+- **Toque de recolher** (1.8): 20h às 8h, o vigia cobre os apps de vício (lista da penalidade + Chrome) com a opção de
+  pagar Ouro e XP (15 min, preço dobrando por noite; regras em `Toque`, cobertas por `ToqueTest`), vencer o impulso
+  ou sair. As cobranças ficam guardadas e o app web as lança no jogo (`toqueCobrancas`/`toqueConfirmar`). Alarmes às
+  20h e às 8h; o vigia dorme com a tela apagada.
 - **Compartilhar conquistas** (1.7): o card gerado pela página é salvo em Imagens/O Sistema e abre o "Compartilhar"
   do Android (`shareImage`), porque o WebView não tem o compartilhamento da web.
 

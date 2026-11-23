@@ -1,10 +1,10 @@
 // Sequências de telas das recompensas (cada passo espera o anterior fechar).
 import { go, refresh } from "../core.js";
 import { S, save } from "../store.js";
-import { today, esc, fmt } from "../util.js";
+import { today, esc, fmt, iso } from "../util.js";
 import { aviso, modal, closeModal, toast } from "../ui.js";
 import { celebrate, bauFx, recordeFx, tituloFx, portaoFx } from "../fx.js";
-import { levelInfo } from "../game.js";
+import { levelInfo, grant } from "../game.js";
 import { RAR } from "../premios.js";
 import { CLASSES, escolherClasse, precisaEscolherClasse, corpos } from "../sombras.js";
 import { checarConquistas, relatorioPendente } from "../conquistas.js";
@@ -12,6 +12,45 @@ import { recordesNaoVistos } from "../feitos.js";
 import { bauPendente, marcarBauAberto, iniciarRecompensas } from "../recompensas.js";
 import { atualizarPortoes, TIPOS } from "../portoes.js";
 import { botaoCompartilhar } from "../cartao.js";
+import { nativo, temToque, toqueStatus, toqueCobrancas, syncNative } from "../native.js";
+
+// Toque de recolher (20h às 8h, app Android 1.8+): lança no jogo o que foi pago no vigia, apresenta o recurso uma
+// vez e, entre 5h e 8h, pergunta se já quer liberar os apps. Devolve true se mostrou algo.
+async function toqueDeRecolher() {
+  if (!temToque()) return false;
+  let mostrou = false;
+  const cob = toqueCobrancas();
+  if (cob.length) {
+    const evs = cob.map(c => grant(-c.xp, -c.ouro, `Toque de recolher: ${c.app}, ${c.min} min`, iso(new Date(c.t))));
+    save(); nativo.toqueConfirmar(JSON.stringify(cob.map(c => c.id))); syncNative();
+    await celebrate(evs);
+    await aviso("Toque de recolher", `<p>Você pagou para usar apps durante o toque de recolher:</p><ul class="list">${evs.map(linhaEv).join("")}</ul>`);
+    mostrou = true;
+  }
+  const st = toqueStatus(); if (!st) return mostrou;
+  if (!S.toqueApresentado) {
+    S.toqueApresentado = true; save();
+    await aviso("Toque de recolher", `<p>Todo dia, das <b>20h às 8h</b>, os apps de vício (os da Zona de Penalidade e o Chrome) custam Ouro e XP para usar.</p>
+      <ul class="list small"><li><span class="grow" style="text-align:left">${15} min por vez: 20 Ouro + 20 XP, e o preço dobra a cada vez na mesma noite (40, 80…). Sem saldo, não libera.</span></li>
+      <li><span class="grow" style="text-align:left">Na tela do bloqueio dá para <b>vencer o impulso</b> (+XP) em vez de pagar.</span></li>
+      <li><span class="grow" style="text-align:left">Depois das <b>5h</b>, ao abrir O Sistema, você pode liberar a manhã.</span></li>
+      <li><span class="grow" style="text-align:left">Desligar leva 24 horas (na tela Bloqueio de apps).</span></li></ul>`);
+    mostrou = true;
+  }
+  if (st.ativo && st.manha && !st.manhaLiberada && S.toqueManha !== today()) {
+    S.toqueManha = today(); save();
+    const liberar = await new Promise(res => {
+      const o = modal(`<div class="ptitle"><span class="bang">!</span><h2>Bom dia, caçador</h2></div>
+        <p class="center">O toque de recolher vai até as <b>8h</b>. Quer liberar os apps agora?</p>
+        <div class="row"><button class="btn ghost grow" data-close>Esperar até as 8h</button><button class="btn primary grow" id="tq-lib">Liberar agora</button></div>`,
+        { sys: true, onEnd: () => res(false) });
+      o.querySelector("#tq-lib").onclick = () => { o._fim = null; o.remove(); res(true); };
+    });
+    if (liberar) toast(nativo.toqueLiberarManha() ? "Apps liberados até as 20h." : "Não deu para liberar agora.", 3500);
+    mostrou = true;
+  }
+  return mostrou;
+}
 
 export const linhaEv = e => {
   const parts = [];
@@ -102,7 +141,8 @@ export async function avisosDoSistema() {
   const { eventos, abriu } = atualizarPortoes();
   save();
   const rel = relatorioPendente(); save();
-  const mostrou = !!(eventos.length || rel || abriu || precisaEscolherClasse());
+  const toque = await toqueDeRecolher();
+  const mostrou = !!(toque || eventos.length || rel || abriu || precisaEscolherClasse());
   if (eventos.length) await aviso("Portão", `<ul class="list">${eventos.map(linhaEv).join("")}</ul>`);
   if (rel) {
     await aviso("Relatório semanal do Sistema", `<p>Semana de ${fmtD(rel.ws)} a ${fmtD(rel.we)}</p>

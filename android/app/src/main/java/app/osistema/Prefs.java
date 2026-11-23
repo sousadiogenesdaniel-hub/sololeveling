@@ -86,10 +86,13 @@ final class Prefs {
         return mode == android.app.AppOpsManager.MODE_ALLOWED;
     }
 
-    /** O vigia pode ficar ligado? (bloqueio ligado e as duas permissões dadas) */
+    /** As duas permissões do vigia (Acesso ao uso e Sobrepor a outros apps) */
+    static boolean permissoes(Context c) { return hasUsageAccess(c) && android.provider.Settings.canDrawOverlays(c); }
+
+    /** O vigia pode ficar ligado para a Zona de Penalidade? (bloqueio ligado e as duas permissões dadas) */
     static boolean canRun(Context c) {
         shouldBlock(c); // aplica um eventual "desligar em 24 h" vencido
-        return sp(c).getBoolean("blockingEnabled", true) && hasUsageAccess(c) && android.provider.Settings.canDrawOverlays(c);
+        return sp(c).getBoolean("blockingEnabled", true) && permissoes(c);
     }
 
     // ---- diagnóstico ----

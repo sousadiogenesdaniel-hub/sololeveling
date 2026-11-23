@@ -35,6 +35,7 @@ export function syncNative() {
     lastDone: lastDone(),
     today: today(),
     blocked: APPS_TODOS,
+    gold: Math.round(S.game.gold), xp: Math.round(S.game.xp), // o toque de recolher só libera se der para pagar
     ...(cfg.lembreteHora != null ? { reminderHour: cfg.lembreteHora } : {}),
   };
   const j = JSON.stringify(payload);
@@ -49,6 +50,11 @@ export const gpsNativo = () => typeof nativo?.trackStart === "function";
 export function nativeTrack(cmd, ...args) {
   try { const r = nativo[cmd](...args); return typeof r === "string" && r.startsWith("{") ? JSON.parse(r) : r; } catch { return null; }
 }
+
+// Toque de recolher (app Android 1.8+)
+export const temToque = () => typeof nativo?.toqueCobrancas === "function";
+export function toqueStatus() { const st = nativeStatus(); return st?.toque || null; }
+export function toqueCobrancas() { try { return JSON.parse(nativo.toqueCobrancas()); } catch { return []; } }
 
 export function keepScreenOn(on) { try { nativo?.keepScreenOn(!!on); } catch { /* sem suporte */ } }
 

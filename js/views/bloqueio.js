@@ -82,6 +82,7 @@ function painel(st) {
       ${versaoAtual(st) ? "" : `<p class="small warn">Spotify e a lista fixa precisam da versão 1.2 do app Android. <a href="download/o-sistema.apk">Baixar</a></p>`}
       <p class="small muted" style="margin-bottom:0">A lista é fixa de propósito: nenhum app pode ser tirado dela pelo O Sistema. Bancos, telefone e Ajustes nunca entram.</p>`)}
     ${st.blockingNow || st.unlockUntil > Date.now() ? emergenciaPanel(st) : ""}
+    ${toquePanel(st)}
     ${panel("Lembrete da missão", `<p class="small muted" style="margin-top:0">Notificação se a missão do dia ainda não foi feita.</p>
       <select data-chg="nativeReminder" aria-label="Horário do lembrete">${[-1, 17, 18, 19, 20, 21, 22].map(h => `<option value="${h}" ${(cfg.lembreteHora ?? st.reminderHour) === h ? "selected" : ""}>${h < 0 ? "Desligado" : h + ":00"}</option>`).join("")}</select>`)}
     ${panel("Desligar", desligar)}
@@ -98,6 +99,33 @@ function painel(st) {
       <tr><td>Apps marcados</td><td>${esc((st.apps || []).filter(a => a.bloqueado).map(a => a.nome).join(", ") || "nenhum")}</td></tr></table>`)}
     <p class="small muted center">App Android ${esc(st.version || "")}</p></div>`;
 }
+
+// Toque de recolher: 20h às 8h, apps de vício custam Ouro e XP (app Android 1.8+)
+function toquePanel(st) {
+  const t = st.toque;
+  if (!t) return panel("Toque de recolher", `<p class="small warn" style="margin:0">Das 20h às 8h, os apps de vício passam a custar Ouro e XP. Precisa do app Android 1.8. <a href="${APK}">Baixar</a></p>`);
+  const precos = [0, 1, 2, 3].map(n => 20 * 2 ** n);
+  const estado = !t.ligado ? `<p class="mid warn">Desligado</p>`
+    : !t.janela ? `<p class="mid">Armado: começa às 20h</p>`
+    : t.manhaLiberada ? `<p class="mid ok">Manhã liberada</p><p class="small muted">Volta às 20h.</p>`
+    : !t.cobrindo ? `<p class="mid ok">Liberado até ${fmtTime(t.liberadoAte)}</p><p class="small muted">Pago: ${t.usos} vez${t.usos === 1 ? "" : "es"} nesta noite.</p>`
+    : `<p class="mid glow">Ativo até as 8h</p><p class="small muted">Próxima liberação: <b>${t.preco} Ouro + ${t.preco} XP</b> por 15 min (${t.usos} já paga${t.usos === 1 ? "" : "s"} nesta noite).</p>`;
+  const des = !t.ligado ? `<button class="btn block" data-act="toqueLigar">Ligar o toque de recolher</button>`
+    : t.desligarEm ? `<p class="small warn">Desliga em ${fmtDate(iso(new Date(t.desligarEm)), { day: "2-digit", month: "2-digit" })} às ${fmtTime(t.desligarEm)}.</p><button class="btn block" data-act="toqueCancelarDesligar">Cancelar o pedido</button>`
+    : `<button class="btn ghost block" data-act="toqueDesligar">Pedir para desligar</button>`;
+  return panel("Toque de recolher", `${estado}
+    <p class="small" style="margin-bottom:4px">Todo dia, das <b>20h às 8h</b>. Vale para os apps da Zona de Penalidade e o Chrome${st.chrome === false ? " (não instalado)" : ""}.</p>
+    <p class="small muted">Preço por 15 min na mesma noite: ${precos.join(", ")}… Ouro e o mesmo em XP (até 640). Sem saldo, não libera. Na tela do bloqueio dá para vencer o impulso em vez de pagar. Depois das 5h, abrir O Sistema oferece liberar a manhã.</p>
+    ${!st.usageAccess || !st.overlay ? `<p class="small bad">Sem as permissões acima, o toque de recolher não funciona.</p>` : ""}
+    ${des}<p class="small muted" style="margin-bottom:0">Desligar só vale 24 horas depois do pedido.</p>`);
+}
+
+actions.toqueDesligar = async () => {
+  if (!await confirmBox("Desligar o toque de recolher", "O pedido só vale daqui a 24 horas. Até lá, continua valendo.", "Pedir")) return;
+  nativo.toqueDesligar(); grant(0, 0, "Pediu para desligar o toque de recolher (vale em 24 h)"); save(); refresh();
+};
+actions.toqueCancelarDesligar = () => { nativo.toqueCancelarDesligar(); refresh(); toast("Pedido cancelado. O toque de recolher continua."); };
+actions.toqueLigar = () => { nativo.toqueLigar(); refresh(); toast("Toque de recolher ligado."); };
 
 views.bloqueio = () => {
   if (!nativo) return instalar();
