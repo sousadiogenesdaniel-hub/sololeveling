@@ -32,48 +32,47 @@ Necromante está pronto.
 Além do Comandante e dos títulos, uma única **mega recompensa** a cada rank, para cada subida ter a empolgação
 que a mudança de classe no rank D tem. O Daniel ainda está pensando.
 
-### Arsenal do Necromante: armas e acessórios (em conversa)
-Proposta do Daniel (23/11/2026). Substitui os 17 itens provisórios de hoje (Adagas do Primeiro Portão, Manto do
-Necromante, Selo do Monarca…).
+### Arsenal do Necromante: armas e acessórios (esboço dos desenhos em andamento)
+Proposta do Daniel (23/11/2026), com os ajustes da conversa. Substitui os 17 itens provisórios de hoje.
 - **Coleção finita**, como ranks, soldados e títulos: o objetivo é ter todos.
 - **Salão próprio** (como a Sala dos Títulos) com todos os itens já desenhados:
-  - não obtido: silhueta cinza-escura ou preta, nome "???", mas a raridade aparece;
-  - os 2 itens do topo têm uma aura dourada atrás.
-- **Tocar num item obtido** abre um popup com zoom e todos os detalhes: onde e quando caiu, poderes, história de
+  - não obtido: silhueta escura, nome "???", mas a raridade aparece;
+  - os 2 Lendários têm uma aura dourada atrás.
+- **Tocar num item obtido** abre um popup com zoom e todos os detalhes: onde e quando caiu, poder, história de
   origem, raridade, nível e rank do jogador quando caiu. Os não obtidos não abrem.
-- **Tocar no item dentro do popup** toca uma animação própria simples, com um som único.
-- **De onde caem:** só dos baús da raridade mais alta e de alguns Portões (não de todos). Portões mais difíceis e
-  mais raros dão itens mais raros.
-- **Quantos por rank:** E 2, D 4, C 7, B 4, A 3, S 1 (21 no total).
-- **4 raridades:** Comum, "médio", Raro e Épico (nomes a fechar).
-- **Itens por classe:** começa pelo Necromante, com **9 armas, 7 livros de invocação e 5 anéis**. As outras
-  classes ficam "Em construção".
-- **Os 2 itens do topo** (um dos 3 do rank A e o único do S) só caem em **Portões nomeados**:
-  - um abre depois de chegar ao rank A (uma **arma**, criação do Claude); o outro depois do rank S ("**o anel
-    que a todos governa**", inspirado no Senhor dos Anéis);
-  - se falhar, o Portão fecha e reabre só mais 2 vezes, em datas sorteadas dentro do período do rank
-    (3 chances no total);
-  - a dificuldade é **complexidade, não um Teste de Rank**: todas as provas da Avaliação a 110–120% do último
-    máximo (Avaliação, Teste de Rank ou a tabela), reduzido se chegar ao nível do teste do próximo rank; mais
-    outros exercícios escolhidos; mais **21 km de corrida e uns 40 km de bike**, seja qual for a trilha ativa;
-    umas 4 horas ou mais no total, tipo um ironman ou triatlo.
+- **Tocar no item dentro do popup** toca uma animação própria, com um som único.
+- **21 itens do Necromante:** 9 armas, 6 livros de invocação, 5 anéis e o **Manto do Necromante**.
+- **Por rank:** D 5 (com o Manto), C 8, B 4, A 3, S 1. Nenhum no rank E (o jogador ainda é Humano).
+- **Raridades** (a mesma escada do Baú): Comum 10, Raro 5, Épico 4, Lendário 2.
+- **O Manto do Necromante** é o único item que não é arma, livro nem anel, e o único que vem direto da subida de
+  rank: chega ao virar Necromante, no rank D.
+- **De onde caem os outros 20: só dos Portões** (nem baú, nem chefe do Teste de Rank). O Portão dá XP, Ouro, corpo
+  e às vezes um item: às vezes só o item, às vezes o item e mais alguma coisa. Portões mais difíceis e mais raros
+  dão itens mais raros. Nunca cai repetido.
+- **Item de rank que já passou** continua podendo cair, desde que o rank do jogador seja igual ou maior que o do item.
+- **Espaços de equipamento:** arma, livro, anel e manto (um de cada).
+- **Poderes (um tipo por espaço):** arma aumenta o Ouro ganho, anel aumenta o XP ganho, livro aumenta a chance de
+  extração (o "Levante-se"). Nunca treino mais leve nem penalidade menor; o bônus vale só no que se ganha, nunca
+  diminui o que se perde.
+- **Os 2 Lendários** só caem em Portões nomeados, feitos para ser quase impossíveis de primeira:
+  - **Portão do Inferno** (abre no rank A): a **Foice das Mil Almas**;
+  - **Portão do Trono** (abre no rank S): o **Anel do Domínio** (inspirado no anel do Senhor dos Anéis, com
+    nome e desenho nossos);
+  - 3 chances, em datas sorteadas; cada abertura avisa com antecedência e dá uns 7 dias para escolher o dia;
+  - se as 3 falharem, o Portão volta no rank seguinte (não some);
+  - dificuldade: todas as provas da Avaliação a 110–120% do último máximo (reduzido se chegar ao nível do teste
+    do próximo rank), outros exercícios, 21 km de corrida e uns 40 km de bike (pelo GPS do app), umas 4h ou mais.
 
-**Pontos em aberto (sugestões do Claude, a decidir):**
-- Nomes das raridades: usar a mesma escada do Baú (Comum, Raro, Épico, Lendário), com os 2 do topo como Lendário
-  (o dourado do app). Divisão sugerida: Comum 8, Raro 6, Épico 5, Lendário 2.
-- Rank E: o jogador ainda é Humano, sem classe. Os 2 itens do E seriam **relíquias seladas** que despertam como
-  item da classe escolhida no rank D.
-- Ritmo: só o baú Lendário (1%) dá uns 3 itens por ano. Sugestão: baús Épico e Lendário, Portões Vermelho e de
-  Emergência; sempre um item que falta (sem repetido), do rank atual ou abaixo.
-- Item de um rank que já passou continua caindo depois (ninguém perde item por subir rápido)?
-- Portão nomeado: avisar com antecedência e dar uns 7 dias para escolher o dia (são 4h+); provas em etapas no
-  mesmo dia, em qualquer ordem; as repetições contam somando séries; corrida e bike pelo GPS do app.
-- Se as 3 chances falharem, o item some para sempre?
-- Espaços de equipamento: arma / livro de invocação / anel (hoje arma / manto / acessório). O Manto do Necromante
-  dado na escolha de classe vira o primeiro livro.
-- Poderes só de recompensa (Ouro, sorte, extração, invocação), nunca treino mais leve nem penalidade menor.
-- Nome original para o anel (ex.: Anel do Domínio) e para a arma do rank A (ex.: uma foice).
-- Os sons entram na conversa de sons e efeitos. Desenhos: esboçar antes de implementar, como foi com as sombras.
+**Ainda em aberto:**
+- Provas do Portão nomeado numa série só (mais difícil, mais risco de lesão) ou em até 2–3 séries.
+- O Portão do Trono no rank S: como não há rank seguinte, reabrir depois de uns 3 meses?
+- **HP e dia de folga** (ideia do Daniel): o Manto dá HP; +1 HP por missão cumprida, uma falta tira HP; com 100 HP
+  dá para trocar por um dia de folga (sem missão e sem penalidade, só no próprio dia e antes da meia-noite, nunca
+  para apagar uma falta). Números a fechar.
+- Poder extra dos Lendários (ex.: o Anel invoca de uma vez todos os Comandantes que você já tem).
+- Valores dos bônus (proposta: Comum +5%, Raro +10%, Épico +15%, Lendário +25%; livros +3, +5 e +8 pontos).
+- O que acontece com os itens provisórios que o jogador já tem (viram Ouro, menos o Manto).
+- Sons: entram na conversa de sons e efeitos.
 
 ### Recompensas: próximos passos
 - **Portões de corrida:** hoje os Portões são de calistenia (peso do corpo). Com a Corrida ativa, poderiam pedir uma
