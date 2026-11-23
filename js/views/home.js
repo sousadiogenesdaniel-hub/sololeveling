@@ -10,6 +10,7 @@ import { portaoAberto, TIPOS, NOMEADOS, nomeados } from "../portoes.js";
 import { podeFolga, HP } from "../premios.js";
 import { bauPendente } from "../recompensas.js";
 import { abrirBauAnimado } from "./recompensas-ui.js";
+import { janelaStatus } from "./titulos.js";
 
 // Portão aberto (ou em andamento) e baú da missão ainda fechado
 function portaoCard() {
@@ -159,5 +160,6 @@ views.inicio = () => {
   return `${header()}
     <p class="small muted" style="margin-top:-6px">${WEEKDAYS[new Date(t + "T12:00").getDay()]}, ${fmtDate(t, { day: "numeric", month: "long" })}</p>
     <div class="stack">${atualizacaoCard()}${penaltyBanner()}${nomeadoCard()}${portaoCard()}${bauCard()}${folgaCard()}${questCard()}${kcalCard()}${reminders()}
-      <a class="btn ghost block" href="#/impulso">⚡ Bateu a vontade? Vença um impulso</a>${statusTiles()}</div>`;
+      <a class="btn ghost block" href="#/impulso">⚡ Bateu a vontade? Vença um impulso</a>
+      ${panel("Janela de Status", janelaStatus())}${statusTiles()}</div>`;
 };
