@@ -1,7 +1,7 @@
 // Missão: trilha, treino do dia, ponto por GPS, treino indoor em dia de chuva, Teste de Rank
 import { views, actions, refresh } from "../core.js";
 import { S, day, save, photos } from "../store.js";
-import { today, addDays, esc, fmt, fmtTime, fmtDate, getPosition, getPreciseFix, distM, shrinkImage, uid, $, num } from "../util.js";
+import { today, addDays, daysBetween, esc, fmt, fmtTime, fmtDate, getPosition, getPreciseFix, distM, shrinkImage, uid, $, num } from "../util.js";
 import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox, aviso } from "../ui.js";
 import { panel as panelBase } from "../ui.js";
 import { completeWorkout, passTest, isRestDay, workoutKcal, grant, R, rankDe } from "../game.js";
@@ -26,6 +26,59 @@ const elapsedMin = w => (Date.now() - w.in.t) / 60000;
 export const SPOT = { raio: 100, folgaMax: 50, max: 3, carenciaDias: 3 };
 const spots = () => (S.spots ||= []);
 const activeSpots = () => spots().filter(s => s.validFrom <= today());
+
+// ---- Modo viagem ---------------------------------------------------------------------------
+// Só ativa a 50 km ou mais de casa (GPS preciso, descontando a margem). Na viagem, o ponto vale em qualquer lugar a
+// 50 km+ de casa e a saída tem que ser no mesmo lugar da entrada; o tempo mínimo é o de sempre. Termina sozinho no
+// primeiro ponto batido perto de casa (a menos de 50 km). Chegou a 30 dias, o jogador informa quantos dias a mais
+// vai ficar (o ponto de viagem só volta a valer depois disso). O dia de estrada é um dia normal: sem treino, é falta.
+export const VIAGEM = { km: 50, dias: 30, maxExtra: 60 };
+export const viagem = () => S.viagem || null;
+const viagemLimite = v => v.ate || addDays(v.inicio, VIAGEM.dias);
+const viagemVencida = () => { const v = viagem(); return !!v && today() >= viagemLimite(v); };
+const emViagem = pos => !!viagem() && pos.garantida >= VIAGEM.km * 1000;
+function encerrarViagem() {
+  const v = viagem(); if (!v) return null;
+  const dias = daysBetween(v.inicio, today());
+  (S.viagens ||= []).push({ inicio: v.inicio, fim: today(), dias, ...(v.extensoes ? { extensoes: v.extensoes } : {}) });
+  delete S.viagem;
+  grant(0, 0, `Modo viagem encerrado: ${dias} dia${dias === 1 ? "" : "s"} fora`);
+  return dias;
+}
+function viagemCard() {
+  const v = viagem(); if (!v) return "";
+  const dias = daysBetween(v.inicio, today()), vencida = viagemVencida(), t = today();
+  return panel(`Modo viagem · dia ${dias + 1}`, `<p style="margin-top:0">Desde ${fmtDate(v.inicio)}. O ponto vale em qualquer lugar a <b>${VIAGEM.km} km ou mais de casa</b>, com a saída no mesmo lugar da entrada e o tempo mínimo de sempre.</p>
+    ${vencida ? `<p class="warn">A viagem chegou a ${dias} dias. Quantos dias a mais você fica? Até responder, o ponto de viagem não vale.</p>
+      <form data-act="estenderViagem" class="row" style="gap:8px"><input id="vg-dias" name="dias" inputmode="numeric" placeholder="dias" style="max-width:90px" aria-label="Dias a mais">
+      <button class="btn primary grow">Confirmar</button></form>`
+      : `<p class="small muted">${v.ate ? `Estendida até ${fmtDate(v.ate)}.` : `Até ${VIAGEM.dias} dias sem precisar avisar nada.`} O modo acaba sozinho quando você bater o ponto perto de casa.</p>`}
+    <p class="small">Sem barras por perto? Duas cadeiras firmes servem para os mergulhos e uma mesa resistente para as remadas (como nos dias de chuva).</p>
+    <p class="small muted" style="margin-bottom:0">O dia de estrada é um dia normal: sem treino, é falta. Se tiver 100 HP, usar a folga fica a seu critério.</p>
+    <button class="btn ghost sm block" style="margin-top:8px" data-act="encerrarViagem">Já voltei: encerrar o modo viagem</button>`, "", `<span class="chip warn">✈️ Viagem</span>`);
+}
+actions.ativarViagem = async () => {
+  if (viagem()) return;
+  const pos = await locate(); if (!pos) return;
+  if (pos.garantida < VIAGEM.km * 1000) return sysMessage("Modo viagem não ativado", `<p>${posLine(pos)}</p><p>O modo viagem só ativa a <b>${VIAGEM.km} km ou mais</b> de casa, descontando a margem do GPS.</p>
+    <p class="small muted">Mais perto que isso, cadastre o local de treino (vale ${SPOT.carenciaDias} dias depois).</p>`);
+  if (!await confirmBox("Ativar o modo viagem", `Você está a ${fmt(pos.dist / 1000)} km de casa. O ponto passa a valer em qualquer lugar a ${VIAGEM.km} km ou mais de casa, até você bater o ponto perto de casa de novo.`, "Ativar")) return;
+  S.viagem = { inicio: today() };
+  grant(0, 0, `Modo viagem ativado a ${fmt(pos.dist / 1000)} km de casa`);
+  save(); refresh();
+};
+actions.estenderViagem = d => {
+  const v = viagem(), n = Math.round(num(d.dias) ?? 0); if (!v) return;
+  if (!(n >= 1 && n <= VIAGEM.maxExtra)) return toast(`Informe de 1 a ${VIAGEM.maxExtra} dias.`);
+  v.ate = addDays(today(), n); (v.extensoes ||= []).push({ d: today(), dias: n });
+  grant(0, 0, `Viagem estendida: mais ${n} dias (até ${fmtDate(v.ate)})`);
+  save(); refresh(); toast(`Modo viagem até ${fmtDate(v.ate)}.`);
+};
+actions.encerrarViagem = async () => {
+  if (!await confirmBox("Encerrar o modo viagem", "O ponto volta a valer só no seu local de treino de sempre.", "Encerrar")) return;
+  const dias = encerrarViagem(); save(); refresh();
+  if (dias != null) toast(`Modo viagem encerrado (${dias} dias).`);
+};
 
 function chooseTrack() {
   return `${header()}<div class="stack">
@@ -272,7 +325,7 @@ function todayCard() {
   const leve = plan.leve ? `<p class="small ok">Semana leve: volume 30% menor para o corpo se recuperar. Faz parte do plano.</p>` : "";
   return panel(plan.titulo, `${redencao}${leve}
     ${exerciseList(null, plan, false)}
-    <p class="small muted">Para valer: bata o ponto de entrada ${activeSpots().length ? "no seu local de treino" : `a mais de ${fmt(minDist() / 1000, 1)} km de casa`} (GPS preciso), treine pelo menos ${minMin()} min e bata o ponto de saída no local.</p>
+    <p class="small muted">${viagem() ? `Em viagem: bata o ponto de entrada em qualquer lugar a ${VIAGEM.km} km ou mais de casa` : `Para valer: bata o ponto de entrada ${activeSpots().length ? "no seu local de treino" : `a mais de ${fmt(minDist() / 1000, 1)} km de casa`}`} (GPS preciso), treine pelo menos ${minMin()} min e bata o ponto de saída no ${viagem() ? "mesmo lugar" : "local"}.</p>
     <button class="btn primary block" data-act="punchIn">Bater ponto: entrada</button>
     <button class="btn ghost block" style="margin-top:8px" data-act="checkRain">🌧 Chuva forte? Verificar clima</button>
     ${escolha}`,
@@ -309,7 +362,15 @@ const posLine = pos => pos.spot
   : `Você está a <b>${fmt(pos.dist)} m</b> de casa (precisão do GPS ±${pos.acc} m).`;
 
 // Devolve o motivo da recusa, ou null se o ponto vale
-function refuse(pos, saida) {
+function refuse(pos, saida, w = null) {
+  if (saida ? w?.in?.viagem : emViagem(pos)) { // ponto de viagem
+    if (saida) {
+      const d = Math.round(distM(pos, w.in)), lim = SPOT.raio + Math.min(SPOT.folgaMax, pos.acc + (w.in.acc || 0));
+      return d > lim ? `<p>Você está a <b>${fmt(d)} m</b> de onde bateu a entrada. Em viagem, a saída tem que ser no mesmo lugar (até ${lim} m).</p>` : null;
+    }
+    if (viagemVencida()) return `<p>A viagem chegou a ${daysBetween(viagem().inicio, today())} dias. Informe em Missão quantos dias a mais você fica para o ponto de viagem voltar a valer.</p>`;
+    return null;
+  }
   if (pos.garantida < minDist()) {
     return `<p>${posLine(pos)}</p><p>${saida ? "Bata o ponto de saída ainda no local de treino, a" : "O ponto só vale a"} mais de <b>${fmt(minDist() / 1000, 1)} km</b> de casa${pos.dist >= minDist() ? ", descontando a margem de erro do GPS" : ""}.</p>`;
   }
@@ -325,12 +386,16 @@ actions.punchIn = async () => {
   const pos = await locate(); if (!pos) return;
   const motivo = refuse(pos, false);
   if (motivo) return sysMessage("Ponto recusado", motivo);
+  if (emViagem(pos)) pos.viagem = true;
+  // de volta perto de casa: o modo viagem acaba no primeiro ponto
+  const voltou = viagem() && pos.dist < VIAGEM.km * 1000 ? encerrarViagem() : null;
   const m = day().modo && MODOS[day().modo] ? day().modo : null;
   const plano = m ? { titulo: MODOS[m].titulo, modo: m, itens: [], idx: null } : workoutFor(today());
   day().workout = { trackId: S.track.id, plano, in: pos, sets: {} };
   save(); refresh();
   sysMessage("Ponto de entrada registrado", `<p>${posLine(pos)}</p><p class="mid glow">${fmtTime(pos.t)}</p>
-    ${activeSpots().length ? "" : `<p class="small warn">Cadastre seu local de treino abaixo: depois de ativo, o ponto só vale dentro dele.</p>`}
+    ${voltou != null ? `<p class="ok small">Bem-vindo de volta: o modo viagem acabou (${voltou} dia${voltou === 1 ? "" : "s"} fora).</p>` : ""}
+    ${pos.viagem ? `<p class="small">Ponto de viagem: bata a saída neste mesmo lugar.</p>` : activeSpots().length ? "" : `<p class="small warn">Cadastre seu local de treino abaixo: depois de ativo, o ponto só vale dentro dele.</p>`}
     <p class="small muted">Treine pelo menos ${minMin()} min e bata o ponto de saída ainda no local.</p>`, { botao: "Bom treino" });
 };
 
@@ -339,7 +404,7 @@ actions.punchOut = async () => {
   if (falta > 0) return sysMessage("Ainda não", `<p>Faltam <b>${falta} min</b> para o tempo mínimo de ${minMin()} min de treino.</p>`);
   if (w.plano.modo && !MODOS[w.plano.modo].feito()) return sysMessage("Faltam os resultados", `<p>Registre os resultados ${w.plano.modo === "avaliacao" ? "da avaliação" : "do Teste de Rank"} antes de bater o ponto de saída.</p>`);
   const pos = await locate(); if (!pos) return;
-  const motivo = refuse(pos, true);
+  const motivo = refuse(pos, true, w);
   if (motivo) return sysMessage("Ponto recusado", motivo);
   w.out = pos;
   finish(w);
@@ -359,7 +424,8 @@ function spotsCard() {
     ${list.length ? `<ul class="list">${list.map(item).join("")}</ul>` : `<p class="warn small">Nenhum local cadastrado. Enquanto isso, o ponto vale em qualquer lugar a mais de 1 km de casa.</p>`}
     <p class="small muted">O ponto de entrada e o de saída só valem num raio de ${SPOT.raio} m do local (+ até ${SPOT.folgaMax} m de margem do GPS).
       Cadastre estando no ponto exato onde treina (ex.: nas barras). ${list.length || S.spotsEver ? `Local novo só passa a valer depois de ${SPOT.carenciaDias} dias.` : "O primeiro local vale na hora; os seguintes, só depois de " + SPOT.carenciaDias + " dias."} Máximo de ${SPOT.max}.</p>
-    <button class="btn block" data-act="addSpot" ${list.length >= SPOT.max ? "disabled" : ""}>${list.length >= SPOT.max ? "Limite de 3 locais" : "📍 Cadastrar: estou no local de treino"}</button>`,
+    <button class="btn block" data-act="addSpot" ${list.length >= SPOT.max ? "disabled" : ""}>${list.length >= SPOT.max ? "Limite de 3 locais" : "📍 Cadastrar: estou no local de treino"}</button>
+    ${viagem() ? "" : `<button class="btn ghost block" style="margin-top:8px" data-act="ativarViagem">✈️ Estou viajando (a ${VIAGEM.km} km ou mais de casa)</button>`}`,
     "", `<span class="small muted">${list.length}/${SPOT.max}</span>`);
 }
 
@@ -427,7 +493,7 @@ actions.checkRain = async () => {
   if (!d.rain?.heavy) {
     toast("Consultando o clima…", 15000);
     try {
-      const pos = S.profile.home || await getPosition();
+      const pos = viagem() ? await getPosition() : (S.profile.home || await getPosition()); // em viagem, o clima de onde você está
       // coordenadas arredondadas (~1 km): suficiente para o clima, sem expor o endereço
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${pos.lat.toFixed(2)}&longitude=${pos.lon.toFixed(2)}` +
         `&current=precipitation,weather_code&hourly=precipitation&forecast_days=1&timezone=auto`;
@@ -445,7 +511,7 @@ actions.checkRain = async () => {
   }
   const plan = workoutFor(today(), true);
   modal(`<div class="ptitle"><h2>Dungeon Indoor liberada</h2></div>
-    <p>Chuva forte confirmada (${fmt(d.rain.mm, 1)} mm/h agora, ${d.rain.horas} h de chuva previstas hoje). Você pode cumprir a missão em casa.</p>
+    <p>Chuva forte confirmada (${fmt(d.rain.mm, 1)} mm/h agora, ${d.rain.horas} h de chuva previstas hoje). Você pode cumprir a missão ${viagem() ? "onde está hospedado" : "em casa"}.</p>
     <ul><li>Treino: <b>${esc(plan.titulo)}</b></li><li>Mínimo de ${INDOOR_MIN} min com o cronômetro do app</li>
     <li>Todas as séries marcadas</li><li>Selfie de prova no final</li></ul>
     <p class="small muted">Sem barras em casa? Use duas cadeiras firmes para mergulhos e uma mesa resistente para as remadas.</p>
@@ -516,7 +582,7 @@ views.treino = () => {
   }
   // Teste do fim da fase fica no topo; o antecipado (e o aviso de espera) fica abaixo da missão de hoje
   const st = testStatus(), topo = st && !st.early && !st.nextTry;
-  return `${header()}<div class="stack">${focoCard()}${topo ? testCard() : ""}${todayCard()}${st && !topo ? testCard() : ""}${spotsCard()}${trailCard()}${trilhasCard()}</div>`;
+  return `${header()}<div class="stack">${focoCard()}${viagemCard()}${topo ? testCard() : ""}${todayCard()}${st && !topo ? testCard() : ""}${spotsCard()}${trailCard()}${trilhasCard()}</div>`;
 };
 
 let tick = null;

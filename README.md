@@ -149,6 +149,12 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 **Chuva forte:** o botão "Verificar clima" consulta a previsão (Open-Meteo, com coordenadas arredondadas).
 Se confirmar chuva forte, libera o treino em casa: 25 min no cronômetro, todas as séries e uma selfie no final.
 
+**Modo viagem:** em Missão (Locais de treino), "Estou viajando" só ativa a 50 km ou mais de casa (GPS preciso). Na
+viagem, o ponto vale em qualquer lugar a 50 km+ de casa, com a saída no mesmo lugar da entrada e o tempo mínimo de
+sempre; a chuva é conferida onde você está. Não precisa informar datas: o modo acaba sozinho no primeiro ponto batido
+perto de casa. Chegou a 30 dias, o app pergunta quantos dias a mais você fica (até responder, o ponto de viagem não
+vale). O dia de estrada é um dia normal: sem treino, é falta (a folga de 100 HP fica a critério do jogador).
+
 ## Como publicar e instalar no celular
 
 O app é só arquivos estáticos, sem etapa de build. O GPS exige HTTPS, então ele precisa estar hospedado.
