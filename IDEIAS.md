@@ -32,47 +32,15 @@ Necromante está pronto.
 Além do Comandante e dos títulos, uma única **mega recompensa** a cada rank, para cada subida ter a empolgação
 que a mudança de classe no rank D tem. O Daniel ainda está pensando.
 
-### Arsenal do Necromante: armas e acessórios (esboço dos desenhos em andamento)
-Proposta do Daniel (23/11/2026), com os ajustes da conversa. Substitui os 17 itens provisórios de hoje.
-- **Coleção finita**, como ranks, soldados e títulos: o objetivo é ter todos.
-- **Salão próprio** (como a Sala dos Títulos) com todos os itens já desenhados:
-  - não obtido: silhueta escura, nome "???", mas a raridade aparece;
-  - os 2 Lendários têm uma aura dourada atrás.
-- **Tocar num item obtido** abre um popup com zoom e todos os detalhes: onde e quando caiu, poder, história de
-  origem, raridade, nível e rank do jogador quando caiu. Os não obtidos não abrem.
-- **Tocar no item dentro do popup** toca uma animação própria, com um som único.
-- **21 itens do Necromante:** 9 armas, 6 livros de invocação, 5 anéis e o **Manto do Necromante**.
-- **Por rank:** D 5 (com o Manto), C 8, B 4, A 3, S 1. Nenhum no rank E (o jogador ainda é Humano).
-- **Raridades** (a mesma escada do Baú): Comum 10, Raro 5, Épico 4, Lendário 2.
-- **O Manto do Necromante** é o único item que não é arma, livro nem anel, e o único que vem direto da subida de
-  rank: chega ao virar Necromante, no rank D.
-- **De onde caem os outros 20: só dos Portões** (nem baú, nem chefe do Teste de Rank). O Portão dá XP, Ouro, corpo
-  e às vezes um item: às vezes só o item, às vezes o item e mais alguma coisa. Portões mais difíceis e mais raros
-  dão itens mais raros. Nunca cai repetido.
-- **Item de rank que já passou** continua podendo cair, desde que o rank do jogador seja igual ou maior que o do item.
-- **Espaços de equipamento:** arma, livro, anel e manto (um de cada).
-- **Poderes (um tipo por espaço):** arma aumenta o Ouro ganho, anel aumenta o XP ganho, livro aumenta a chance de
-  extração (o "Levante-se"). Nunca treino mais leve nem penalidade menor; o bônus vale só no que se ganha, nunca
-  diminui o que se perde.
-- **Os 2 Lendários** só caem em Portões nomeados, feitos para ser quase impossíveis de primeira:
-  - **Portão do Inferno** (abre no rank A): a **Foice das Mil Almas**;
-  - **Portão do Trono** (abre no rank S): o **Anel do Domínio** (inspirado no anel do Senhor dos Anéis, com
-    nome e desenho nossos);
-  - 3 chances, em datas sorteadas; cada abertura avisa com antecedência e dá uns 7 dias para escolher o dia;
-  - se as 3 falharem, o Portão volta no rank seguinte (não some);
-  - dificuldade: todas as provas da Avaliação a 110–120% do último máximo (reduzido se chegar ao nível do teste
-    do próximo rank), outros exercícios, 21 km de corrida e uns 40 km de bike (pelo GPS do app), umas 4h ou mais.
-
-**Ainda em aberto:**
-- Provas do Portão nomeado numa série só (mais difícil, mais risco de lesão) ou em até 2–3 séries.
-- O Portão do Trono no rank S: como não há rank seguinte, reabrir depois de uns 3 meses?
-- **HP e dia de folga** (ideia do Daniel): o Manto dá HP; +1 HP por missão cumprida, uma falta tira HP; com 100 HP
-  dá para trocar por um dia de folga (sem missão e sem penalidade, só no próprio dia e antes da meia-noite, nunca
-  para apagar uma falta). Números a fechar.
-- Poder extra dos Lendários (ex.: o Anel invoca de uma vez todos os Comandantes que você já tem).
-- Valores dos bônus (proposta: Comum +5%, Raro +10%, Épico +15%, Lendário +25%; livros +3, +5 e +8 pontos).
-- O que acontece com os itens provisórios que o jogador já tem (viram Ouro, menos o Manto).
-- Sons: entram na conversa de sons e efeitos.
+### Arsenal: o que ficou para depois
+O Arsenal do Necromante, o HP com o dia de folga e os Portões do Inferno e do Trono estão no app (regras no README).
+Ficaram para depois:
+- **Arsenal das outras classes** (Mago, Guerreiro, Assassino, Tanque), quando elas saírem do "Em construção".
+- **Sons próprios de cada item:** hoje cada item já tem um som sintetizado diferente (timbre pelo tipo, nota pela
+  posição no catálogo). Melhorar na conversa de sons e efeitos.
+- **Poder extra da Foice e de outros Épicos:** hoje só o Anel do Domínio tem um poder extra (invocar todos os
+  Comandantes). Dá para mudar qualquer poder depois, inclusive o do Anel: o poder é calculado na hora, então o
+  item que você já tem passa a valer a regra nova.
 
 ### Recompensas: próximos passos
 - **Portões de corrida:** hoje os Portões são de calistenia (peso do corpo). Com a Corrida ativa, poderiam pedir uma
@@ -93,6 +61,6 @@ Academia, Ciclismo, Natação e Híbrido aparecem como "Building…".
 ## Descartadas (para lembrar o porquê)
 - **Volta por cima e bônus de sequência:** recompensa extra por voltar depois de uma falta e XP crescente com
   a sequência. O Daniel preferiu não.
-- **Premiar a Condição** (sono, foco, celular na cama): prêmio criaria tentação de marcar "sim" sem ser. A
-  Condição continua sem XP nem Ouro.
+- **Premiar as respostas da Condição** (sono, foco, celular na cama): prêmio criaria tentação de marcar "sim" sem
+  ser. Desde 23/11/2026 a Condição dá +5 XP só por registrar o dia inteiro, seja qual for a resposta.
 - **Modelo A de duas trilhas** (principal + extra valendo menos): substituído pelas várias trilhas ativas.

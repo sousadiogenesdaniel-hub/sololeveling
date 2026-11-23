@@ -14,9 +14,10 @@ views.mais = () => {
   const pend = pendingDebts().length;
   const corpos = (S.corpos || []).length, portao = Object.values(S.portoes || {}).some(p => p.status === "aberto" || p.status === "ativo");
   return `${header()}<div class="stack">${panel("Menu", `<ul class="list">
-    ${item("exercito", "🗡️", "Exército das Sombras", S.classe ? "Sombras, invocação e equipamentos" : "Classe, corpos guardados e equipamentos", corpos ? `<span class="chip">${corpos}</span>` : "")}
+    ${item("exercito", "🗡️", "Exército das Sombras", S.classe ? "Sombras, corpos e invocação" : "Classe e corpos guardados", corpos ? `<span class="chip">${corpos}</span>` : "")}
+    ${item("arsenal", "⚔️", "Arsenal", "Armas, livros, anéis e o Manto (HP e folga)", typeof S.hp === "number" && S.hp >= 100 ? `<span class="chip hpv">Folga</span>` : "")}
     ${item("titulos", "🏆", "Sala dos Títulos", "Títulos por raridade, do Comum ao Mítico")}
-    ${item("portao", "🌀", "Portões", "Um por semana, sem aviso", portao ? `<span class="chip warn">Aberto</span>` : "")}
+    ${item("portao", "🌀", "Portões", "Um por semana, sem aviso; e os do Inferno e do Trono", portao ? `<span class="chip warn">Aberto</span>` : "")}
     ${item("impulso", "⚡", "Impulso", "Bateu a vontade? Um desafio na hora")}
     ${item("relatorio", "📊", "Relatório semanal", "A sua semana comparada com a anterior")}
     ${item("extras", "🚶", "Atividades extras", "Caminhada, bike, esporte... somam no gasto do dia", S.tracking ? `<span class="chip warn">Ao vivo</span>` : "")}
@@ -56,7 +57,7 @@ views.medidas = arg => {
         <div class="field grow"><label for="da">Abdômen (cm)</label><input id="da" name="abdomen" inputmode="decimal" value="${d.abdomen ?? ""}"></div></div>
         <div class="field"><label for="dd">Data</label><input id="dd" type="date" name="data" value="${today()}" max="${today()}"></div>
         <button class="btn primary block">Salvar</button></form>
-        <p class="small muted">Meça sempre no mesmo horário, de preferência ao acordar. Registrar os dois hoje vale +${R.medidasXp} XP.</p>`)}
+        <p class="small muted">Meça sempre no mesmo horário, de preferência ao acordar. Registrar os dois hoje vale +${R.medidasXp} XP (e a Condição de ontem, mais +${R.condicaoXp}).</p>`)}
       ${panel("Últimos registros", hist.length ? `<table class="t"><tr><th>Data</th><th>Peso</th><th>Abdômen</th></tr>
         ${hist.map(k => `<tr><td>${fmtDate(k)}</td><td class="num">${S.days[k].peso ? fmt(S.days[k].peso, 1) + " kg" : "—"}</td><td class="num">${S.days[k].abdomen ? fmt(S.days[k].abdomen, 1) + " cm" : "—"}</td></tr>`).join("")}</table>`
         : `<p class="muted">Nenhum registro ainda.</p>`)}</div>`;

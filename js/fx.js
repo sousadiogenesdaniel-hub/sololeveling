@@ -249,3 +249,29 @@ export function extracaoFx({ grau, arte, nome, sub, cor, faixa = "", palavra = "
     <div class="ex-placa">${faixa ? `<div class="ex-faixa">${faixa}</div>` : ""}<div class="ex-nome">${nome}</div><div class="ex-sub">${sub}</div></div>
     <div class="ex-toque">toque para continuar</div></div>`, (T.dur + 3) * 1000);
 }
+
+// ---- Arsenal -----------------------------------------------------------------------------
+// Som de cada item (sintetizado): o tipo dá o timbre e a posição no catálogo dá a nota, então cada um soa diferente.
+// arma = corte metálico; livro = acorde baixo com brilho; anel = sino; manto = sopro grave; Lendário = impacto + acorde.
+export function playItem(it, i = 0) {
+  const ctx = soundOn() && audio(); if (!ctx) return;
+  const base = 196 * 2 ** ((i % 12) / 12); // uma nota diferente por item
+  if (it.slot === "arma") { noise(ctx, 0, .25, .25); tone(ctx, { f: base * 4, t: .08, d: .5, type: "sine", v: .1, slide: base * 4.2 }); tone(ctx, { f: base * 6, t: .1, d: .35, type: "sine", v: .05 }); }
+  if (it.slot === "livro") { [1, 1.25, 1.5].forEach((m, k) => tone(ctx, { f: base * m, t: k * .06, d: 1, v: .07 })); [4, 5, 6].forEach((m, k) => tone(ctx, { f: base * m, t: .35 + k * .1, d: .5, type: "sine", v: .03 })); }
+  if (it.slot === "anel") { tone(ctx, { f: base * 4, d: 1.4, type: "sine", v: .12 }); tone(ctx, { f: base * 4 * 2.76, d: .9, type: "sine", v: .04 }); tone(ctx, { f: base * 6, t: .2, d: 1, type: "sine", v: .05 }); }
+  if (it.slot === "manto") { noise(ctx, 0, .8, .18); tone(ctx, { f: base / 2, d: 1, type: "sine", v: .15, slide: base / 3 }); }
+  if (it.rar === "lendario") { tone(ctx, { f: 65, t: .05, d: 1.2, type: "sine", v: .3, slide: 40 }); [1, 1.26, 1.5, 2].forEach(m => tone(ctx, { f: base * m, t: .3, d: 1.8, v: .05 })); }
+}
+
+// Item do Arsenal obtido (Portão, mudança de classe)
+export function itemFx({ arte, nome, sub, cor, lendario = false, item = null }) {
+  navigator.vibrate?.(lendario ? [80, 50, 80, 50, 400] : [60, 40, 120]);
+  lendario ? playRank() : item ? playItem(item) : playLevel();
+  return overlay(`fx-item${lendario ? " lendario" : ""}`, `<div class="fx-dark"></div>
+    <div class="fx-type">${typing("[ AVISO DO SISTEMA ] Item obtido para o Arsenal.")}</div>
+    <div class="fx-item-arte" style="--c:${cor}">${arte}</div>
+    <div class="fx-item-nome" style="--c:${cor}">${nome}</div>
+    <div class="fx-item-sub" style="--c:${cor}">${sub.toUpperCase()}</div>
+    ${lendario ? `<div class="fx-burst">${particles(40, cor)}</div>` : ""}
+    <div class="fx-lvl">toque para continuar</div>`, lendario ? 5600 : 4200);
+}

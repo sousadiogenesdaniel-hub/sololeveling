@@ -1,10 +1,11 @@
-// Condição: métricas pessoais de saúde, sem obrigação, sem XP e sem penalidade.
-// O objetivo é só enxergar padrões. Sono e celular na cama se referem à noite anterior;
+// Condição: métricas pessoais de saúde, sem obrigação e sem penalidade. Registrar os 4 itens de um dia (até o dia
+// seguinte) vale +5 XP, seja qual for a resposta. O objetivo é enxergar padrões. Sono e celular na cama se referem à noite anterior;
 // energia e foco, ao próprio dia.
 import { views, actions, refresh } from "../core.js";
 import { S, day, save } from "../store.js";
 import { today, addDays, weekday, fmt, fmtDate, num, esc, WEEKDAYS } from "../util.js";
-import { header, panel, toast } from "../ui.js";
+import { header, panel, toast, showEvents } from "../ui.js";
+import { premiarCondicao, R } from "../game.js";
 import { yearBoard } from "./assiduidade.js";
 
 // Níveis de cada métrica: ok (verde) · warn (amarelo) · bad (vermelho)
@@ -35,7 +36,7 @@ function registro() {
   return panel(isToday ? "Hoje" : fmtDate(d), `
     <div class="row between" style="margin-bottom:10px">
       <button class="btn sm ghost" data-act="condDay" data-n="-1" aria-label="Dia anterior">◀</button>
-      <span class="small muted">${isToday ? "Toque de novo para desmarcar" : "Registrando um dia passado"}</span>
+      <span class="small muted">${isToday ? "Toque de novo para desmarcar" : "Registrando um dia passado"}${c && (S.days[d]?.condXp) ? " · XP recebido" : d >= addDays(today(), -1) ? ` · os 4 itens valem +${R.condicaoXp} XP` : ""}</span>
       <button class="btn sm ghost" data-act="condDay" data-n="1" ${isToday ? "disabled" : ""} aria-label="Próximo dia">▶</button></div>
     <div class="field"><label for="cd-sono">Sono da noite passada (horas)</label>
       <div class="row"><input id="cd-sono" inputmode="decimal" placeholder="ex.: 7,5" value="${c.sono != null ? String(c.sono).replace(".", ",") : ""}" data-chg="setSono" style="max-width:110px">
@@ -50,7 +51,9 @@ function setCond(campo, v) {
   const d = day(curDate()), c = (d.cond ||= {});
   if (v === null || c[campo] === v) delete c[campo]; else c[campo] = v;
   if (!Object.keys(c).length) delete d.cond;
+  const ev = premiarCondicao(curDate());
   save(); refresh();
+  if (ev) ev.levelUp ? showEvents("Condição registrada", [ev]) : toast(`Condição registrada: +${ev.xp} XP`);
 }
 actions.setCond = ({ campo, v }) => setCond(campo, v);
 actions.sonoRapido = ({ h }) => setCond("sono", +h);
@@ -78,7 +81,7 @@ function resumo() {
     <li><span class="grow">Foco</span><span class="num">${dots(conta("foco"))}</span></li>
     <li><span class="grow">Energia</span><span class="num">${dots(conta("energia"))}</span></li>
     <li><span class="grow">Celular na cama</span><span class="num">${c.ok + c.bad ? `${c.bad} de ${c.ok + c.bad} noites` : "—"}</span></li></ul>
-    <p class="small muted" style="margin-bottom:0">${ds.length} dia${ds.length > 1 ? "s" : ""} com registro. Sem XP, sem penalidade: é só para você se entender.</p>`);
+    <p class="small muted" style="margin-bottom:0">${ds.length} dia${ds.length > 1 ? "s" : ""} com registro. Sem penalidade, e o XP não depende das respostas: é para você se entender.</p>`);
 }
 
 // ---- padrões ------------------------------------------------------------------------
@@ -155,4 +158,7 @@ function quadro() {
 }
 actions.condBoard = ({ m }) => { boardMetric = m; refresh(); };
 
-views.condicao = () => `${header()}<div class="stack">${registro()}${resumo()}${padroes()}${quadro()}</div>`;
+views.condicao = arg => {
+  if (arg === "ontem") { viewDate = addDays(today(), -1); history.replaceState(null, "", "#/condicao"); }
+  return `${header()}<div class="stack">${registro()}${resumo()}${padroes()}${quadro()}</div>`;
+};

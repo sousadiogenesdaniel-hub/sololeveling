@@ -18,9 +18,10 @@ export function nativeStatus() {
   try { return JSON.parse(nativo.status()); } catch { return null; }
 }
 
-// Último dia com missão concluída (qualquer trilha)
+// Último dia com missão concluída (qualquer trilha). Um dia de folga conta como cumprido para o Android não
+// achar que foi falta.
 function lastDone() {
-  return Object.keys(S.days).filter(d => S.days[d].workout?.done).sort().pop() || "";
+  return [...Object.keys(S.days).filter(d => S.days[d].workout?.done), ...(S.folgas || [])].sort().pop() || "";
 }
 
 // Informa ao Android o estado do jogo. Chamado a cada atualização da tela (é barato).

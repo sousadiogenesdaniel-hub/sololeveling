@@ -14,12 +14,16 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 | **Missão** | Treino do dia da trilha escolhida, ponto por GPS (entrada e saída), séries para marcar, treino indoor em dia de chuva forte e Teste de Rank. |
 | **Comida** | **Dieta padrão** que entra sozinha em todos os dias, e **Dia**, onde você altera só aquele dia sem mexer na dieta. Busca na tabela TACO e alimentos próprios pelo rótulo. |
 | **Evolução** | Gráficos de peso, abdômen, calorias consumidas × gastas, medidas semanais e treinos por semana. |
-| **Mais** | Atividades extras, Condição (sono, foco, energia e celular na cama, com padrões; sem XP nem penalidade), Medidas (diárias: peso e abdômen; semanais), Fotos (galeria e antes × depois), Loja, Penalidades, Registro do Sistema e Perfil. |
+| **Mais** | Atividades extras, Condição (sono, foco, energia e celular na cama, com padrões; sem penalidade), Medidas (diárias: peso e abdômen; semanais), Fotos (galeria e antes × depois), Loja, Penalidades, Registro do Sistema e Perfil. |
 
 ## Regras do jogo
 
 - **Treino concluído:** +100 XP e +100 Ouro. Todas as séries marcadas: +20 XP.
-- **Medidas do dia:** +10 XP. **Medidas semanais:** +30 XP. **Dia dentro da meta de calorias:** +20 XP.
+- **Medidas do dia** (peso e abdômen): +5 XP. **Condição** de um dia registrada inteira (sono, celular na cama,
+  energia e foco), até o dia seguinte: +5 XP, seja qual for a resposta. **Medidas semanais:** +30 XP. **Dia dentro
+  da meta de calorias:** +20 XP.
+- **Atividades extras do dia** (somadas, inclusive a da missão bônus): a partir de 250 kcal, +10 XP e +1 HP; acima
+  de 700 kcal, mais +20 XP e +2 HP (o HP só com o Manto do Necromante). Editar ou excluir recalcula.
 - **A cada 7 treinos seguidos:** +50 Ouro.
 - **Faltou ao treino:** −150 XP, −50 Ouro e **Zona de Penalidade** (o app fica vermelho e a Loja tranca).
 - **Sair da Zona de Penalidade:** pagar a multa por PIX a cada pessoa do grupo (cadastradas em Penalidades),
@@ -72,8 +76,8 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 ## Recompensas
 
 - **Baú do Sistema:** toda missão concluída abre um baú com animação. Chances base: Comum 70% (10–40 Ouro), Raro 22%
-  (60–100 Ouro ou "XP em dobro na próxima missão"), Épico 7% (150–250 Ouro, 30% de equipamento), Lendário 1%
-  (350–500 Ouro e equipamento). Treino com todas as séries no alvo dá +5% de sorte.
+  (60–100 Ouro ou "XP em dobro na próxima missão"), Épico 7% (150–250 Ouro), Lendário 1% (350–500 Ouro). Treino com
+  todas as séries no alvo dá +5% de sorte. Itens do Arsenal não caem do baú.
 - **Recordes e marcos:** superar o melhor histórico numa prova (Avaliação ou Teste de Rank) mostra "Novo recorde!".
   Contadores da vida inteira (flexões, agachamentos, abdominais, barras, mergulhos, remadas, prancha, km) têm marcos
   (100, 500, 1.000…). **Relatório semanal** ao abrir o app no começo da semana do jogo, comparando com a anterior.
@@ -87,18 +91,38 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   própria (Aprendiz das Sombras → … → Monarca das Sombras). Cada feito deixa um corpo: recorde (Soldado, no máximo 1 por prova a cada 7 dias),
   marco (Soldado ou Elite), Portão (Elite/Cavaleiro) e chefe do Teste de Rank (Comandante, com nome próprio: o do D é o
   Cavaleiro Carmesim). "Levante-se!" extrai a sombra: Soldado 80%, Elite 50%, Cavaleiro 35% por tentativa, 3 tentativas
-  (falhou 3 vezes, vira cinzas); Comandante nunca falha. As sombras ganham XP a cada missão (Soldado → Elite no nível 10,
+  (falhou 3 vezes, vira cinzas); Comandante nunca falha. O **Marechal** (chefe do S) só se levanta com os 6 livros e o
+  Manto no Arsenal: 40% de chance (+ pontos do livro equipado), +20% a cada falha, nova tentativa 14 dias depois e
+  nunca vira cinzas. As sombras ganham XP a cada missão (Soldado → Elite no nível 10,
   Elite → Cavaleiro no 20). Por missão: +1 Ouro por Soldado e +3 por Cavaleiro (até +40), +1% de sorte no baú por Elite
   (até +10%). **Invocação** de um Comandante 1 vez por semana (ex.: Cavaleiro Carmesim = baú da missão de hoje no mínimo
-  Raro). Nada disso alivia penalidade.
+  Raro). Com o Anel do Domínio equipado, a invocação da semana pode chamar todos os seus Comandantes de uma vez. Nada
+  disso alivia penalidade.
 - **Visual por classe e rank:** o losango do rank tem a cor do rank (E cinza, D verde, C azul, B roxo, A vermelho,
   S dourado). Humano usa o azul de sempre; o Necromante tem fundo preto-arroxeado com fumaça e destaque em roxos do D
   (claro) ao A (roxo imperial com brilho); no S, preto e dourado. A Zona de Penalidade (vermelha) vence tudo. A
   extração de cada grau tem a sua animação, mais longa e exclusiva quanto mais alto o grau (Soldado ~3 s, Marechal
   ~9 s com mensagem do Sistema, asas, coroa e clarão dourado).
-- **Equipamentos** (arma, manto, acessório) caem de baús Épicos/Lendários, Portões e chefes; repetido vira Ouro.
+- **Arsenal** (por classe; hoje, o do Necromante): 21 itens com desenho, história e animação e som próprios ao
+  tocar: 9 armas, 6 livros de invocação, 5 anéis e o Manto. Por rank: D 5, C 8, B 4, A 3, S 1. Raridades: 10 Comuns,
+  5 Raros, 4 Épicos e 2 Lendários. Os não obtidos aparecem como silhueta "???" com a raridade; os Lendários têm aura
+  dourada. A ficha mostra poder, onde cai, quando, nível e rank em que caiu e a história. Um de cada espaço equipado:
+  **arma** = +5/10/15/25% de Ouro (missões, Portões e baús); **anel** = mesma % de XP (missões e Portões); **livro** =
+  +3/5/8/12 pontos na chance de extração; **Manto** = HP. O Manto vem com a classe (rank D); os outros caem só dos
+  Portões, nunca repetidos, em qualquer rank igual ou maior que o do item: Portão comum dá Comum (30%), de Emergência
+  Comum ou Raro (40%), Vermelho Raro ou Épico (50%). Com item, metade das vezes vem só ele, sem baú. Os itens
+  provisórios de antes viraram Ouro.
+- **HP e dia de folga:** o Manto guarda HP: +1 por missão, por Portão vencido e por dia de atividades com 250 kcal
+  (+2 acima de 700); uma falta tira 25. Guarda até 100. Com 100 HP, troque por um dia de folga: sem missão e sem
+  penalidade, só no próprio dia e antes de cumprir a missão (nunca apaga uma falta).
+- **Portões nomeados:** o **Portão do Inferno** (abre no rank A, dá o Grimório da Noite Eterna, o 6º livro) e o
+  **Portão do Trono** (abre no S, dá o Anel do Domínio). Avisam ao abrir e dão 7 dias para escolher o dia. Desafio:
+  todas as provas da fase a 110–120% do último máximo, em até 2 séries somadas (sem chegar à meta do próximo teste),
+  100 burpees, 200 afundos, 21 km de corrida e 40 km de bike pelo GPS do app; umas 4 h ou mais. No dia, quem entra
+  não deve a missão diária. Vencer: o item Lendário, +1000 XP e +500 Ouro. 3 chances por rank (a próxima abre 2 a 6
+  semanas depois); gastou as 3, volta no rank seguinte; no S, 3 meses depois. Nunca some.
 - **Portões:** um por semana, num dia sorteado e sem aviso, com desafio calculado pelos máximos (contra o relógio,
-  circuito ou resistência) e 48 h para entrar. Normal (73%, opcional: +100 XP, baú Épico+, corpo e 25% de item),
+  circuito ou resistência) e 48 h para entrar. Normal (73%, opcional: +100 XP, baú Épico+, corpo e chance de item),
   Vermelho (15%, mais difícil; depois de entrar, sair ou estourar o tempo custa 50 XP) e de Emergência (12%,
   obrigatório: ignorar ou falhar custa 150 XP e 50 Ouro, sem Zona de Penalidade). Nunca na Zona de Penalidade nem
   colado num Teste de Rank. Não substitui a missão do dia.
@@ -110,7 +134,7 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   saldo, não libera. A tela do bloqueio oferece "Vencer o impulso" no lugar de pagar. Depois das 5h, abrir O Sistema
   pergunta se quer liberar a manhã. As cobranças entram no Registro na próxima abertura do app. Na Zona de
   Penalidade vale o bloqueio total. Desligar leva 24 h.
-- **Card de conquista** para compartilhar no WhatsApp (rank, recorde, título, sombra, Portão, relatório). No app
+- **Card de conquista** para compartilhar no WhatsApp (rank, recorde, título, sombra, item do Arsenal, Portão, relatório). No app
   Android precisa da versão 1.7.
 
 ## Como o treino é verificado

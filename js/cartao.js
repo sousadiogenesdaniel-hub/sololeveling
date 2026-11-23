@@ -36,6 +36,8 @@ function conteudo(tipo, d) {
       texto: `Conquistei o título "${d.nome}" (${RAR[d.rar].nome}) no O Sistema.` };
     case "sombra": return { cor: d.cor || "#b58cff", topo: "SOMBRA EXTRAÍDA", titulo: d.nome, linhas: [d.grau], arte: d.arte,
       texto: `Levante-se. ${d.nome} agora faz parte do meu exército.` };
+    case "item": return { cor: RAR[d.rar].cor, topo: "ITEM DO ARSENAL", titulo: d.nome, linhas: [`${d.tipo} · ${RAR[d.rar].nome}`.toUpperCase()], arte: d.arte, quadrada: true,
+      texto: `${d.nome} (${RAR[d.rar].nome}) agora está no meu Arsenal.` };
     case "portao": return { cor: d.cor, topo: "PORTÃO VENCIDO", titulo: d.nome, linhas: [`Rank ${d.rank}`, d.tempo ? `${d.tempo} min` : ""],
       texto: `Venci o ${d.nome} (rank ${d.rank}) no O Sistema.` };
     default: return { cor: "#3fb8ff", topo: "RELATÓRIO SEMANAL", titulo: `${d.missoes}/${d.cobradas} missões`, linhas: [`+${d.xp} XP`, `Nível ${d.nivelIni} → ${d.nivelFim}`],
@@ -60,7 +62,7 @@ export async function gerarCard(tipo, d) {
   x.shadowBlur = 0; x.fillStyle = "#bcd4ff"; x.font = "700 46px Rajdhani, 'Segoe UI', sans-serif";
   x.fillText(c.topo, W / 2, 250);
   let y = 330;
-  if (c.arte) { const img = await svgImg(c.arte); if (img) { x.drawImage(img, W / 2 - 200, y, 400, 480); y += 520; } }
+  if (c.arte) { const img = await svgImg(c.arte), h = c.quadrada ? 400 : 480; if (img) { x.drawImage(img, W / 2 - 200, y, 400, h); y += h + 40; } }
   else if (tipo === "rank") { // losango do rank
     x.save(); x.translate(W / 2, y + 230); x.rotate(Math.PI / 4); x.strokeStyle = c.cor; x.lineWidth = 12; x.shadowColor = c.cor; x.shadowBlur = 50;
     x.strokeRect(-160, -160, 320, 320); x.restore();

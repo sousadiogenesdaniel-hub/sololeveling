@@ -9,8 +9,24 @@ import { header, panel, modal, closeModal, toast, confirmBox, showEvents } from 
 import { checarMarcos, checarConquistas } from "../conquistas.js";
 import { mostrarTitulos } from "./recompensas-ui.js";
 import { tmb, weightOn, grant, extrasKcal, BONUS, gpsBonusStatus, checkGpsBonus, bonusWeek, weekStart, weekEnd } from "../game.js";
+import { mudarHp } from "../premios.js";
 
-export const EXTRA_XP = 10; // uma vez por dia, só pelo hábito de se mexer
+// Recompensa das atividades do dia (somadas, inclusive a da missão bônus): a partir de 250 kcal, +10 XP e +1 HP;
+// acima de 700 kcal, mais +20 XP e +2 HP. O HP só vale para quem tem o Manto do Necromante. Recalcula ao salvar,
+// editar ou excluir: se o total cair abaixo da faixa, o que foi dado volta.
+export const ATIV = [{ kcal: 250, xp: 10, hp: 1 }, { kcal: 700, xp: 20, hp: 2, acima: true }];
+const faixa = kcal => ATIV.filter(f => f.acima ? kcal > f.kcal : kcal >= f.kcal).length;
+export function premiarAtividades(date) {
+  const dd = day(date), kcal = extrasKcal(date), nova = faixa(kcal);
+  const antes = dd.ativFaixa ?? (dd.extraXp ? 1 : 0); // antes da regra das 250 kcal, a 1ª atividade do dia dava +10 XP
+  dd.ativFaixa = nova;
+  const ev = [];
+  for (let i = antes; i < nova; i++) { const f = ATIV[i];
+    ev.push({ ...grant(f.xp, 0, `Atividades do dia: ${i ? "mais de" : "pelo menos"} ${f.kcal} kcal`, date), hp: mudarHp(f.hp) }); }
+  for (let i = antes; i > nova; i--) { const f = ATIV[i - 1];
+    ev.push({ ...grant(-f.xp, 0, `Atividades do dia abaixo de ${f.kcal} kcal`, date), hp: mudarHp(-f.hp) }); }
+  return ev;
+}
 
 const DIST = ["dist", "Distância (km)"], TEMPO = ["tempo", "Tempo (min)"], ELEV = ["elev", "Subida acumulada (m)"];
 // met: [leve, moderada, intensa], usado quando não há distância
@@ -82,7 +98,7 @@ views.extras = () => {
   return `${header()}<div class="stack">
     ${tracking}
     ${panel("Atividades extras", `<p class="small muted" style="margin-top:0">O que você fez além da missão diária. As calorias entram no gasto do dia (Início e Evolução).
-      A primeira atividade de cada dia vale +${EXTRA_XP} XP. Não substitui a missão.</p>
+      Somando <b>${ATIV[0].kcal} kcal</b> no dia: +${ATIV[0].xp} XP (e +${ATIV[0].hp} HP com o Manto). Acima de <b>${ATIV[1].kcal} kcal</b>: mais +${ATIV[1].xp} XP e +${ATIV[1].hp} HP. Não substitui a missão.</p>
       <button class="btn primary block" data-act="newExtra">+ Registrar atividade</button>
       ${tr ? "" : `<button class="btn block" style="margin-top:8px" data-act="startTrack">📍 Rastrear agora com GPS</button>`}`)}
     ${bonusPanel()}
@@ -141,10 +157,11 @@ function form({ date = today(), tipo = "caminhada", dados = {}, intensidade = "m
     if (d.tempo > 600 || (d.dist ?? 0) > 300 || (d.elev ?? 0) > 5000) return toast("Algum valor está fora do esperado.");
     const est = estimate(f.tipo.value, d, f.intensidade.value, date);
     const rec = { id: id || uid(), tipo: f.tipo.value, dados: d, intensidade: f.intensidade.value, ...est, ...(gps ? { gps } : {}) };
-    if (id) removeExtra(dateOf(id), id);
+    const velha = id ? dateOf(id) : null;
+    if (velha) removeExtra(velha, id);
     const dd = day(date); (dd.extras ??= []).push(rec);
-    const ev = [];
-    if (!dd.extraXp) { dd.extraXp = true; ev.push(grant(EXTRA_XP, 0, "Atividade extra registrada", date)); }
+    const ev = premiarAtividades(date);
+    if (velha && velha !== date) ev.push(...premiarAtividades(velha));
     const bonus = checkGpsBonus(date); if (bonus) ev.push(bonus);
     checarMarcos(); const titulos = checarConquistas(); // km somados: marcos e títulos
     save(); closeModal(); refresh();
@@ -154,7 +171,8 @@ function form({ date = today(), tipo = "caminhada", dados = {}, intensidade = "m
   };
   if (id) $("#xdel", o).onclick = async () => {
     if (!await confirmBox("Excluir atividade", "Ela sai do gasto calórico do dia.", "Excluir")) return;
-    removeExtra(date, id); save(); refresh();
+    removeExtra(date, id); const ev = premiarAtividades(date); save(); refresh();
+    if (ev.length) showEvents("Atividade excluída", ev);
   };
 }
 

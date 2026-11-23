@@ -59,6 +59,7 @@ export function showEvents(titulo, events, extra = "") {
     const parts = [];
     if (e.xp) parts.push(`<b class="${e.xp > 0 ? "ok" : "bad"}">${e.xp > 0 ? "+" : ""}${e.xp} XP</b>`);
     if (e.gold) parts.push(`<b class="${e.gold > 0 ? "gold" : "bad"}">${e.gold > 0 ? "+" : ""}${e.gold} Ouro</b>`);
+    if (e.hp) parts.push(`<b class="hpv">${e.hp > 0 ? "+" : ""}${e.hp} HP</b>`);
     return `<li><span class="grow" style="text-align:left">${esc(e.motivo)}</span><span class="num">${parts.join(" ")}</span></li>`;
   }).join("");
   const up = events.filter(e => e.levelUp).pop(), down = events.filter(e => e.levelDown).pop();

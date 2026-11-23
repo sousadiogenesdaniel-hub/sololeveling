@@ -3,24 +3,25 @@ import { S, save } from "./store.js";
 import { today } from "./util.js";
 import { grant, R } from "./game.js";
 import { pr } from "./tracks.js";
-import { abrirBau, bonus } from "./premios.js";
-import { crescerSombras, invocacaoHoje, necromante, COMANDANTES } from "./sombras.js";
+import { abrirBau, bonus, bonusEquip, eventoHp, HP } from "./premios.js";
+import { crescerSombras, invocacaoHoje, invocado, necromante, COMANDANTES } from "./sombras.js";
 import { checarMarcos, checarConquistas } from "./conquistas.js";
 
-// Depois de completeWorkout: bênçãos, invocação, Ouro do exército e equipamento, crescimento das sombras,
-// marcos, títulos e o Baú do Sistema (sorteado agora; a animação só revela).
+// Depois de completeWorkout: bênçãos, invocação, Ouro do exército, bônus do Arsenal (arma e anel), HP do Manto,
+// crescimento das sombras, marcos, títulos e o Baú do Sistema (sorteado agora; a animação só revela).
 export function posMissao(w, date = today()) {
   const ev = [], linhas = [];
   if (S.buffs?.xpDobro) { ev.push(grant(R.treinoXp, 0, "Bênção do baú: XP em dobro")); delete S.buffs.xpDobro; }
   const inv = invocacaoHoje();
-  if (inv?.cmd === "C") ev.push(grant(R.treinoXp, 0, `Invocação de ${COMANDANTES.C.nome}: XP em dobro`));
+  if (invocado("C")) ev.push(grant(R.treinoXp, 0, `Invocação de ${COMANDANTES.C.nome}: XP em dobro`));
   const b = bonus();
   if (b.ouroSombras) ev.push(grant(0, b.ouroSombras, "O Exército das Sombras trabalhou por você"));
-  if (b.ouro) ev.push(grant(0, b.ouro, "Bônus dos equipamentos"));
+  ev.push(...bonusEquip(R.treinoXp + (w.full ? R.completoXp : 0), R.treinoOuro, "na missão", date));
+  const hp = eventoHp(HP.missao, "Manto do Necromante: missão cumprida"); if (hp) ev.push(hp);
   if (necromante() && S.sombras?.length) linhas.push(`Suas ${S.sombras.length} sombras ganharam experiência`);
   linhas.push(...crescerSombras());
-  const minimo = inv?.cmd === "S" ? "epico" : inv?.cmd === "D" ? "raro" : "comum";
-  const bau = abrirBau({ sorte: b.sorteTotal + (w.hit ? 5 : 0), minimo, ouroX: inv?.cmd === "B" ? 2 : 1 });
+  const minimo = invocado("S") ? "epico" : invocado("D") ? "raro" : "comum";
+  const bau = abrirBau({ sorte: b.sorteTotal + (w.hit ? 5 : 0), minimo, ouroX: invocado("B") ? 2 : 1 });
   S.days[date].bau = { raridade: bau.raridade, premios: bau.premios, aberto: false, ...(inv ? { invocacao: inv.cmd } : {}) };
   const marcos = checarMarcos();
   const titulos = checarConquistas();
@@ -61,7 +62,7 @@ export function vencerImpulso() {
   if (!a || (Date.now() - a.inicio) / 1000 < a.seg) return null;
   delete im.atual;
   im.total++; im.dias[today()] = (im.dias[today()] || 0) + 1;
-  const ev = im.dias[today()] <= IMPULSO.xpPorDia ? [grant(IMPULSO.xp + bonus().impulso, 0, "Impulso vencido")] : [];
+  const ev = im.dias[today()] <= IMPULSO.xpPorDia ? [grant(IMPULSO.xp, 0, "Impulso vencido")] : [];
   const titulos = checarConquistas();
   save();
   return { ev, total: im.total, titulos };

@@ -3,14 +3,15 @@ import { go, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { today, esc, fmt, iso } from "../util.js";
 import { aviso, modal, closeModal, toast } from "../ui.js";
-import { celebrate, bauFx, recordeFx, tituloFx, portaoFx } from "../fx.js";
+import { celebrate, bauFx, recordeFx, tituloFx, portaoFx, itemFx } from "../fx.js";
+import { arteItem } from "../arte-itens.js";
 import { levelInfo, grant } from "../game.js";
-import { RAR } from "../premios.js";
+import { RAR, itemBase, migrarArsenal, possui, HP } from "../premios.js";
 import { CLASSES, escolherClasse, precisaEscolherClasse, corpos } from "../sombras.js";
 import { checarConquistas, relatorioPendente } from "../conquistas.js";
 import { recordesNaoVistos } from "../feitos.js";
 import { bauPendente, marcarBauAberto, iniciarRecompensas } from "../recompensas.js";
-import { atualizarPortoes, TIPOS } from "../portoes.js";
+import { atualizarPortoes, TIPOS, atualizarNomeados, NOMEADOS, NOM } from "../portoes.js";
 import { botaoCompartilhar } from "../cartao.js";
 import { nativo, temToque, toqueStatus, toqueCobrancas, syncNative, conferirAtualizacao, atualizacao } from "../native.js";
 
@@ -56,6 +57,7 @@ export const linhaEv = e => {
   const parts = [];
   if (e.xp) parts.push(`<b class="${e.xp > 0 ? "ok" : "bad"}">${e.xp > 0 ? "+" : ""}${e.xp} XP</b>`);
   if (e.gold) parts.push(`<b class="${e.gold > 0 ? "gold" : "bad"}">${e.gold > 0 ? "+" : ""}${e.gold} Ouro</b>`);
+  if (e.hp) parts.push(`<b class="hpv">${e.hp > 0 ? "+" : ""}${e.hp} HP</b>`);
   return `<li><span class="grow" style="text-align:left">${esc(e.motivo)}</span><span class="num">${parts.join(" ")}</span></li>`;
 };
 const linhaTxt = t => `<li><span class="grow" style="text-align:left">${esc(t)}</span></li>`;
@@ -67,7 +69,7 @@ export async function telaMissaoConcluida(events, pos) {
   const li = levelInfo();
   const corposNovos = pos.marcos.length;
   await aviso("Missão diária concluída", `<p class="small muted" style="margin:0">[ O Sistema reconhece o seu esforço ]</p>
-    <ul class="list">${todos.filter(e => e.xp || e.gold || e.motivo).map(linhaEv).join("")}
+    <ul class="list">${todos.filter(e => e.xp || e.gold || e.hp || e.motivo).map(linhaEv).join("")}
       ${pos.linhas.map(linhaTxt).join("")}${pos.marcos.map(m => linhaTxt(`Marco: ${m.texto}`)).join("")}</ul>
     <p class="small muted">Nível ${li.level} · ${fmt(li.into)} / ${fmt(li.need)} XP${corposNovos ? ` · ${corposNovos} corpo${corposNovos > 1 ? "s" : ""} novo${corposNovos > 1 ? "s" : ""} esperando no Exército` : ""}</p>`,
     { botao: "Abrir o Baú do Sistema" });
@@ -123,9 +125,11 @@ export function escolhaDeClasse() {
       if (!escolherClasse(b.dataset.classe)) return;
       save(); closeModal();
       await mostrarTitulos(checarConquistas());
-      const n = corpos().length;
+      const n = corpos().length, manto = itemBase("manto-necromante");
+      await itemFx({ arte: arteItem(manto, { tam: 260 }), nome: manto.nome, cor: RAR[manto.rar].cor, sub: "Manto · Raro", item: manto });
       await aviso("Você agora é um Necromante", `<p>Os seus feitos deixaram <b>${n} corpo${n === 1 ? "" : "s"}</b> esperando. Diga "Levante-se" e forme o seu exército.</p>
-        <p class="small muted">Ganhou também o <b>Manto do Necromante</b> (+10% de chance de extração).</p>`, { botao: "Ir para o Exército" });
+        <p class="small muted">O <b>Manto do Necromante</b> é a primeira peça do seu Arsenal: ele guarda HP (+1 por missão), e ${HP.folga} HP valem um dia de folga.
+        As outras 20 peças caem dos Portões.</p>`, { botao: "Ir para o Exército" });
       save(); go("exercito");
     });
   });
@@ -138,13 +142,29 @@ export async function mostrarClasseSePreciso() {
 // Portão que acabou de abrir e a mudança de classe pendente.
 export async function avisosDoSistema() {
   iniciarRecompensas();
+  const mig = migrarArsenal(); save();
   const antes = !!atualizacao;
   const atual = nativo ? !!(await conferirAtualizacao()) : false;
   const { eventos, abriu } = atualizarPortoes();
+  const nomeados = atualizarNomeados();
   save();
   const rel = relatorioPendente(); save();
   const toque = await toqueDeRecolher();
-  const mostrou = !!(toque || eventos.length || rel || abriu || precisaEscolherClasse() || atual !== antes);
+  const arsenal = mig && (mig.ouro || possui("manto-necromante"));
+  const mostrou = !!(toque || eventos.length || rel || abriu || nomeados.length || arsenal || precisaEscolherClasse() || atual !== antes);
+  if (arsenal) {
+    if (mig.ev) await celebrate([mig.ev]);
+    await aviso("O Arsenal chegou", `${possui("manto-necromante") ? `<p>São <b>21 peças do Necromante</b> para colecionar: 9 armas, 6 livros de invocação, 5 anéis e o seu Manto. Elas caem dos Portões, nunca repetidas.</p>
+      <p>O seu <b>Manto</b> agora guarda <b class="hpv">HP</b>: +1 por missão, por Portão vencido e por dia de atividades com 250 kcal. Com ${HP.folga} HP, troque por um dia de folga.</p>
+      <p class="small muted">O Marechal só se levanta com os 6 livros e o Manto no Arsenal.</p>` : ""}
+      ${mig.ouro ? `<p class="small">Os ${mig.velhos} itens provisórios saíram e viraram <b class="gold">+${mig.ouro} Ouro</b>.</p>` : ""}`, { botao: "Abrir o Arsenal" });
+  }
+  for (const k of nomeados) {
+    const N = NOMEADOS[k];
+    await portaoFx(N.nome, N.cor, `Escolha o dia em até ${NOM.escolher} dias · toque para continuar`);
+    await aviso(N.nome, `<p>Abriu. Você tem <b>${NOM.escolher} dias</b> para escolher o dia: são umas 4 horas ou mais, com 21 km de corrida e 40 km de bike pelo GPS.</p>
+      <a class="btn primary block" href="#/portao" data-close>Ver o desafio e escolher o dia</a>`, { botao: "Depois" });
+  }
   if (eventos.length) await aviso("Portão", `<ul class="list">${eventos.map(linhaEv).join("")}</ul>`);
   if (rel) {
     await aviso("Relatório semanal do Sistema", `<p>Semana de ${fmtD(rel.ws)} a ${fmtD(rel.we)}</p>

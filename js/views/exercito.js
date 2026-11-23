@@ -1,13 +1,13 @@
-// Tela do Exército das Sombras (Necromante) e dos Equipamentos.
+// Tela do Exército das Sombras (Necromante). O equipamento fica no Arsenal.
 import { views, actions, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { esc, fmt, fmtDate, addDays, today } from "../util.js";
 import { header, panel, toast, confirmBox, aviso } from "../ui.js";
 import { extracaoFx, falhaFx } from "../fx.js";
 import { weekStart } from "../game.js";
-import { RAR, SLOTS, ITENS, itemBase, inventario, equipados, equipar, efeitoTxt, bonus } from "../premios.js";
+import { RAR, SLOTS, itemBase, equipados, efeitoTxt, bonus, arsenalMarechal } from "../premios.js";
 import { necromante, precisaEscolherClasse, classeAtual, sombras, corpos, GRAU, COMANDANTES, arteSombra, nomeSombra, nivelSombra, poderSombra,
-  poderTotal, levantar, chanceExtracao, invocar, podeInvocar, invocouNaSemana, invocacaoHoje } from "../sombras.js";
+  poderTotal, levantar, chanceExtracao, invocar, podeInvocar, invocouNaSemana, invocacaoHoje, statusMarechal, podeInvocarTodos } from "../sombras.js";
 import { checarConquistas } from "../conquistas.js";
 import { mostrarTitulos, escolhaDeClasse, listaClasses } from "./recompensas-ui.js";
 import { botaoCompartilhar } from "../cartao.js";
@@ -16,17 +16,11 @@ const RANKS = ["D", "C", "B", "A", "S"];
 const pct = v => `${Math.round(v * 100)}%`;
 
 function equipamentoPanel() {
-  const eq = equipados(), inv = inventario();
-  const slot = ([k, nome]) => {
-    const b = eq[k] && itemBase(eq[k]);
-    return `<li><span class="small muted" style="width:5.5em">${nome}</span><span class="grow">${b ? `<b style="color:${RAR[b.rar].cor}">${esc(b.nome)}</b><br><span class="small muted">${efeitoTxt(b.ef)}</span>` : `<span class="muted">vazio</span>`}</span></li>`;
-  };
-  const outros = inv.map(i => itemBase(i.base)).filter(b => b && eq[b.slot] !== b.id);
-  return panel("Equipamento", `<ul class="list">${Object.entries(SLOTS).map(slot).join("")}</ul>
-    ${outros.length ? `<h3 style="margin-top:10px">Inventário</h3><ul class="list">${outros.map(b => `<li><span class="grow"><b style="color:${RAR[b.rar].cor}">${esc(b.nome)}</b>
-      <span class="raro-chip" style="color:${RAR[b.rar].cor}">${RAR[b.rar].nome}</span><br><span class="small muted">${SLOTS[b.slot]} · ${efeitoTxt(b.ef)}</span></span>
-      <button class="btn sm" data-act="equipar" data-id="${b.id}">Equipar</button></li>`).join("")}</ul>` : ""}
-    <p class="small muted" style="margin-bottom:0">Equipamentos caem de baús Épicos e Lendários, dos Portões e dos chefes dos Testes de Rank (${inv.length} de ${ITENS.length} encontrados). Repetido vira Ouro.</p>`);
+  const eq = equipados(), m = arsenalMarechal();
+  return panel("Equipamento", `<ul class="list small">${Object.entries(SLOTS).map(([k, nome]) => { const b = eq[k] && itemBase(eq[k]);
+      return `<li><span class="muted" style="width:4.5em">${nome}</span><span class="grow">${b ? `<b style="color:${RAR[b.rar].cor}">${esc(b.nome)}</b> · <span class="muted">${efeitoTxt(b)}</span>` : `<span class="muted">vazio</span>`}</span></li>`; }).join("")}</ul>
+    <p class="small muted">Livros no Arsenal: <b>${m.livros}/6</b>${m.manto ? " · Manto ✓" : ""}. O Marechal só se levanta com os 6 livros e o Manto.</p>
+    <a class="btn block" href="#/arsenal">Abrir o Arsenal</a>`);
 }
 
 function bloqueado() {
@@ -35,7 +29,7 @@ function bloqueado() {
     <div class="grow"><p style="margin-top:0">Você ainda é <b>Humano</b>. Ao vencer o chefe do rank <b>D</b>, o Sistema libera a <b>mudança de classe</b>. Como <b>Necromante</b>, você forma este exército.</p>
     <p class="small">Seus feitos já estão guardando corpos: <b class="glow">${n}</b> esperando a extração.</p></div></div>
     ${precisaEscolherClasse() ? `<button class="btn primary block" data-act="abrirClasse">Escolher a classe</button>` : ""}
-    <p class="small muted" style="margin-bottom:0">Cada recorde pessoal, marco (1.000 flexões, 100 km…), Portão vencido e chefe de Teste de Rank deixa um corpo. O chefe do rank D vira o seu primeiro Comandante.</p>`)}
+    <p class="small muted" style="margin-bottom:0">Cada recorde pessoal, marco (1.000 flexões, 100 km…), Portão vencido e chefe de Teste de Rank deixa um corpo. O chefe do rank D vira o seu primeiro Comandante. Com a classe vem também o Arsenal.</p>`)}
     ${panel("Classes do rank D", `${listaClasses()}<p class="small muted" style="margin-bottom:0">As classes em construção chegam em atualizações futuras, cada uma com a sua coleção.</p>`)}`;
 }
 
@@ -52,12 +46,13 @@ function invocacaoPanel() {
   const meus = RANKS.filter(r => sombras().some(s => s.cmd === r));
   if (!meus.length) return "";
   const hoje = invocacaoHoje(), usada = invocouNaSemana();
-  return panel("Invocação", `${hoje ? `<p class="ok" style="margin-top:0">Hoje: <b>${COMANDANTES[hoje.cmd].nome}</b> está com você · ${COMANDANTES[hoje.cmd].efeito}.</p>`
+  return panel("Invocação", `${hoje ? `<p class="ok" style="margin-top:0">Hoje: ${hoje.cmd === "todos" ? `<b>todos os seus Comandantes</b> estão com você (Anel do Domínio)` : `<b>${COMANDANTES[hoje.cmd].nome}</b> está com você · ${COMANDANTES[hoje.cmd].efeito}`}.</p>`
       : usada ? `<p class="muted" style="margin-top:0">Invocação desta semana já usada. Volta em ${fmtDate(addDays(weekStart(), 7))}.</p>`
       : `<p style="margin-top:0">Uma invocação por semana: o Comandante empresta o poder dele por um dia.</p>`}
     <ul class="list">${meus.map(r => { const k = COMANDANTES[r];
       return `<li><span class="grow"><b style="color:${k.cor}">${k.nome}</b> · ${k.poder}<br><span class="small muted">${k.efeito}</span></span>
         <button class="btn sm ${podeInvocar(r) ? "primary" : "ghost"}" data-act="invocar" data-r="${r}" ${podeInvocar(r) ? "" : "disabled"}>Invocar</button></li>`; }).join("")}</ul>
+    ${podeInvocarTodos() ? `<button class="btn primary block" style="margin-top:8px" data-act="invocar" data-r="todos">Invocar todos (Anel do Domínio)</button>` : ""}
     ${!usada && meus.some(r => COMANDANTES[r].missao) && S.days[today()]?.workout?.done ? `<p class="small muted" style="margin-bottom:0">Os poderes da missão valem para a missão do dia: invoque antes de concluir.</p>` : ""}`);
 }
 
@@ -75,11 +70,18 @@ function comandantesPanel() {
 
 function corposPanel() {
   const cs = corpos(); if (!cs.length) return "";
+  const linha = c => {
+    if (c.grau !== "marechal") return c.grau === "comandante" ? "extração garantida" : `${pct(chanceExtracao(c))} por tentativa · ${c.tentativas} tentativa${c.tentativas > 1 ? "s" : ""}`;
+    const st = statusMarechal(c);
+    return st.bloqueado ? `precisa dos 6 livros e do Manto no Arsenal (${st.livros}/6 livros${st.manto ? ", Manto ✓" : ""})`
+      : st.espera ? `recuou para as sombras · nova tentativa em ${fmtDate(st.espera)}` : `${pct(st.chance)} de chance · nunca vira cinzas`;
+  };
+  const pode = c => c.grau !== "marechal" || statusMarechal(c).ok;
   return panel("Corpos esperando", `<ul class="list">${cs.map(c => {
-    const nome = c.cmd ? `Chefe do rank ${c.cmd}` : GRAU[c.grau].nome, garantido = c.grau === "comandante" || c.grau === "marechal";
+    const nome = c.cmd ? `Chefe do rank ${c.cmd}` : GRAU[c.grau].nome;
     return `<li><span style="width:46px;flex:none">${arteSombra(c.cmd ? { grau: c.grau, cmd: c.cmd } : { grau: c.grau }, { tam: 46, bloqueado: true })}</span>
-      <span class="grow"><b>${nome}</b><br><span class="small muted">${esc(c.origem)} · ${garantido ? "extração garantida" : `${pct(chanceExtracao(c))} por tentativa · ${c.tentativas} tentativa${c.tentativas > 1 ? "s" : ""}`}</span></span>
-      <button class="btn sm primary" data-act="levantar" data-id="${c.id}">Levante-se</button></li>`;
+      <span class="grow"><b>${nome}</b><br><span class="small muted">${esc(c.origem)} · ${linha(c)}</span></span>
+      <button class="btn sm ${pode(c) ? "primary" : "ghost"}" data-act="levantar" data-id="${c.id}" ${pode(c) ? "" : "disabled"}>Levante-se</button></li>`;
   }).join("")}</ul>`, "", `<span class="chip">${cs.length}</span>`);
 }
 
@@ -93,14 +95,19 @@ function sombrasPanel() {
 
 views.exercito = () => `${header()}<div class="stack">
   ${necromante() ? `${exercitoPanel()}${corposPanel()}${invocacaoPanel()}${comandantesPanel()}${sombrasPanel()}` : bloqueado()}
-  ${equipamentoPanel()}</div>`;
+  ${necromante() ? equipamentoPanel() : ""}</div>`;
 
 actions.abrirClasse = () => escolhaDeClasse();
-actions.equipar = ({ id }) => { equipar(id); save(); refresh(); toast(`${itemBase(id).nome} equipado.`); };
 
 actions.levantar = async ({ id }) => {
   const r = levantar(id); if (!r) return;
   save();
+  if (r.marechal && !r.ok) {
+    if (r.bloqueado) return aviso("O Marechal não responde", `<p>Ele só se levanta para quem tem os <b>6 livros de invocação</b> e o <b>Manto</b> no Arsenal.</p><p class="small muted">Você tem ${r.livros}/6 livros${r.manto ? " e o Manto" : ""}.</p>`);
+    if (r.espera) return toast(`O Marechal recuou para as sombras. Nova tentativa em ${fmtDate(r.espera)}.`, 3500);
+    await falhaFx("O MARECHAL RECUOU", `Nova tentativa em ${fmtDate(r.volta)} · a chance sobe a cada vez`);
+    return refresh();
+  }
   if (r.ok) {
     const s = r.sombra, cor = s.cmd ? COMANDANTES[s.cmd].cor : GRAU[s.grau].cor;
     await extracaoFx({ grau: s.grau, arte: arteSombra(s, { tam: 300 }), nome: esc(nomeSombra(s)), cor,
@@ -114,11 +121,13 @@ actions.levantar = async ({ id }) => {
 };
 
 actions.invocar = async ({ r }) => {
-  const k = COMANDANTES[r];
-  if (!await confirmBox(`Invocar ${k.nome}`, `${k.poder}: ${k.efeito}. Uma invocação por semana.`, "Invocar")) return;
+  const todos = r === "todos", k = todos ? null : COMANDANTES[r];
+  const txt = todos ? `Os poderes de ${sombras().filter(s => s.cmd).map(s => COMANDANTES[s.cmd].nome).join(", ")} valem hoje. Uma invocação por semana.` : `${k.poder}: ${k.efeito}. Uma invocação por semana.`;
+  if (!await confirmBox(todos ? "Invocar todos os Comandantes" : `Invocar ${k.nome}`, txt, "Invocar")) return;
   if (!invocar(r)) return toast("Não dá para invocar agora.");
   save();
-  const s = sombras().find(x => x.cmd === r);
-  await extracaoFx({ grau: s.grau, arte: arteSombra(s, { tam: 300 }), nome: esc(k.nome), sub: k.poder, cor: k.cor, faixa: "INVOCAÇÃO", palavra: "INVOCAÇÃO" });
+  const s = todos ? sombras().filter(x => x.cmd).sort((a, b) => poderSombra(b) - poderSombra(a))[0] : sombras().find(x => x.cmd === r);
+  await extracaoFx({ grau: s.grau, arte: arteSombra(s, { tam: 300 }), nome: todos ? "TODOS OS COMANDANTES" : esc(k.nome), sub: todos ? "Anel do Domínio" : k.poder,
+    cor: todos ? "#ffc94d" : k.cor, faixa: "INVOCAÇÃO", palavra: "INVOCAÇÃO" });
   refresh();
 };

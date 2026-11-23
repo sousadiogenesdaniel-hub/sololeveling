@@ -10,7 +10,6 @@ import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, te
 import { statusList, avaliacaoLiberada, avaliacaoForm, provasHoje, avaliouHoje } from "./avaliacao.js";
 import { posMissao } from "../recompensas.js";
 import { COMANDANTES, arteSombra, derrotarChefe } from "../sombras.js";
-import { RAR } from "../premios.js";
 import { telaMissaoConcluida, mostrarRecordes, mostrarClasseSePreciso } from "./recompensas-ui.js";
 import { botaoCompartilhar } from "../cartao.js";
 
@@ -158,8 +157,9 @@ actions.submitTest = data => {
   const ev = passTest(st.early);
   const ch = derrotarChefe(ph.rank); save();
   const acabou = trackFinished(), prox = currentPhase(), k = COMANDANTES[ph.rank];
-  const chefe = `<p>${ch.corpo.cmd ? `Chefe derrotado: <b style="color:${k.cor}">${k.nome}</b>. O corpo dele aguarda a extração no Exército.` : "Chefe derrotado de novo: um corpo de Cavaleiro aguarda no Exército."}
-    ${ch.item?.item ? `<br>Largou: <b style="color:${RAR[ch.item.item.rar].cor}">${ch.item.item.nome}</b>` : ""}</p>${botaoCompartilhar("rank", { rank: ph.rank, trilha })}`;
+  const chefe = `<p>${ch.corpo.cmd ? `Chefe derrotado: <b style="color:${k.cor}">${k.nome}</b>. ${ch.corpo.grau === "marechal"
+      ? "O corpo dele espera no Exército: só se levanta para quem tiver os 6 livros e o Manto no Arsenal."
+      : "O corpo dele aguarda a extração no Exército."}` : "Chefe derrotado de novo: um corpo de Cavaleiro aguarda no Exército."}</p>${botaoCompartilhar("rank", { rank: ph.rank, trilha })}`;
   showEvents("Meta conquistada", [ev], chefe + (acabou
     ? `<p class="glow">Você concluiu a trilha inteira. O Sistema reconhece um Monarca.</p>`
     : `<p>Rank <b class="glow">${ph.rank}</b>${multi() ? ` na ${currentTrack().nome}` : ""}${media ? " (pela média das duas tentativas)" : ""}. Nova meta revelada: <b class="glow">${prox.nome}</b>, rumo ao rank ${prox.rank}. Os treinos já são os da fase nova.</p>

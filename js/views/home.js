@@ -4,9 +4,10 @@ import { views, actions, refresh } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
 import { header, panel } from "../ui.js";
-import { mealsOf, totals, spent, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToShop, monthDebt, weightOn, weightGoal, cotaKcal, R } from "../game.js";
+import { mealsOf, totals, spent, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToShop, monthDebt, weightOn, weightGoal, cotaKcal, R, condicaoPendente } from "../game.js";
 import { workoutFor, currentTrack } from "../tracks.js";
-import { portaoAberto, TIPOS } from "../portoes.js";
+import { portaoAberto, TIPOS, NOMEADOS, nomeados } from "../portoes.js";
+import { podeFolga, HP } from "../premios.js";
 import { bauPendente } from "../recompensas.js";
 import { abrirBauAnimado } from "./recompensas-ui.js";
 
@@ -18,6 +19,23 @@ function portaoCard() {
     <p class="small muted">${p.status === "ativo" ? "Você está dentro. Volte e conclua antes do tempo acabar."
       : `Fecha em ${fmtDate(p.fecha, { day: "2-digit", month: "2-digit" })} à meia-noite. ${p.tipo === "emergencia" ? "Obrigatório." : "Opcional: só prêmio."}`}</p>
     <a class="btn primary block" href="#/portao">${p.status === "ativo" ? "Voltar ao Portão" : "Ver o Portão"}</a>`, "portao").replace('class="panel portao"', `class="panel portao" style="--pc:${T.cor}"`);
+}
+// Portão do Inferno / do Trono esperando a escolha do dia, ou marcado para hoje
+function nomeadoCard() {
+  const t = today();
+  return Object.entries(NOMEADOS).map(([k, N]) => {
+    const g = nomeados()[k];
+    if (!g || !(g.status === "aberto" || g.status === "ativo" || (g.status === "marcado" && g.dia === t))) return "";
+    const txt = g.status === "aberto" ? `Escolha o dia até ${fmtDate(g.prazo, { day: "2-digit", month: "2-digit" })}.` : g.status === "ativo" ? "Você está dentro: conclua até a meia-noite." : "É hoje. Hoje você não deve a missão diária se entrar.";
+    return panel(N.nome, `<p class="small" style="margin-top:0">${txt}</p><a class="btn primary block" href="#/portao">${g.status === "aberto" ? "Escolher o dia" : "Ir ao Portão"}</a>`, "portao")
+      .replace('class="panel portao"', `class="panel portao" style="--pc:${N.cor}"`);
+  }).join("");
+}
+// 100 HP do Manto: dá para trocar por um dia de folga hoje
+function folgaCard() {
+  if (!podeFolga().ok) return "";
+  return panel("Dia de folga disponível", `<p class="small" style="margin-top:0">O seu Manto chegou a <b class="hpv">${HP.folga} HP</b>. Dá para usar hoje um dia sem missão e sem penalidade, ou guardar para quando precisar.</p>
+    <a class="btn block" href="#/arsenal">Ver no Arsenal</a>`);
 }
 function atualizacaoCard() {
   const a = atualizacao; if (!a) return "";
@@ -97,6 +115,7 @@ function kcalCard() {
 function reminders() {
   const t = today(), d = S.days[t] || {}, items = [];
   if (!d.peso || !d.abdomen) items.push(["Registrar peso e abdômen de hoje", `+${R.medidasXp} XP`, "medidas"]);
+  if (condicaoPendente(addDays(t, -1))) items.push(["Registrar a Condição de ontem", `+${R.condicaoXp} XP`, "condicao/ontem"]);
   const lastW = Object.keys(S.weekly).sort().pop();
   if (!lastW || daysBetween(lastW, t) >= 7) items.push(["Medidas semanais pendentes", `+${R.semanalXp} XP`, "medidas/semanal"]);
   const lastPhoto = S.lastPhoto;
@@ -139,6 +158,6 @@ views.inicio = () => {
   const t = today();
   return `${header()}
     <p class="small muted" style="margin-top:-6px">${WEEKDAYS[new Date(t + "T12:00").getDay()]}, ${fmtDate(t, { day: "numeric", month: "long" })}</p>
-    <div class="stack">${atualizacaoCard()}${penaltyBanner()}${portaoCard()}${bauCard()}${questCard()}${kcalCard()}${reminders()}
+    <div class="stack">${atualizacaoCard()}${penaltyBanner()}${nomeadoCard()}${portaoCard()}${bauCard()}${folgaCard()}${questCard()}${kcalCard()}${reminders()}
       <a class="btn ghost block" href="#/impulso">⚡ Bateu a vontade? Vença um impulso</a>${statusTiles()}</div>`;
 };

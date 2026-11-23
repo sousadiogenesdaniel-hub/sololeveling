@@ -18,6 +18,7 @@ import "./views/avaliacao.js";
 import "./views/exercito.js";
 import "./views/titulos.js";
 import "./views/portao.js";
+import "./views/arsenal.js";
 import "./cartao.js";
 import { avisosDoSistema } from "./views/recompensas-ui.js";
 import { syncNative, keepScreenOn } from "./native.js";

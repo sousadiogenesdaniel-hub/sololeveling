@@ -2,10 +2,10 @@
 // Cada feito real deixa um "corpo" (feitos.js); o Necromante extrai a sombra dele ("Levante-se!").
 // Até o rank D o jogador não tem classe: os corpos ficam esperando. Passar no teste do D = mudança de classe.
 import { S } from "./store.js";
-import { today, uid } from "./util.js";
+import { today, uid, addDays } from "./util.js";
 import { GRAUS, novoCorpo } from "./feitos.js";
 import { weekStart, levelInfo } from "./game.js";
-import { bonus, darItem, itemDoChefe } from "./premios.js";
+import { bonus, darItem, arsenalMarechal, equipado } from "./premios.js";
 
 // Todo mundo começa como Humano; a classe é o prêmio do rank D. Só o Necromante está pronto: as outras
 // estão em construção (cada uma vai ter a sua coleção, como as sombras do Necromante).
@@ -63,32 +63,48 @@ export const poderTotal = () => sombras().reduce((n, s) => n + poderSombra(s), 0
 export const nomeSombra = s => s.cmd ? s.nome : s.grau === "cavaleiro" ? `Cavaleiro ${s.nome}` : `${GRAU[s.grau].nome} ${s.nome}`;
 export const temComandante = cmd => sombras().some(s => s.cmd === cmd) || corpos().some(c => c.cmd === cmd);
 
-// O chefe do Teste de Rank vencido vira corpo de Comandante (garantido) e larga o equipamento dele.
+// O chefe do Teste de Rank vencido vira corpo de Comandante (o do S é o Marechal).
 // Se o comandante daquele rank já é seu (ex.: venceu o D em outra trilha), vira um Cavaleiro.
 export function derrotarChefe(rank) {
   const corpo = temComandante(rank)
     ? novoCorpo({ grau: "cavaleiro", origem: `Chefe do rank ${rank} (de novo)` })
     : novoCorpo({ grau: COMANDANTES[rank]?.grau || "comandante", cmd: rank, origem: `Chefe do rank ${rank}` });
-  const it = itemDoChefe(rank);
-  return { corpo, item: it ? darItem(it.id, `Chefe do rank ${rank}`) : null };
+  return { corpo };
 }
 
 export function escolherClasse(id) {
   const c = CLASSES.find(x => x.id === id);
   if (!c?.ativo || S.classe) return false;
   S.classe = id; S.classeEm = today();
-  if (id === "necromante") darItem("manto-necromante", "Mudança de classe");
+  if (id === "necromante") darItem("manto-necromante", "Mudança de classe (rank D)");
   return true;
 }
 
-// "Levante-se!": tenta extrair a sombra de um corpo. Comandante e Marechal nunca falham.
-// Soldado 80%, Elite 50%, Cavaleiro 35% por tentativa (+ bônus de extração dos equipamentos). 3 tentativas.
+// "Levante-se!": tenta extrair a sombra de um corpo. Comandante nunca falha.
+// Soldado 80%, Elite 50%, Cavaleiro 35% por tentativa (+ pontos de extração do livro equipado). 3 tentativas.
+// O Marechal tem regra própria (statusMarechal): só com os 6 livros e o Manto, pode falhar e nunca vira cinzas.
+export const MARECHAL = { base: .4, porFalha: .2, espera: 14 };
+export function statusMarechal(c) {
+  const a = arsenalMarechal();
+  if (!a.ok) return { bloqueado: true, ...a };
+  if (c.esperaAte && today() < c.esperaAte) return { espera: c.esperaAte };
+  return { ok: true, chance: Math.min(1, MARECHAL.base + bonus().extracao / 100 + MARECHAL.porFalha * (c.falhas || 0)) };
+}
 export function chanceExtracao(c) {
+  if (c.grau === "marechal") return statusMarechal(c).chance ?? 0;
   return Math.min(.95, GRAU[c.grau].chance + bonus().extracao / 100);
 }
 export function levantar(id) {
   const c = corpos().find(x => x.id === id);
   if (!c || !necromante()) return null;
+  if (c.grau === "marechal") {
+    const st = statusMarechal(c);
+    if (!st.ok) return { ok: false, marechal: true, ...st, corpo: c };
+    if (Math.random() >= st.chance) {
+      c.falhas = (c.falhas || 0) + 1; c.esperaAte = addDays(today(), MARECHAL.espera);
+      return { ok: false, marechal: true, volta: c.esperaAte, corpo: c };
+    }
+  }
   if (c.grau === "comandante" || c.grau === "marechal" || Math.random() < chanceExtracao(c)) {
     S.corpos = corpos().filter(x => x !== c);
     const s = { id: uid(), nome: c.cmd ? COMANDANTES[c.cmd].nome : nomeNovo(c.grau), grau: c.grau, cmd: c.cmd || null, origem: c.origem, d: today(), xp: 0 };
@@ -114,7 +130,11 @@ export function crescerSombras(xp = 10) {
 }
 
 // ---- invocação: 1 por semana do jogo -----------------------------------------------------
+// Com o Anel do Domínio equipado, a invocação da semana pode chamar todos os seus Comandantes de uma vez.
 export const invocacaoHoje = () => S.invocacao?.d === today() ? S.invocacao : null;
+export const invocado = cmd => { const inv = invocacaoHoje(); return !!inv && (inv.cmd === cmd || (inv.cmd === "todos" && sombras().some(s => s.cmd === cmd))); };
+export const podeInvocarTodos = () => equipado("anel-dominio") && comandantesSeus().length > 1 && necromante() && !invocouNaSemana()
+  && !(comandantesSeus().some(s => COMANDANTES[s.cmd].missao) && S.days[today()]?.workout?.done);
 export const invocouNaSemana = () => S.invocacao?.semana === weekStart();
 export const comandantesSeus = () => sombras().filter(s => s.cmd);
 export function podeInvocar(cmd) {
@@ -123,10 +143,10 @@ export function podeInvocar(cmd) {
   return !(k.missao && S.days[today()]?.workout?.done); // poder da missão de hoje: só antes de concluir
 }
 export function invocar(cmd) {
-  if (!podeInvocar(cmd)) return null;
+  if (cmd === "todos" ? !podeInvocarTodos() : !podeInvocar(cmd)) return null;
   S.invocacao = { d: today(), semana: weekStart(), cmd };
-  if (cmd === "A") corpos().forEach(c => { c.tentativas++; });
-  return COMANDANTES[cmd];
+  if (invocado("A")) corpos().forEach(c => { c.tentativas++; });
+  return cmd === "todos" ? { nome: "Todos os Comandantes" } : COMANDANTES[cmd];
 }
 
 // ---- arte (SVG desenhado aqui mesmo: silhueta escura, aura e olhos acesos) -----------------

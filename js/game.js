@@ -6,11 +6,13 @@ import { progress, currentPhase, currentTrack, trackFinished, todasConcluidas, e
 export const R = {
   treinoXp: 100, treinoOuro: 100,      // treino do dia concluído
   completoXp: 20,                      // todas as séries marcadas
-  medidasXp: 10,                       // peso + abdômen do dia
+  medidasXp: 5,                        // peso + abdômen do dia
+  condicaoXp: 5,                       // Condição de um dia registrada inteira (até o dia seguinte)
   semanalXp: 30,                       // medidas semanais
   kcalXp: 20,                          // fechou o dia dentro da meta de calorias
   streakOuro: 50,                      // a cada 7 treinos seguidos
   faltaXp: -150, faltaOuro: -50,       // não treinou
+  faltaHp: -25,                        // e tira HP de quem tem o Manto do Necromante
   corrosaoXp: -30,                     // por dia com dívida não comprovada
   testeXp: 500, testeOuro: 300,        // passou no Teste de Rank
   // dieta (avaliada no fechamento do dia, não entra na Zona de Penalidade)
@@ -111,8 +113,22 @@ export function workoutKcal(date, durMin, indoor) {
   return Math.round((met - 1) * (tmb(date) / 24) * (Math.min(durMin, 120) / 60));
 }
 
+// ---- Condição ------------------------------------------------------------------------------
+// Os 4 itens de um dia registrados (sono, celular na cama, energia e foco) valem +5 XP, uma vez por dia, se
+// registrados até o dia seguinte. O XP não depende das respostas: é pelo hábito de registrar.
+export const condicaoCompleta = c => !!c && c.sono != null && !!c.cama && !!c.energia && !!c.foco;
+export const condicaoPendente = d => !!S.profile && d >= (S.profile.criado || d) && !S.days[d]?.condXp && !condicaoCompleta(S.days[d]?.cond);
+export function premiarCondicao(d) {
+  const rec = S.days[d], t = today();
+  if (!rec || rec.condXp || !condicaoCompleta(rec.cond) || d > t || d < addDays(t, -1)) return null;
+  rec.condXp = true;
+  return grant(R.condicaoXp, 0, `Condição de ${d === t ? "hoje" : "ontem"} registrada`, t);
+}
+
 // ---- obrigação de treino ---------------------------------------------------------------
-export const isRestDay = date => weekday(date) === (S.profile?.restDay ?? 0);
+// Dia de folga (comprado com 100 HP do Manto): conta como descanso, sem missão e sem penalidade
+export const isFolga = date => (S.folgas || []).includes(date) || (S.diasNomeados || []).includes(date); // folga ou dia de Portão nomeado
+export const isRestDay = date => weekday(date) === (S.profile?.restDay ?? 0) || isFolga(date);
 export function isObligated(date) {
   const desde = S.trackSince || S.track?.startDate; // vale mesmo no intervalo entre trocar de trilha e escolher outra
   return !!desde && date >= desde && !isRestDay(date) && !todasConcluidas();
@@ -234,7 +250,9 @@ export function processDays() {
     if (isObligated(d) && !rec.workout?.done) {
       S.debts.push({ date: d, serial: makeSerial(d), status: "pendente", pagamentos: [] });
       g.needsWorkout = true; g.streak = 0;
-      report.push({ ...grant(R.faltaXp, R.faltaOuro, `Missão diária FALHOU em ${fmtDate(d)}`, d), falta: true });
+      const ev = { ...grant(R.faltaXp, R.faltaOuro, `Missão diária FALHOU em ${fmtDate(d)}`, d), falta: true };
+      if (typeof S.hp === "number") { const a = S.hp; S.hp = Math.max(0, a + R.faltaHp); ev.hp = S.hp - a; } // falta = dano no HP do Manto
+      report.push(ev);
     }
     const dieta = dietVerdict(d, rec);
     if (dieta) report.push(grant(dieta.xp, dieta.gold, dieta.motivo, d));
