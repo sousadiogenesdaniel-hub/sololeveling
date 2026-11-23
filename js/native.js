@@ -51,6 +51,21 @@ export function nativeTrack(cmd, ...args) {
   try { const r = nativo[cmd](...args); return typeof r === "string" && r.startsWith("{") ? JSON.parse(r) : r; } catch { return null; }
 }
 
+// Versão publicada do app Android (download/versao.json sem cache) × a instalada
+export let atualizacao = null; // { instalada, nova, url } quando há versão nova
+const numVer = v => String(v || "0").split(".").map(n => parseInt(n, 10) || 0);
+const maior = (a, b) => { const x = numVer(a), y = numVer(b); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
+export async function conferirAtualizacao() {
+  const st = nativeStatus(); if (!st?.version) return null;
+  try {
+    const r = await fetch(`download/versao.json?t=${Date.now()}`, { cache: "no-store" }); if (!r.ok) return null;
+    const v = await r.json();
+    // endereço único por versão: o Chrome e o servidor não têm como entregar o arquivo antigo guardado
+    atualizacao = maior(v.versionName, st.version) ? { instalada: st.version, nova: v.versionName, url: `download/o-sistema.apk?v=${v.versionCode}-${(v.sha256 || "").slice(0, 8)}` } : null;
+  } catch { /* sem internet: tenta na próxima */ }
+  return atualizacao;
+}
+
 // Toque de recolher (app Android 1.8+)
 export const temToque = () => typeof nativo?.toqueCobrancas === "function";
 export function toqueStatus() { const st = nativeStatus(); return st?.toque || null; }

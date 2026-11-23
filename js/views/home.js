@@ -1,5 +1,5 @@
 // Início: resumo rápido do dia
-import { nativeStatus } from "../native.js";
+import { nativeStatus, atualizacao } from "../native.js";
 import { views, actions, refresh } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
@@ -18,6 +18,12 @@ function portaoCard() {
     <p class="small muted">${p.status === "ativo" ? "Você está dentro. Volte e conclua antes do tempo acabar."
       : `Fecha em ${fmtDate(p.fecha, { day: "2-digit", month: "2-digit" })} à meia-noite. ${p.tipo === "emergencia" ? "Obrigatório." : "Opcional: só prêmio."}`}</p>
     <a class="btn primary block" href="#/portao">${p.status === "ativo" ? "Voltar ao Portão" : "Ver o Portão"}</a>`, "portao").replace('class="panel portao"', `class="panel portao" style="--pc:${T.cor}"`);
+}
+function atualizacaoCard() {
+  const a = atualizacao; if (!a) return "";
+  return panel("App Android desatualizado", `<p style="margin-top:0">Instalado: <b>${esc(a.instalada)}</b> · disponível: <b class="glow">${esc(a.nova)}</b></p>
+    <a class="btn primary block" href="${a.url}">Baixar a ${esc(a.nova)}</a>
+    <p class="small muted" style="margin-bottom:0">Na lista de downloads, abra o arquivo <b>mais recente</b> (se puder, apague os o-sistema*.apk antigos antes). Ao instalar a versão nova, o Android costuma checar a segurança de novo. Se não checar, provavelmente é o arquivo antigo.</p>`, "alert");
 }
 function bauCard() {
   if (!bauPendente()) return "";
@@ -133,6 +139,6 @@ views.inicio = () => {
   const t = today();
   return `${header()}
     <p class="small muted" style="margin-top:-6px">${WEEKDAYS[new Date(t + "T12:00").getDay()]}, ${fmtDate(t, { day: "numeric", month: "long" })}</p>
-    <div class="stack">${penaltyBanner()}${portaoCard()}${bauCard()}${questCard()}${kcalCard()}${reminders()}
+    <div class="stack">${atualizacaoCard()}${penaltyBanner()}${portaoCard()}${bauCard()}${questCard()}${kcalCard()}${reminders()}
       <a class="btn ghost block" href="#/impulso">⚡ Bateu a vontade? Vença um impulso</a>${statusTiles()}</div>`;
 };

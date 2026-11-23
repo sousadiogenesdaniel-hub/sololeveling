@@ -12,7 +12,7 @@ import { recordesNaoVistos } from "../feitos.js";
 import { bauPendente, marcarBauAberto, iniciarRecompensas } from "../recompensas.js";
 import { atualizarPortoes, TIPOS } from "../portoes.js";
 import { botaoCompartilhar } from "../cartao.js";
-import { nativo, temToque, toqueStatus, toqueCobrancas, syncNative } from "../native.js";
+import { nativo, temToque, toqueStatus, toqueCobrancas, syncNative, conferirAtualizacao, atualizacao } from "../native.js";
 
 // Toque de recolher (20h às 8h, app Android 1.8+): lança no jogo o que foi pago no vigia, apresenta o recurso uma
 // vez e, entre 5h e 8h, pergunta se já quer liberar os apps. Devolve true se mostrou algo.
@@ -138,11 +138,13 @@ export async function mostrarClasseSePreciso() {
 // Portão que acabou de abrir e a mudança de classe pendente.
 export async function avisosDoSistema() {
   iniciarRecompensas();
+  const antes = !!atualizacao;
+  const atual = nativo ? !!(await conferirAtualizacao()) : false;
   const { eventos, abriu } = atualizarPortoes();
   save();
   const rel = relatorioPendente(); save();
   const toque = await toqueDeRecolher();
-  const mostrou = !!(toque || eventos.length || rel || abriu || precisaEscolherClasse());
+  const mostrou = !!(toque || eventos.length || rel || abriu || precisaEscolherClasse() || atual !== antes);
   if (eventos.length) await aviso("Portão", `<ul class="list">${eventos.map(linhaEv).join("")}</ul>`);
   if (rel) {
     await aviso("Relatório semanal do Sistema", `<p>Semana de ${fmtD(rel.ws)} a ${fmtD(rel.we)}</p>
