@@ -42,10 +42,22 @@ Ficaram para depois:
   Comandantes). Dá para mudar qualquer poder depois, inclusive o do Anel: o poder é calculado na hora, então o
   item que você já tem passa a valer a regra nova.
 
-### Desenho único para cada sombra (em conversa)
-O Daniel quer que cada uma das 100 sombras tenha um desenho só dela, "quase uma NFT". A identidade (corpo, arma,
-marcas, cor dos olhos) continua igual quando ela evolui; o grau muda o capacete e a armadura. Ver a conversa antes de
-implementar.
+### Desenho único para cada sombra
+O Daniel quer que cada uma das 100 sombras do Registro tenha um desenho só dela, "quase uma NFT": peça única, com
+número e ficha (sem blockchain). Hoje todas do mesmo grau têm o mesmo desenho.
+- **Proposta do Claude (meio-termo):**
+  - **DNA fixo por sombra**, gerado pelo número: corpo (magro, forte, alto, curvado), arma (lança, espada, machado,
+    adagas, arco, martelo, escudo…), capa ou trapos, cor e formato dos olhos, aura e postura. O mesmo número gera
+    sempre o mesmo desenho.
+  - **Uma marca desenhada à mão para cada nome**, ligada ao significado: Corvo com máscara de bico e penas, Urso largo
+    e pesado, Lince magro com garras, Fumaça com o corpo se desfazendo, Trovão com raios na armadura, Granito, Basalto
+    e Rocha com textura de pedra.
+  - **A identidade fica quando evolui:** o grau só troca o capacete e a armadura (boina da Elite, elmo do Cavaleiro).
+  - **Comandantes e Marechal** desenhados à mão por inteiro (são só 5).
+- **Por que não tudo à mão:** seriam uns 250 desenhos (cada Soldado tem até 3 formas), lento e com estilo variando.
+  Imagens de gerador de imagem o Claude não consegue criar; se o Daniel quiser usar imagens próprias, dá para encaixar.
+- **Próximo passo, quando voltar ao assunto:** esboçar 10 sombras (Soldados, Elites, um Cavaleiro e a evolução de
+  uma delas) para aprovar o estilo antes de fazer as 100.
 
 ### Recompensas: próximos passos
 - **Portões de corrida:** hoje os Portões são de calistenia (peso do corpo). Com a Corrida ativa, poderiam pedir uma
