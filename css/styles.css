@@ -662,3 +662,5 @@ li.ex-ok { animation: exOk .9s ease-out; }
 .dg-info { font-size: .7rem; color: var(--muted); }
 .dg-portal .dg-gira { transform-box: view-box; transform-origin: 50% 50%; animation: arsGira 14s linear infinite; }
 .dg-card:nth-child(2n) .dg-gira { animation-duration: 18s; animation-direction: reverse; }
+.ct-fam { margin-top: 12px; padding: 10px 10px 2px; border: 1px solid var(--line); border-left: 3px solid var(--glow); background: rgba(var(--glow-rgb), .05); }
+.ct-fam .list { margin-top: 6px; }

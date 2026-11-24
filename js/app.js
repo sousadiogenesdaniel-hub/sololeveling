@@ -21,7 +21,6 @@ import "./views/portao.js";
 import "./views/arsenal.js";
 import "./views/porque.js";
 import "./views/dungeons.js";
-import "./views/contadores.js";
 import { missaoAberturaFx } from "./fx.js";
 import { workoutFor } from "./tracks.js";
 import { ritualDoDia } from "./ritual.js";

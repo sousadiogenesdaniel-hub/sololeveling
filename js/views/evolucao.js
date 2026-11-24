@@ -6,6 +6,7 @@ import { header, panel } from "../ui.js";
 import { totals, spent, mealsOf, weightGoal, weightTrend } from "../game.js";
 import { WEEKLY } from "./outros.js";
 import { attendanceBoard } from "./assiduidade.js";
+import { contadoresPanel } from "./contadores.js";
 
 let period = 90, charts = [];
 const PERIODS = [[30, "30 d"], [90, "90 d"], [180, "6 m"], [0, "Tudo"]];
@@ -57,7 +58,6 @@ views.evolucao = () => {
   return `${header()}
     <div class="tabs">${PERIODS.map(([v, n]) => `<button class="btn sm ${period === v ? "on" : ""}" data-act="evoPeriod" data-v="${v}">${n}</button>`).join("")}</div>
     <div class="stack">
-    <a class="btn block" href="#/contadores">🔢 Contadores: quantas flexões, agachamentos… você já fez</a>
     ${panel("Resumo", `<table class="t"><tr><th></th><th>Início</th><th>Atual</th><th>Variação</th><th>Meta</th></tr>
       ${row("Peso", ini, atual, p.metaPeso, p.metaMargem ? `± ${fmt(p.metaMargem)} kg` : "kg")}${row("Abdômen", abdIni, abdAt, p.metaAbdomen, "cm")}</table>`)}
     ${attendanceBoard()}
@@ -66,7 +66,8 @@ views.evolucao = () => {
     ${panel("Abdômen (cm)", box("c-abd"))}
     ${panel("Calorias: consumidas × gastas", box("c-kcal") + `<p class="small muted">Gasto = metabolismo de repouso × 1,2 + treino do dia (estimativa).</p>`)}
     ${panel("Medidas semanais (cm)", box("c-week"))}
-    ${panel("Treinos por semana", box("c-treinos"))}</div>`;
+    ${panel("Treinos por semana", box("c-treinos"))}
+    ${contadoresPanel()}</div>`;
 };
 
 actions.evoPeriod = ({ v }) => { period = +v; refresh(); };

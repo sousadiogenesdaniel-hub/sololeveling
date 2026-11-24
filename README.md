@@ -158,10 +158,9 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   rastreando pelo GPS em Atividades depois de entrar, dentro do tempo da dungeon. A distância vem da corrida mais
   longa dos últimos 60 dias pelo GPS (ou da prova "Correr sem parar", ou 2 km para começar), vezes o fator do tipo
   (Red ×1,3, Emergência ×0,85); o tempo é a distância no seu ritmo × 1,25.
-- **Contadores** (Mais → Contadores, ou em Evolução): quanto você já fez nas missões, por período (sempre, este mês,
-  esta semana): as provas do Teste de Rank (somando os exercícios que treinam cada prova, com o recorde e a meta da
-  fase), os destaques (flexão pike, agachamento búlgaro, abdominal supra), as famílias dos marcos com o próximo marco
-  e a lista de todos os exercícios. Conta as séries marcadas × o alvo; "cada perna/lado" conta os dois lados.
+- **Contadores** (no fim de Evolução): quanto você já fez de cada exercício nas missões. Primeiro os exercícios das
+  provas do Teste de Rank, agrupados pela família dos marcos, com a barra até o próximo marco da família; depois os
+  outros. Conta as séries marcadas × o alvo; "cada perna/lado" conta os dois lados.
 - **Registro de Dungeons:** cada dungeon vencida vira um card numerado por tipo (Dungeon #001, Red Dungeon #001,
   Dungeon de Emergência #001; as nomeadas só com o nome), com a cor do tipo (azul, vermelho, laranja), o desafio, os
   exercícios, o tempo e o que foi recebido. Só aparecem as vencidas. Filtro por tipo e por rank (Mais → Registro de

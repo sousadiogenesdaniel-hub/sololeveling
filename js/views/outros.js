@@ -20,7 +20,6 @@ views.mais = () => {
     ${item("portao", "🌀", "Dungeons", "Uma por semana, sem aviso; e as do Inferno e do Trono", portao ? `<span class="chip warn">Aberta</span>` : "")}
     ${item("dungeons", "🗂️", "Registro de Dungeons", "A coleção das dungeons vencidas", (S.dungeons || []).length ? `<span class="chip">${S.dungeons.length}</span>` : "")}
     ${item("impulso", "⚡", "Impulso", "Bateu a vontade? Um desafio na hora")}
-    ${item("contadores", "🔢", "Contadores", "Quantas flexões, agachamentos… você já fez")}
     ${item("relatorio", "📊", "Relatório semanal", "A sua semana comparada com a anterior")}
     ${item("extras", "🚶", "Atividades extras", "Caminhada, bike, esporte... somam no gasto do dia", S.tracking ? `<span class="chip warn">Ao vivo</span>` : "")}
     ${item("porque", "🔥", "Meu porquê", "As fotos e as mensagens do ritual do dia")}
