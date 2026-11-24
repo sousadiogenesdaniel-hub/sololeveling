@@ -6,7 +6,7 @@ import { header, panel, toast, confirmBox, aviso } from "../ui.js";
 import { bauFx, falhaFx, celebrate, itemFx } from "../fx.js";
 import { arteItem } from "../arte-itens.js";
 import { RAR, SLOTS, itemBase } from "../premios.js";
-import { TIPOS, PENA, portaoAberto, entrarPortao, desistirPortao, concluirPortao, minutos, NOMEADOS, NOM, nomeados, marcarNomeado, entrarNomeado, concluirNomeado, kmGps } from "../portoes.js";
+import { TIPOS, PENA, portaoAberto, entrarPortao, desistirPortao, concluirPortao, minutos, NOMEADOS, NOM, nomeados, marcarNomeado, entrarNomeado, concluirNomeado, kmGps, kmGpsDesde, gpsCumprido } from "../portoes.js";
 import { impulso, novoImpulso, vencerImpulso, IMPULSO } from "../recompensas.js";
 import { checarConquistas } from "../conquistas.js";
 import { linhaEv, mostrarTitulos } from "./recompensas-ui.js";
@@ -105,7 +105,10 @@ views.portao = () => {
     <p>${esc(d.desc)}</p>
     <ul class="list">${d.itens.map((it, i) => `<li><label class="row grow" style="margin:0;text-transform:none;letter-spacing:0;font-size:1rem;color:var(--text)">
       <input type="checkbox" data-chg="marcaPortao" data-i="${i}" ${feitos[i] ? "checked" : ""}>
-      <span class="grow">${it.un === "rodada" ? esc(it.nome) : `<b class="num">${fmt(it.alvo)}${it.un === "s" ? " s" : ""}</b> ${esc(it.nome)}`}</span></label></li>`).join("")}</ul>
+      <span class="grow">${it.un === "rodada" ? esc(it.nome) : `<b class="num">${fmt(it.alvo)}${it.un === "s" ? " s" : ""}</b> ${esc(it.nome)}`}</span></label></li>`).join("")}
+      ${(d.gps || []).map(g => { const feito = kmGpsDesde(g.tipo, p.inicio); return `<li><span class="grow"><b class="num">${fmt(g.km, 1)} km</b> de ${g.nome.toLowerCase()} pelo GPS <span class="small muted">(salva depois de entrar)</span></span>
+        <b class="num ${feito >= g.km ? "ok" : ""}">${fmt(feito, 1)} / ${fmt(g.km, 1)}</b></li>`; }).join("")}</ul>
+    ${d.gps?.length ? `<a class="btn block" href="#/extras" style="margin-top:8px">📍 Rastrear a corrida em Atividades</a>` : ""}
     <button class="btn primary block" data-act="concluirPortao" style="margin-top:10px">Concluir a Dungeon</button>
     <button class="btn ghost sm block" data-act="sairPortao" style="margin-top:8px">${p.tipo === "normal" ? "Sair (volta depois, o tempo zera)" : "Desistir (conta como falha)"}</button>`, "portao")}</div>`
     .replace('class="panel portao"', `class="panel portao" ${estilo}`);
@@ -139,8 +142,8 @@ actions.sairPortao = async () => {
 };
 actions.concluirPortao = async () => {
   const p = portaoAberto(); if (!p) return;
-  const todos = p.desafio.itens.every((_, i) => p.feitos?.[i]);
-  if (!todos && !await confirmBox("Concluir sem tudo marcado?", "A Dungeon só é vencida com todos os itens feitos dentro do tempo.", "Concluir assim mesmo")) return;
+  const todos = p.desafio.itens.every((_, i) => p.feitos?.[i]), gps = gpsCumprido(p);
+  if ((!todos || !gps) && !await confirmBox("Concluir sem tudo feito?", gps ? "A Dungeon só é vencida com todos os itens feitos dentro do tempo." : "Ainda faltam quilômetros da corrida pelo GPS. Concluir assim conta como falha.", "Concluir assim mesmo")) return;
   const r = concluirPortao(todos); save(); refresh();
   await resultado(r, p);
 };
@@ -148,7 +151,7 @@ actions.concluirPortao = async () => {
 async function resultado(r, p) {
   const T = TIPOS[p.tipo];
   if (!r.venceu) {
-    await falhaFx(r.porTempo ? "O TEMPO ACABOU" : "A DUNGEON VENCEU", `${T.nome} · ${p.minutos ?? "—"} min`);
+    await falhaFx(r.porTempo ? "O TEMPO ACABOU" : "A DUNGEON VENCEU", r.faltouGps ? "Faltaram quilômetros da corrida pelo GPS" : `${T.nome} · ${p.minutos ?? "—"} min`);
     if (r.eventos.length) await aviso("A Dungeon falhou", `<ul class="list">${r.eventos.map(linhaEv).join("")}</ul>`);
     return refresh();
   }

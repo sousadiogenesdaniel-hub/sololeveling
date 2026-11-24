@@ -197,7 +197,8 @@ function form({ date = today(), tipo = "caminhada", dados = {}, intensidade = "m
     if (!d.tempo) return toast("Informe o tempo da atividade.");
     if (d.tempo > 600 || (d.dist ?? 0) > 300 || (d.elev ?? 0) > 5000) return toast("Algum valor está fora do esperado.");
     const est = estimate(f.tipo.value, d, f.intensidade.value, date);
-    const rec = { id: id || uid(), tipo: f.tipo.value, dados: d, intensidade: f.intensidade.value, ...est, ...(gps ? { gps } : {}) };
+    const antigo = id ? Object.keys(S.days).flatMap(k => extrasOf(k)).find(e => e.id === id) : null; // editar não muda quando foi salva
+    const rec = { id: id || uid(), tipo: f.tipo.value, dados: d, intensidade: f.intensidade.value, ...est, ...(gps ? { gps } : {}), salvo: antigo?.salvo ?? (id ? 0 : Date.now()) };
     const velha = id ? dateOf(id) : null;
     if (velha) removeExtra(velha, id);
     const dd = day(date); (dd.extras ??= []).push(rec);

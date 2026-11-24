@@ -58,6 +58,47 @@ function desafio(tipo) {
       { nome: "Agachamentos", alvo: Math.max(30, Math.round(agach * 2.5 * f)), un: "reps" }] };
 }
 
+// ---- conteúdo da dungeon: calistenia, corrida ou as duas ------------------------------------------
+// Sorteado ao abrir, pela trilha principal: Calistenia 55% só calistenia / 30% as duas / 15% só corrida; Corrida o
+// inverso; outra trilha 45 / 30 / 25. A intensidade segue o tipo (Red 30% mais, Emergência 15% menos).
+export const COMPOSICAO = { calistenia: { cal: .55, ambos: .30 }, corrida: { cal: .15, ambos: .30 }, outra: { cal: .45, ambos: .30 } };
+function composicao() {
+  const P = COMPOSICAO[S.track?.id] || COMPOSICAO.outra, r = Math.random();
+  return r < P.cal ? "cal" : r < P.cal + P.ambos ? "ambos" : "cor";
+}
+// Base da corrida: a corrida mais longa dos últimos 60 dias pelo GPS (com o ritmo dela); sem nenhuma, a prova
+// "Correr sem parar" da Avaliação; sem nada, um começo seguro de 2 km a 8 min/km.
+export function corridaBase(t = today()) {
+  let melhor = null;
+  for (let i = 0; i < 60; i++) {
+    for (const e of S.days[addDays(t, -i)]?.extras || []) {
+      const km = e.gps?.tipo === "corrida" ? e.gps.km : 0, min = e.dados?.tempo;
+      if (km >= 0.5 && min > 0 && (!melhor || km > melhor.km)) melhor = { km, pace: min / km, fonte: "gps" };
+    }
+  }
+  const lim = b => ({ ...b, pace: Math.min(10, Math.max(4, b.pace)) });
+  if (melhor) return lim(melhor);
+  if (pr("corrida")) return lim({ km: pr("corrida"), pace: 7.5, fonte: "prova" });
+  return { km: 2, pace: 8, fonte: "inicial" };
+}
+const fmtKm1 = n => String(Math.round(n * 10) / 10).replace(".", ",");
+function desafioCompleto(tipo) {
+  const comp = composicao();
+  if (comp === "cal") return desafio(tipo);
+  const b = corridaBase(), f = TIPOS[tipo].fator;
+  const km = Math.max(1, Math.round(b.km * f * 10) / 10), limCorrida = Math.ceil(km * b.pace * 1.25);
+  const gps = [{ tipo: "corrida", nome: "Corrida", km }];
+  if (comp === "cor") return { modo: "corrida", titulo: `Corrida de ${fmtKm1(km)} km`, limite: limCorrida, itens: [], gps,
+    desc: "Corra a distância rastreando pelo GPS (em Atividades), depois de entrar. Pode pausar o rastreamento; o relógio da Dungeon não para." };
+  const d = desafio(tipo);
+  return { ...d, modo: `${d.modo}+corrida`, titulo: `${d.titulo} + corrida de ${fmtKm1(km)} km`, limite: d.limite + limCorrida + 5, gps,
+    desc: `${d.desc} E a corrida de ${fmtKm1(km)} km pelo GPS (em Atividades), antes ou depois, dentro do mesmo tempo.` };
+}
+// Km rastreados pelo GPS de um tipo, salvos depois da entrada na dungeon (hoje e ontem, se virou a meia-noite)
+export const kmGpsDesde = (tipo, desde) => [today(), addDays(today(), -1)].flatMap(d => S.days[d]?.extras || [])
+  .filter(e => e.gps?.tipo === tipo && (e.salvo || 0) >= desde).reduce((n, e) => n + (e.gps.km || 0), 0);
+export const gpsCumprido = p => !p.desafio?.gps?.length || p.desafio.gps.every(x => kmGpsDesde(x.tipo, p.inicio || 0) >= x.km);
+
 // Abre o portão no dia sorteado, fecha os vencidos e aplica a pena da Emergência ignorada.
 // Devolve { eventos, abriu } (abriu = portão que acabou de abrir, para a animação).
 export function atualizarPortoes() {
@@ -82,7 +123,7 @@ export function atualizarPortoes() {
       while (prox <= fimDaSemana(p.ws) && isRestDay(prox)) prox = addDays(prox, 1);
       if (prox <= fimDaSemana(p.ws)) p.dia = prox; else p.status = "perdido";
     } else {
-      Object.assign(p, { status: "aberto", abertoEm: t, fecha: addDays(t, 1), rank: levelInfo().rank, desafio: desafio(p.tipo) });
+      Object.assign(p, { status: "aberto", abertoEm: t, fecha: addDays(t, 1), rank: levelInfo().rank, desafio: desafioCompleto(p.tipo) });
       abriu = p;
     }
   }
@@ -107,12 +148,12 @@ export function desistirPortao() {
 // Arsenal; com item, metade das vezes vem só ele (sem baú), na outra metade item e baú. Sem item, baú.
 export function concluirPortao(tudoFeito) {
   const p = portaoAberto(); if (!p || p.status !== "ativo") return null;
-  const tempo = minutos(p), venceu = tudoFeito && tempo <= p.desafio.limite, T = TIPOS[p.tipo];
+  const tempo = minutos(p), gpsOk = gpsCumprido(p), venceu = tudoFeito && gpsOk && tempo <= p.desafio.limite, T = TIPOS[p.tipo];
   p.fim = Date.now(); p.minutos = Math.round(tempo * 10) / 10;
   if (!venceu) {
     p.status = "falhou";
     const pe = PENA[p.tipo];
-    return { venceu: false, porTempo: tudoFeito, eventos: pe ? [grant(pe.xp, pe.ouro, `${T.nome} falhou`)] : [] };
+    return { venceu: false, porTempo: tudoFeito && gpsOk, faltouGps: !gpsOk, eventos: pe ? [grant(pe.xp, pe.ouro, `${T.nome} falhou`)] : [] };
   }
   p.status = "vencido";
   const eventos = [grant(T.xp, 0, `${T.nome} vencida`), ...bonusEquip(T.xp, 0, "na Dungeon")];

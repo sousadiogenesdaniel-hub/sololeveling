@@ -153,6 +153,11 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   saldo, não libera. A tela do bloqueio oferece "Vencer o impulso" no lugar de pagar. Depois das 5h, abrir O Sistema
   pergunta se quer liberar a manhã. As cobranças entram no Registro na próxima abertura do app. Na Zona de
   Penalidade vale o bloqueio total. Desligar leva 24 h.
+- **Conteúdo das dungeons:** cada dungeon sorteia calistenia, corrida ou as duas, pela trilha principal (Calistenia:
+  55% só calistenia, 30% as duas, 15% só corrida; Corrida: o inverso; outra trilha: 45/30/25). A corrida é feita
+  rastreando pelo GPS em Atividades depois de entrar, dentro do tempo da dungeon. A distância vem da corrida mais
+  longa dos últimos 60 dias pelo GPS (ou da prova "Correr sem parar", ou 2 km para começar), vezes o fator do tipo
+  (Red ×1,3, Emergência ×0,85); o tempo é a distância no seu ritmo × 1,25.
 - **Registro de Dungeons:** cada dungeon vencida vira um card numerado por tipo (Dungeon #001, Red Dungeon #001,
   Dungeon de Emergência #001; as nomeadas só com o nome), com a cor do tipo (azul, vermelho, laranja), o desafio, os
   exercícios, o tempo e o que foi recebido. Só aparecem as vencidas. Filtro por tipo e por rank (Mais → Registro de
