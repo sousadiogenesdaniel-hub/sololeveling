@@ -67,9 +67,10 @@ Fazer um personagem para cada classe: Necromante, Mago, Guerreiro, Assassino e T
 No Registro de Dungeons, a Dungeon do Inferno e a do Trono precisam de um card bem especial (hoje é provisório: o
 portal com uma coroa). O Daniel ainda vai pensar no que pode ser.
 
-### Dungeons no lugar da missão bônus (em conversa)
-Ver o documento "Dungeons: frequência e prêmios": 2 a 3 dungeons por semana, a Dungeon de Campo (verde, pelo GPS)
-no lugar da missão bônus e prêmios raros (baú Lendário garantido, item a mais, Tesouro do Monarca).
+### Dungeons de corrida (em conversa)
+O Daniel quer dungeons com calistenia e corrida, para qualquer jogador (sem bike nem academia), mesmo fora das
+trilhas. Falta decidir como o Sistema sabe o máximo de corrida: ver a proposta na conversa (histórico do GPS + prova
+opcional na Avaliação + valor inicial seguro).
 
 ### Recompensas: próximos passos
 - **Dungeons de corrida:** hoje as Dungeons são de calistenia (peso do corpo). Com a Corrida ativa, poderiam pedir uma

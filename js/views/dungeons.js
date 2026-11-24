@@ -6,7 +6,7 @@ import { esc, fmt, fmtDate } from "../util.js";
 import { header, panel, modal } from "../ui.js";
 import { DUNGEON, MODO_NOME, registroDungeons } from "../portoes.js";
 
-const FILTROS = [["todas", "Todas"], ["normal", "Dungeon"], ["vermelho", "Red Dungeon"], ["emergencia", "Emergência"], ["nomeadas", "Nomeadas"]];
+const FILTROS = [["todas", "Todas"], ["normal", "Dungeon"], ["vermelho", "Red Dungeon"], ["emergencia", "Emergência"], ["campo", "Campo"], ["nomeadas", "Nomeadas"]];
 const RANKS = ["E", "D", "C", "B", "A", "S"];
 let filtro = "todas", rankF = "";
 const passa = r => (filtro === "todas" || (filtro === "nomeadas" ? DUNGEON[r.tipo]?.nomeada : r.tipo === filtro)) && (!rankF || r.rank === rankF);

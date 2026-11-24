@@ -6,6 +6,7 @@ import { pr } from "./tracks.js";
 import { abrirBau, bonus, bonusEquip, eventoHp, HP } from "./premios.js";
 import { crescerSombras, invocacaoHoje, invocado, necromante, COMANDANTES } from "./sombras.js";
 import { checarMarcos, checarConquistas } from "./conquistas.js";
+import { finalizarCampo } from "./portoes.js";
 
 // Depois de completeWorkout: bênçãos, invocação, Ouro do exército, bônus do Arsenal (arma e anel), HP do Manto,
 // crescimento das sombras, marcos, títulos e o Baú do Sistema (sorteado agora; a animação só revela).
@@ -23,10 +24,12 @@ export function posMissao(w, date = today()) {
   const minimo = invocado("S") ? "epico" : invocado("D") ? "raro" : "comum";
   const bau = abrirBau({ sorte: b.sorteTotal + (w.hit ? 5 : 0), minimo, ouroX: invocado("B") ? 2 : 1 });
   S.days[date].bau = { raridade: bau.raridade, premios: bau.premios, aberto: false, ...(inv ? { invocacao: inv.cmd } : {}) };
+  const campo = finalizarCampo(date); // atividade longa feita antes da missão: a Dungeon de Campo fecha agora
+  if (campo) { ev.push(...campo.eventos); linhas.push("Dungeon de Campo vencida"); }
   const marcos = checarMarcos();
   const titulos = checarConquistas();
   save();
-  return { ev, linhas, bau, marcos, titulos, niveis: cres.niveis, evolucoes: cres.evolucoes };
+  return { ev, linhas, bau, marcos, titulos, niveis: cres.niveis, evolucoes: cres.evolucoes, campo };
 }
 
 // Baú da missão de hoje ainda não aberto (o app foi fechado antes da animação)

@@ -8,7 +8,10 @@ import { today, iso, esc, fmt, num, uid, fmtDate, fmtShort, addDays, distM, $ } 
 import { header, panel, modal, closeModal, toast, confirmBox, showEvents } from "../ui.js";
 import { checarMarcos, checarConquistas } from "../conquistas.js";
 import { mostrarTitulos } from "./recompensas-ui.js";
-import { tmb, weightOn, grant, extrasKcal, BONUS, gpsBonusStatus, checkGpsBonus, bonusWeek, weekStart, weekEnd } from "../game.js";
+import { tmb, weightOn, grant, extrasKcal, BONUS, CAMPO, kmCampo, gpsBonusStatus, checkGpsBonus, bonusWeek, weekStart, weekEnd } from "../game.js";
+import { finalizarCampo } from "../portoes.js";
+import { bauFx } from "../fx.js";
+import { RAR } from "../premios.js";
 import { mudarHp } from "../premios.js";
 
 // Recompensa das atividades do dia (somadas, inclusive a da missão bônus): a partir de 250 kcal, +10 XP e +1 HP;
@@ -143,12 +146,16 @@ views.extras = () => {
 
 // ---- missão bônus ----------------------------------------------------------------
 export function bonusPanel() {
-  const st = gpsBonusStatus(), usado = bonusWeek();
-  return panel("Missão bônus", `<p style="margin-top:0">Caminhada, corrida ou trilha de <b>${BONUS.km.caminhada} km ou mais</b> (bike: ${BONUS.km.bike} km), <b>rastreada pelo GPS</b>: <b class="gold">+${BONUS.gpsOuro} Ouro</b> em semana sem falta, ou <b class="gold">+${BONUS.gpsOuroSeq}</b> se a semana teve falta mas as últimas ${BONUS.seguidos} missões foram cumpridas. Uma por dia, só Ouro.</p>
+  const st = gpsBonusStatus(), usado = bonusWeek(), km = kmCampo();
+  const linha = ([k, c]) => `<li><span class="grow">${c.nome[0].toUpperCase() + c.nome.slice(1)}</span><b class="num ${km[k] >= c.km ? "ok" : ""}">${fmt(km[k], 1)} / ${c.km} km</b></li>`;
+  return panel("Dungeon de Campo", `<p style="margin-top:0">Sempre aberta (menos no descanso e na Zona de Penalidade). Vence no dia em que as atividades <b>rastreadas pelo GPS</b> somarem
+      <b>${CAMPO.corrida.km} km correndo</b>, <b>${CAMPO.andando.km} km andando</b> (caminhada ou trilha) ou <b>${CAMPO.bike.km} km de bike</b>:
+      <b class="gold">+${BONUS.gpsOuro} Ouro</b> em semana sem falta, ou <b class="gold">+${BONUS.gpsOuroSeq}</b> se a semana teve falta mas as últimas ${BONUS.seguidos} missões foram cumpridas. Às vezes vem uma surpresa. Uma por dia.</p>
+    <ul class="list small">${Object.entries(CAMPO).map(linha).join("")}</ul>
     <p class="small ${st.ok ? "ok" : st.feito ? "ok" : "warn"}">${st.ok ? "✔ " : st.feito ? "✔ " : ""}${st.motivo}</p>
-    <div class="row between small"><span class="muted">Bônus da semana (${fmtDate(weekStart(), { day: "2-digit", month: "2-digit" })} a ${fmtDate(weekEnd(), { day: "2-digit", month: "2-digit" })})</span><b class="gold num">${usado}/${BONUS.teto}</b></div>
+    <div class="row between small"><span class="muted">Ouro de bônus da semana (${fmtDate(weekStart(), { day: "2-digit", month: "2-digit" })} a ${fmtDate(weekEnd(), { day: "2-digit", month: "2-digit" })})</span><b class="gold num">${usado}/${BONUS.teto}</b></div>
     <div class="bar" style="margin-top:4px"><i style="width:${Math.min(100, usado / BONUS.teto * 100)}%;background:var(--gold);box-shadow:0 0 8px var(--gold)"></i></div>
-    <p class="small muted" style="margin-bottom:0">Registro manual não conta para o bônus: só a distância medida pelo rastreamento.</p>`, "", `<span class="gold">◆</span>`);
+    <p class="small muted" style="margin-bottom:0">Registro manual não conta: só a distância medida pelo rastreamento. Cada vitória entra no <a href="#/dungeons">Registro de Dungeons</a>.</p>`, "portao").replace('class="panel portao"', 'class="panel portao" style="--pc:#3ddc84"');
 }
 
 // ---- formulário -----------------------------------------------------------------
@@ -197,11 +204,13 @@ function form({ date = today(), tipo = "caminhada", dados = {}, intensidade = "m
     const ev = premiarAtividades(date);
     if (velha && velha !== date) ev.push(...premiarAtividades(velha));
     const bonus = checkGpsBonus(date); if (bonus) ev.push(bonus);
+    const campo = bonus ? finalizarCampo(date) : null; if (campo) ev.push(...campo.eventos);
     checarMarcos(); const titulos = checarConquistas(); // km somados: marcos e títulos
     save(); closeModal(); refresh();
     if (titulos.length) setTimeout(() => mostrarTitulos(titulos), 1200);
-    ev.length ? showEvents("Atividade registrada", ev, `<p class="small muted">~${fmt(est.kcal)} kcal somadas ao gasto de ${date === today() ? "hoje" : fmtDate(date)}.</p>`)
-      : toast(`Atividade salva: ~${fmt(est.kcal)} kcal.`);
+    const fim = ev.length ? showEvents(campo ? "Dungeon de Campo vencida" : "Atividade registrada", ev, `<p class="small muted">~${fmt(est.kcal)} kcal somadas ao gasto de ${date === today() ? "hoje" : fmtDate(date)}.</p>`)
+      : (toast(`Atividade salva: ~${fmt(est.kcal)} kcal.`), Promise.resolve());
+    if (campo?.bau) fim.then(() => bauFx(campo.bau.raridade, RAR[campo.bau.raridade].nome, RAR[campo.bau.raridade].cor, campo.bau.premios));
   };
   if (id) $("#xdel", o).onclick = async () => {
     if (!await confirmBox("Excluir atividade", "Ela sai do gasto calórico do dia.", "Excluir")) return;

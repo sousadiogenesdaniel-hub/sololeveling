@@ -5,7 +5,7 @@ import { today, esc, fmt, num, fmtDate, fmtShort, signed, shrinkImage, uid, days
 import { header, panel, modal, closeModal, toast, showEvents, confirmBox, sysMessage } from "../ui.js";
 import { nativo } from "../native.js";
 import { weightOn } from "../game.js";
-import { grant, R, inPenalty, daysToShop, pendingDebts, monthDebt, BONUS, bonusWeek, cleanWeek, dietWeek, weekStart, weekEnd } from "../game.js";
+import { grant, R, inPenalty, daysToShop, pendingDebts, monthDebt, BONUS, CAMPO, bonusWeek, cleanWeek, dietWeek, weekStart, weekEnd } from "../game.js";
 
 // ---- Mais -----------------------------------------------------------------------
 views.mais = () => {
@@ -187,13 +187,13 @@ views.loja = () => {
         <button class="item" data-act="editShop" data-id="${i.id}"><b>${esc(i.nome)}</b><br><span class="small gold num">◆ ${fmt(i.custo)}</span></button>
         <button class="btn sm primary" data-act="buy" data-id="${i.id}" ${!aberta || pen || g < i.custo ? "disabled" : ""}>Comprar</button></li>`).join("")}</ul>
       <button class="btn ghost sm block" data-act="editShop" data-id="">+ Novo item</button>`, "", `<span class="gold num">◆ ${fmt(g)}</span>`)}
-    ${panel("Missões bônus", (() => {
+    ${panel("Bônus de Ouro", (() => {
       const dw = dietWeek(), feitos = dw.filter(Boolean).length, passados = dw.filter(x => x !== null).length, limpa = cleanWeek();
       return `<p class="small muted" style="margin-top:0">Ouro extra para quem já está cumprindo as missões. Semana do jogo: ${fmtDate(weekStart(), { day: "2-digit", month: "2-digit" })} a ${fmtDate(weekEnd(), { day: "2-digit", month: "2-digit" })}. Fora da Zona de Penalidade, até ${BONUS.teto} de Ouro por semana.</p>
       <ul class="list small">
-        <li><span class="grow">Atividade de ${BONUS.km.caminhada} km+ rastreada por GPS (bike ${BONUS.km.bike} km), depois da missão <span class="muted">(semana com falta: +${BONUS.gpsOuroSeq} depois de ${BONUS.seguidos} missões seguidas)</span></span><b class="gold">+${BONUS.gpsOuro}</b></li>
+        <li><span class="grow">Dungeon de Campo: ${CAMPO.corrida.km} km correndo, ${CAMPO.andando.km} km andando ou ${CAMPO.bike.km} km de bike no dia, pelo GPS, depois da missão <span class="muted">(semana com falta: +${BONUS.gpsOuroSeq} depois de ${BONUS.seguidos} missões seguidas)</span></span><b class="gold">+${BONUS.gpsOuro}</b></li>
         <li><span class="grow">Semana inteira dentro da meta de calorias <span class="muted">(${passados ? `${feitos} de ${passados} dia${passados > 1 ? "s" : ""} fechado${passados > 1 ? "s" : ""}${feitos < passados ? ": esta semana já não vale" : ""}` : "começa a contar amanhã"})</span></span><b class="gold">+${BONUS.dietaOuro}</b></li></ul>
-      <div class="row between small"><span class="${limpa ? "ok" : "bad"}">${limpa ? "Semana limpa ✔" : "Semana com falta: só o bônus de GPS reduzido"}</span><b class="gold num">${bonusWeek()}/${BONUS.teto}</b></div>
+      <div class="row between small"><span class="${limpa ? "ok" : "bad"}">${limpa ? "Semana limpa ✔" : "Semana com falta: só a Dungeon de Campo, com valor reduzido"}</span><b class="gold num">${bonusWeek()}/${BONUS.teto}</b></div>
       <a class="btn sm ghost block" style="margin-top:8px" href="#/extras">Rastrear atividade</a>`;
     })())}
     ${panel("Compras", compras.length ? `<ul class="list small">${compras.map(c => `<li><span class="muted num">${fmtShort(c.date)}</span>

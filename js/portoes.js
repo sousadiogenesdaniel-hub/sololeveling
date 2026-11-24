@@ -4,7 +4,7 @@
 import { S } from "./store.js";
 import { today, addDays, uid } from "./util.js";
 import { possui } from "./premios.js";
-import { weekStart, isRestDay, inPenalty, levelInfo, grant, RANK_ORDER } from "./game.js";
+import { weekStart, isRestDay, inPenalty, levelInfo, grant, RANK_ORDER, CAMPO } from "./game.js";
 import { pr, currentPhase, testKey } from "./tracks.js";
 import { novoCorpo } from "./feitos.js";
 import { abrirBau, bonus, bonusEquip, darItem, sortearItemPortao, eventoHp, HP, RAR, itemBase } from "./premios.js";
@@ -140,6 +140,7 @@ export function concluirPortao(tudoFeito) {
 // Só as vencidas aparecem. Guarda o desafio, as metas, o tempo e o que foi recebido.
 export const DUNGEON = {
   normal: { nome: "Dungeon", cor: "#3fb8ff" }, vermelho: { nome: "Red Dungeon", cor: "#ff2e4d" }, emergencia: { nome: "Dungeon de Emergência", cor: "#ff7a1a" },
+  campo: { nome: "Dungeon de Campo", cor: "#3ddc84" },
   inferno: { nome: "Dungeon do Inferno", cor: "#ff5a2e", nomeada: true }, trono: { nome: "Dungeon do Trono", cor: "#ffc94d", nomeada: true },
 };
 export const MODO_NOME = { relogio: "Contra o relógio", circuito: "Circuito", resistencia: "Resistência" };
@@ -156,6 +157,21 @@ function registrarDungeon({ tipo, rank, desafio = {}, minutos = null, premios = 
   lista.push(reg);
   return reg;
 }
+// Dungeon de Campo vencida no dia (o Ouro já foi pago por checkGpsBonus): entra no Registro e tem uma chance pequena
+// de surpresa (um baú). Sem itens do Arsenal e sem corpos, para não estragar as coleções.
+export const CAMPO_SURPRESA = .12;
+export function finalizarCampo(date = today()) {
+  const b = (S.bonus || []).find(x => x.date === date && x.tipo === "gps" && !x.reg); if (!b) return null;
+  const C = CAMPO[b.campo] || CAMPO.corrida, eventos = [];
+  let bau = null;
+  if (Math.random() < CAMPO_SURPRESA) { bau = abrirBau({ sorte: bonus().sorteTotal, motivo: "Baú da Dungeon de Campo" }); eventos.push(...bau.eventos); }
+  b.reg = registrarDungeon({ tipo: "campo", rank: levelInfo().rank, d: date,
+    desafio: { titulo: "Dungeon de Campo", desc: `${fmtKm(C.km)} km ${C.nome} no dia, rastreados pelo GPS.`, gps: [{ nome: C.nome[0].toUpperCase() + C.nome.slice(1), km: b.km || C.km }] },
+    premios: [`+${b.ouro} Ouro`, bau && `Surpresa: Baú ${RAR[bau.raridade].nome} (${bau.premios.join(", ")})`].filter(Boolean) }).id;
+  return { reg: b.reg, bau, eventos };
+}
+const fmtKm = n => String(n).replace(".", ",");
+
 // Dungeons vencidas antes do Registro entram com o que ficou guardado (sem a lista completa de prêmios)
 export function migrarRegistroDungeons() {
   if (S.dungeonsV) return 0;

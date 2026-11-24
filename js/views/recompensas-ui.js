@@ -75,6 +75,7 @@ export async function telaMissaoConcluida(events, pos, w = null) {
     <p class="small muted">Nível ${li.level} · ${fmt(li.into)} / ${fmt(li.need)} XP${corposNovos ? ` · ${corposNovos} corpo${corposNovos > 1 ? "s" : ""} novo${corposNovos > 1 ? "s" : ""} esperando no Exército` : ""}</p>`,
     { botao: "Abrir o Baú do Sistema" });
   await abrirBauAnimado();
+  if (pos.campo?.bau) await bauFx(pos.campo.bau.raridade, RAR[pos.campo.bau.raridade].nome, RAR[pos.campo.bau.raridade].cor, pos.campo.bau.premios);
   await mostrarCrescimento(pos.niveis, pos.evolucoes);
   await mostrarTitulos(pos.titulos);
   await mostrarClasseSePreciso();

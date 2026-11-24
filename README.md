@@ -22,7 +22,7 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 - **Medidas do dia** (peso e abdômen): +5 XP. **Condição** de um dia registrada inteira (sono, celular na cama,
   energia e foco), até o dia seguinte: +5 XP, seja qual for a resposta. **Medidas semanais:** +30 XP. **Dia dentro
   da meta de calorias:** +20 XP.
-- **Atividades extras do dia** (somadas, inclusive a da missão bônus): a partir de 250 kcal, +10 XP e +1 HP; acima
+- **Atividades extras do dia** (somadas, inclusive a da Dungeon de Campo): a partir de 250 kcal, +10 XP e +1 HP; acima
   de 700 kcal, mais +20 XP e +2 HP (o HP só com o Manto do Necromante). Editar ou excluir recalcula. A tela mostra a
   barra do dia até as duas faixas e um diário (como o da Comida): totais da semana e do mês e cada dia com as suas
   atividades, kcal e XP.
@@ -37,11 +37,14 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   enviar o print de cada comprovante para o app ler (valor, data, hora e recebedor; o mesmo comprovante não vale
   duas vezes) e concluir um treino. Cada dia com multa pendente custa 30 XP. As imagens não são guardadas.
 - **Loja:** só abre de sexta a domingo. Uma semana perfeita (6 treinos = 600 de Ouro) paga exatamente uma pizza.
-- **Missões bônus (só Ouro, nunca XP):** atividade de 5 km+ rastreada por GPS (bike 15 km) num dia de missão
-  cumprida (1 por dia; registro manual não vale): **+125** em semana sem falta; em semana com falta, **+75** se as
-  últimas 3 missões foram cumpridas (o descanso não quebra a sequência). Semana inteira dentro da meta de calorias:
-  +150 (só em semana sem falta). Nada na Zona de Penalidade; até 300 por semana. A semana do jogo começa no dia
-  seguinte ao descanso (descanso na sexta → sábado a sexta). O rastreamento tem pausa (o tempo parado não conta).
+- **Dungeon de Campo (no lugar da antiga missão bônus de GPS):** sempre aberta, vence no dia em que as atividades
+  rastreadas pelo GPS somarem 5 km correndo, 10 km andando (caminhada ou trilha) ou 35 km de bike, num dia de missão
+  cumprida (1 por dia; registro manual não vale): **+125 Ouro** em semana sem falta; em semana com falta, **+75** se as
+  últimas 3 missões foram cumpridas (o descanso não quebra a sequência). Às vezes vem uma surpresa (sem itens do
+  Arsenal nem corpos). Cada vitória entra no Registro de Dungeons (card verde). **Bônus da dieta:** semana inteira
+  dentro da meta de calorias, +150 (só em semana sem falta). Nada na Zona de Penalidade; até 300 de Ouro de bônus por
+  semana. A semana do jogo começa no dia seguinte ao descanso (descanso na sexta → sábado a sexta). O rastreamento
+  tem pausa (o tempo parado não conta).
 - **Nível e rank são separados.** O **nível** mede a constância: vem do XP, começa rápido (~1 nível por missão
   na 1ª semana) e desacelera (cada nível pede 16 XP a mais que o anterior); jogando perfeito, nível ~29 em 2 meses,
   ~77 em 1 ano e 100 em ~20 meses, sem teto. O **rank** mede o que o corpo faz: vem só do Teste de Rank. Passou,
