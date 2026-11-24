@@ -1,6 +1,7 @@
 // Integração com o app Android (quando o app roda dentro da casca nativa).
 // No navegador comum, `nativo` é null e nada disto faz efeito.
 import { S } from "./store.js";
+import { curtas } from "./ritual.js";
 import { today } from "./util.js";
 import { inPenalty } from "./game.js";
 import { todasConcluidas } from "./tracks.js";
@@ -37,6 +38,7 @@ export function syncNative() {
     today: today(),
     blocked: APPS_TODOS,
     gold: Math.round(S.game.gold), xp: Math.round(S.game.xp), // o toque de recolher só libera se der para pagar
+    frases: { pen: curtas("penalidade"), toque: curtas("noite") }, // Meu porquê: uma linha nas telas de bloqueio (app 2.0)
     ...(cfg.lembreteHora != null ? { reminderHour: cfg.lembreteHora } : {}),
   };
   const j = JSON.stringify(payload);

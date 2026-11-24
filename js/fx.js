@@ -295,3 +295,45 @@ export function evolucaoFx({ arteDe, artePara, nome, para, cor }) {
     <div class="fx-evo-txt" style="--c:${cor}">${nome} evoluiu para ${para}!</div>
     <div class="fx-lvl">toque para continuar</div>`, 8200);
 }
+
+// ---- trilha escolhida: animação e som próprios de cada trilha ------------------------------
+// Calistenia: a barra se desenha e a silhueta sobe numa barra, com impacto metálico.
+// Corrida: contagem 3, 2, 1, pegadas acendendo e a largada com rastro de luz.
+export function playTrilha(id) {
+  const ctx = soundOn() && audio(); if (!ctx) return;
+  if (id === "corrida") {
+    [0.6, 1.2, 1.8].forEach(t => tone(ctx, { f: 440, t, d: .16, type: "square", v: .07 }));
+    tone(ctx, { f: 880, t: 2.4, d: .5, type: "square", v: .08 }); noise(ctx, 2.4, .7, .3);
+    [392, 523.25, 659.25, 783.99].forEach((f, i) => tone(ctx, { f, t: 2.6 + i * .07, d: 1.2, v: .06 }));
+    return;
+  }
+  noise(ctx, .3, .5, .12);
+  tone(ctx, { f: 160, t: 1.2, d: .7, type: "sawtooth", v: .05, slide: 520 });
+  noise(ctx, 1.9, .35, .35); tone(ctx, { f: 1250, t: 1.9, d: .9, type: "sine", v: .08 }); tone(ctx, { f: 1870, t: 1.92, d: .6, type: "sine", v: .04 });
+  [261.63, 329.63, 392, 523.25].forEach((f, i) => tone(ctx, { f, t: 2.3 + i * .07, d: 1.4, v: .06 }));
+}
+export function trilhaFx({ id, nome, icone = "", fase = "", rank = "", cor = "var(--glow)" }) {
+  navigator.vibrate?.(id === "corrida" ? [40, 560, 40, 560, 40, 560, 300] : [60, 1800, 200]);
+  playTrilha(id);
+  const cena = id === "calistenia" ? `<svg class="tr-svg" viewBox="0 0 240 220" aria-hidden="true">
+      <path class="tr-barra" d="M30 205 V40 H210 V205" fill="none" stroke="${cor}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path class="tr-braco tr-be" d="M106 40 L110 96" stroke="${cor}" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path class="tr-braco tr-bd" d="M134 40 L130 96" stroke="${cor}" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <g class="tr-corpo"><circle cx="120" cy="78" r="13" fill="#04060c" stroke="${cor}" stroke-width="2"/>
+        <path d="M106 96 H134 L131 150 H109 Z" fill="#04060c" stroke="${cor}" stroke-width="2"/>
+        <path d="M113 150 L111 198 M127 150 L129 198" stroke="${cor}" stroke-width="6" stroke-linecap="round" fill="none"/></g>
+      <circle class="tr-impacto" cx="120" cy="40" r="10" fill="none" stroke="#fff" stroke-width="3"/></svg>`
+    : id === "corrida" ? `<svg class="tr-svg" viewBox="0 0 240 220" aria-hidden="true">
+      <path class="tr-chao" d="M10 182 H230" stroke="${cor}" stroke-width="3" fill="none"/>
+      <path d="M40 150 V200" stroke="#fff" stroke-width="4" stroke-dasharray="6 6" fill="none"/>
+      ${[0, 1, 2, 3, 4, 5].map(i => `<ellipse class="tr-pe" cx="${66 + i * 28}" cy="${i % 2 ? 176 : 166}" rx="9" ry="4.5" fill="${cor}" style="animation-delay:${0.7 + i * .25}s"/>`).join("")}
+      <path class="tr-rastro" d="M40 140 H232" stroke="${cor}" stroke-width="5" stroke-linecap="round" fill="none"/></svg>
+      <div class="tr-conta">${["3", "2", "1", "LARGADA!"].map((n, i) => `<span style="animation-delay:${0.6 + i * .6}s">${n}</span>`).join("")}</div>`
+    : `<div class="tr-icone">${icone}</div>`;
+  return overlay(`fx-trilha tr-${id}`, `<div class="fx-dark"></div>
+    <div class="fx-type">${typing("[ AVISO DO SISTEMA ] Trilha escolhida.")}</div>
+    <div class="tr-cena" style="--c:${cor}">${cena}</div>
+    <div class="tr-nome" style="--c:${cor}">${nome.toUpperCase()}</div>
+    ${fase ? `<div class="tr-sub">Fase ${fase}${rank ? ` · rumo ao rank ${rank}` : ""}</div>` : ""}
+    <div class="fx-lvl">toque para continuar</div>`, 5400);
+}

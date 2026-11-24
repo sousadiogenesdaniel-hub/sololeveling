@@ -145,6 +145,7 @@ public class BlockerService extends Service {
         t.setLetterSpacing(0.12f);
         t.setGravity(Gravity.CENTER);
         box.addView(t);
+        frase(box, "pen", Color.rgb(255, 190, 198));
 
         TextView m = new TextView(this);
         m.setText(nome + " está bloqueado até você pagar a multa e cumprir a missão do dia.\n\nBancos, telefone e os outros apps continuam liberados.");
@@ -190,6 +191,20 @@ public class BlockerService extends Service {
     }
 
     /** Toque de recolher: pagar (Ouro + XP, 15 min), vencer o impulso ou sair. */
+    /** Uma linha do "Meu porquê" (frase curta escrita pelo jogador), em itálico, logo abaixo do título. */
+    private void frase(LinearLayout box, String tipo, int cor) {
+        String f = Frases.para(this, tipo);
+        if (f == null) return;
+        TextView v = new TextView(this);
+        v.setText("“" + f + "”");
+        v.setTextColor(cor);
+        v.setTextSize(16);
+        v.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.ITALIC));
+        v.setGravity(Gravity.CENTER);
+        v.setPadding(0, 28, 0, 0);
+        box.addView(v);
+    }
+
     private void showToque(String pkg) {
         String nome = Toque.nome(pkg);
         int preco = Toque.precoAgora(this), vez = Toque.usos(this) + 1;
@@ -208,6 +223,7 @@ public class BlockerService extends Service {
         t.setLetterSpacing(0.12f);
         t.setGravity(Gravity.CENTER);
         box.addView(t);
+        frase(box, "toque", Color.rgb(214, 200, 255));
 
         TextView m = new TextView(this);
         m.setText(nome + " custa Ouro e XP das 20h às 8h.\n\nAgora: " + preco + " Ouro + " + preco + " XP por " + Toque.MINUTOS + " min (a " + vez + "ª desta noite; a próxima dobra).\n"

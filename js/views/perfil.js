@@ -6,6 +6,7 @@ import { today, addDays, esc, fmt, num, fmtDate, WEEKDAYS, getPreciseFix, $ } fr
 import { header, panel, toast, sysMessage, confirmBox, modal, closeModal } from "../ui.js";
 import { levelInfo, nextRank, tmb, weightOn, applyAutoKcal, KCAL_AUTO, pendingDebts, revalidateDebts, grant, MULTA_MIN, rankDe } from "../game.js";
 import { janelaStatus } from "./titulos.js";
+import { trilhaFx } from "../fx.js";
 import { currentTrack, TRACKS, trackById, ativas, multi, setFoco, progress } from "../tracks.js";
 
 function profileForm(p = {}, first = false) {
@@ -179,7 +180,7 @@ actions.novaTrilha = () => {
       <button class="btn sm primary" data-act="iniciarTrilha" data-id="${x.id}">Iniciar</button></li>`).join("")}</ul>`);
 };
 
-actions.iniciarTrilha = ({ id }) => {
+actions.iniciarTrilha = async ({ id }) => {
   const nova = !S.progress[id] || !Object.values(S.days).some(d => d.workout?.done && d.workout.trackId === id);
   const p = progress(id);
   p.inicio ??= today();
@@ -189,6 +190,7 @@ actions.iniciarTrilha = ({ id }) => {
   if (!w?.in && !w?.done) { S.focoDia = { d: today(), id }; setFoco(id); if (S.days[today()]?.modo) delete S.days[today()].modo; }
   save(); closeModal();
   const tr = trackById(id), ph = tr.phases[Math.min(p.phase, tr.phases.length - 1)];
+  await trilhaFx({ id, nome: tr.nome, icone: tr.icone, fase: ph.nome, rank: ph.rank });
   sysMessage("Trilha iniciada", `<p class="mid glow">${tr.icone} ${tr.nome}</p>
     <p>Fase <b>${ph.nome}</b>, rumo ao rank ${ph.rank}. Sua outra trilha continua de onde está.</p>
     ${p.nivelamento ? `<p class="small">Já tem condicionamento nela? Faça o <b>Nivelamento</b> na Missão: o teste do rank ${ph.rank} pela média de 2 tentativas. Passando, pula de fase (e pode nivelar de novo). Vale até o seu primeiro treino normal desta trilha.</p>` : ""}

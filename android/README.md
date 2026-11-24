@@ -24,6 +24,9 @@ num WebView preso a esse endereço e adiciona o que o navegador não faz:
   pagar Ouro e XP (15 min, preço dobrando por noite; mesma lista da penalidade; regras em `Toque`, cobertas por `ToqueTest`), vencer o impulso
   ou sair. As cobranças ficam guardadas e o app web as lança no jogo (`toqueCobrancas`/`toqueConfirmar`). Alarmes às
   20h e às 8h; o vigia dorme com a tela apagada.
+- **Meu porquê** (2.0): o app web manda no sync (`frases`) as mensagens curtas (até 90 caracteres) que o jogador
+  escreveu para a Zona de Penalidade e para a noite; a tela de bloqueio mostra uma delas, sorteada, abaixo do título
+  (`Frases.java`, testada em `FrasesTest`). Ficam só no aparelho.
 - **Compartilhar conquistas** (1.7): o card gerado pela página é salvo em Imagens/O Sistema e abre o "Compartilhar"
   do Android (`shareImage`), porque o WebView não tem o compartilhamento da web.
 

@@ -21,6 +21,7 @@ views.mais = () => {
     ${item("impulso", "⚡", "Impulso", "Bateu a vontade? Um desafio na hora")}
     ${item("relatorio", "📊", "Relatório semanal", "A sua semana comparada com a anterior")}
     ${item("extras", "🚶", "Atividades extras", "Caminhada, bike, esporte... somam no gasto do dia", S.tracking ? `<span class="chip warn">Ao vivo</span>` : "")}
+    ${item("porque", "🔥", "Meu porquê", "As fotos e as mensagens do ritual do dia")}
     ${item("condicao", "🌙", "Condição", "Sono, foco, energia e celular na cama")}
     ${item("medidas", "📏", "Medidas", "Peso e abdômen diários, medidas semanais")}
     ${item("fotos", "📸", "Fotos", "Registro semanal e antes × depois")}
@@ -116,7 +117,7 @@ views.fotos = () => `${header()}<div class="stack">
 
 views.fotos.after = async () => {
   urls.forEach(URL.revokeObjectURL); urls = [];
-  photoCache = (await photos.all()).filter(p => p.tipo !== "prova").sort((a, b) => b.date.localeCompare(a.date) || a.angulo.localeCompare(b.angulo));
+  photoCache = (await photos.all()).filter(p => p.tipo !== "prova" && !String(p.tipo || "").startsWith("ritual")).sort((a, b) => b.date.localeCompare(a.date) || a.angulo.localeCompare(b.angulo));
   const area = $("#photo-area"); if (!area) return;
   const dates = [...new Set(photoCache.map(p => p.date))];
   // Antes × depois: escolha qualquer foto de cada lado (sempre visível)

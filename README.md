@@ -143,6 +143,15 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   saldo, não libera. A tela do bloqueio oferece "Vencer o impulso" no lugar de pagar. Depois das 5h, abrir O Sistema
   pergunta se quer liberar a manhã. As cobranças entram no Registro na próxima abertura do app. Na Zona de
   Penalidade vale o bloqueio total. Desligar leva 24 h.
+- **Ritual do dia (Meu porquê):** na primeira abertura de cada dia, antes de qualquer aviso, uma tela com três fotos
+  de frente (Antes, que você escolhe; Agora, a foto de frente mais recente de Fotos; Meta, que você escolhe), a linha
+  do que falta e da missão de hoje, e uma mensagem sua escolhida pelo contexto (Geral, Depois de uma falta, Zona de
+  Penalidade, Semana perfeita, Dia de Teste ou Portão, Noite), sem repetir as últimas 3. O botão "Eu lembro" só ativa
+  depois de 5 s e precisa ser segurado. Configura em Mais → Meu porquê; vazio, o ritual não aparece. As mensagens de
+  Noite e da Zona de Penalidade com até 90 caracteres também aparecem numa linha nas telas de bloqueio (app Android 2.0).
+  Tudo fica só no aparelho.
+- **Trilha escolhida:** cada trilha tem a sua animação com som ao ser iniciada (Calistenia: a silhueta sobe na barra;
+  Corrida: contagem, pegadas e largada). O jogador começa sem trilha; o Início avisa que o jogo começa quando escolher.
 - **Card de conquista** para compartilhar no WhatsApp (rank, recorde, título, sombra, item do Arsenal, Portão, relatório). No app
   Android precisa da versão 1.7.
 

@@ -12,6 +12,7 @@ import { posMissao } from "../recompensas.js";
 import { COMANDANTES, arteSombra, derrotarChefe } from "../sombras.js";
 import { telaMissaoConcluida, mostrarRecordes, mostrarClasseSePreciso } from "./recompensas-ui.js";
 import { botaoCompartilhar } from "../cartao.js";
+import { trilhaFx } from "../fx.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
 const PUNCH_EXPIRES_H = 5;    // ponto de entrada vence depois disso
@@ -90,13 +91,14 @@ function chooseTrack() {
     </li>`).join("")}</ul>`)}</div>`;
 }
 
-actions.pickTrack = ({ id }) => {
+actions.pickTrack = async ({ id }) => {
   S.track = { id, startDate: S.game.log.length || Object.keys(S.days).length ? today() : addDays(today(), 1) };
   S.trackSince ??= S.track.startDate;
   progress(id).inicio ??= S.track.startDate;
   S.ativas = [...new Set([...ativas(), id])];
   save();
-  const ph = currentPhase();
+  const ph = currentPhase(), tr = trackById(id);
+  await trilhaFx({ id, nome: tr.nome, icone: tr.icone, fase: ph.nome, rank: ph.rank });
   sysMessage("Trilha iniciada", `<p class="mid glow">${trackById(id).nome}</p>
     <p>Fase <b>${ph.nome}</b>. Sua primeira meta tem prazo de <b>${ph.prazo}</b>.</p>
     <p class="small muted">6 treinos por semana, 1 dia de descanso. Faltou, pagou.</p>`, { onClose: refresh });

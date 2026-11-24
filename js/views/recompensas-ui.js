@@ -170,6 +170,12 @@ export async function avisosDoSistema() {
       As de cada rank só se levantam com você naquele rank ou acima, então o Registro só fecha no S.</p>
     <p>Elas sobem 1 nível a cada 10 missões e evoluem: Soldado → Elite → Cavaleiro.</p>
     ${reg.total ? `<p class="small muted">As suas ${reg.total} sombras já entraram no Registro${reg.absorvidos ? ` (${reg.absorvidos} sem vaga foram absorvidas pelo exército)` : ""}.</p>` : ""}`, { botao: "Ver o Registro" });
+  if (!S.ritualApresentado && S.profile) {
+    S.ritualApresentado = true; save();
+    await aviso("Ritual do dia", `<p>Agora, na primeira abertura de cada dia, o Sistema pode lembrar <b>por que você começou</b>: a sua foto de antes, a de agora, a da meta e uma mensagem sua.</p>
+      <p class="small muted">Configure em <b>Mais → Meu porquê</b>. Enquanto estiver vazio, o ritual não aparece.</p>
+      <a class="btn primary block" href="#/porque" data-close>Configurar agora</a>`, { botao: "Depois" });
+  }
   if (arsenal) {
     if (mig.ev) await celebrate([mig.ev]);
     await aviso("O Arsenal chegou", `${possui("manto-necromante") ? `<p>São <b>21 peças do Necromante</b> para colecionar: 9 armas, 6 livros de invocação, 5 anéis e o seu Manto. Elas caem dos Portões, nunca repetidas.</p>

@@ -19,6 +19,8 @@ import "./views/exercito.js";
 import "./views/titulos.js";
 import "./views/portao.js";
 import "./views/arsenal.js";
+import "./views/porque.js";
+import { ritualDoDia } from "./ritual.js";
 import "./cartao.js";
 import { avisosDoSistema } from "./views/recompensas-ui.js";
 import { syncNative, keepScreenOn } from "./native.js";
@@ -98,6 +100,7 @@ async function aoAbrir(sempre = false) {
   if (avisando) return;
   avisando = true;
   try {
+    if (await ritualDoDia()) render(); // primeira abertura do dia: o ritual vem antes de tudo
     const r = closeDays();
     if (r || sempre) render();
     if (r instanceof Promise) await r;

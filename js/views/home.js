@@ -69,7 +69,8 @@ function penaltyBanner() {
 
 function questCard() {
   const t = today(), w = S.days[t]?.workout;
-  if (!S.track) return panel("Missão diária", `<p>Nenhuma trilha escolhida.</p><a class="btn primary block" href="#/treino">Escolher trilha</a>`);
+  if (!S.track) return panel("O Sistema está esperando", `<p style="margin-top:0">Escolha uma trilha para o jogo começar. Até lá, nenhuma missão é cobrada.</p>
+    <a class="btn primary block" href="#/treino">Escolher a trilha</a>`, "portao");
   if (w?.done) return panel("Missão diária", `<p class="mid ok">✔ Concluída</p>
     <p class="muted small">${esc(w.plano.titulo)} · ${w.durMin} min · ~${w.kcal} kcal</p>`, "good");
   if (isRestDay(t) && !S.game.needsWorkout) return panel("Missão diária", `<p class="mid">Dia de descanso</p>

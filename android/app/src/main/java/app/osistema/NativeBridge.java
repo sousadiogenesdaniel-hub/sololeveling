@@ -97,6 +97,8 @@ final class NativeBridge {
             // saldo do jogador: o toque de recolher só libera se der para pagar
             if (o.has("gold")) ed.putInt("saldoOuro", o.optInt("gold", 0));
             if (o.has("xp")) ed.putInt("saldoXp", o.optInt("xp", 0));
+            // Meu porquê (2.0): frases curtas para as telas de bloqueio
+            if (o.has("frases")) ed.putString("frases", o.optJSONObject("frases") != null ? o.optJSONObject("frases").toString() : "{}");
             // "blocked" é ignorado de propósito: a lista é fixa e a página não consegue tirar apps dela
             ed.remove("blocked").apply();
             Scheduler.evaluate(a);
