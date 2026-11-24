@@ -366,3 +366,31 @@ export function serieFx(el, estado, extra = null) {
     if (extra === "treino") el.closest(".list")?.classList.add("treino-ok");
   }
 }
+
+// ---- missão concluída (ao bater o ponto de saída), antes de nível e rank -----------------------
+// Perfeita = todas as séries no alvo (verde, faíscas e arpejo). Concluída = com séries abaixo do alvo ou sem marcar
+// (âmbar, só o selo e duas notas). Curta (~2 s) e pulável.
+export function playMissao(perfeita) {
+  const ctx = soundOn() && audio(); if (!ctx) return;
+  if (perfeita) {
+    [659.25, 783.99, 987.77, 1318.5].forEach((f, i) => tone(ctx, { f, t: .35 + i * .08, d: .4, type: "sine", v: .1 }));
+    [1975.5, 2637].forEach((f, i) => tone(ctx, { f, t: .75 + i * .1, d: .5, type: "sine", v: .04 }));
+  } else {
+    tone(ctx, { f: 392, t: .35, d: .35, v: .1 }); tone(ctx, { f: 523.25, t: .5, d: .6, v: .1 });
+  }
+}
+export function missaoFx(w) {
+  const s = w.series || {}, especial = !!w.plano?.modo, perfeita = !!w.hit;
+  const sub = especial ? `${w.plano.titulo} concluído`
+    : perfeita ? `Todas as ${s.total} séries no alvo · a carga sobe`
+    : s.feitas >= s.total ? `${s.baixas} série${s.baixas > 1 ? "s" : ""} abaixo do alvo · a carga se mantém`
+    : `${s.feitas || 0} de ${s.total} séries marcadas`;
+  const cor = perfeita ? "var(--ok)" : especial ? "var(--glow)" : "var(--warn)";
+  navigator.vibrate?.(perfeita ? [40, 60, 40, 60, 160] : [40, 80, 120]);
+  playMissao(perfeita);
+  return overlay(`fx-missao${perfeita ? " perfeita" : ""}`, `<div class="fx-dark"></div>
+    <div class="ms-selo" style="--c:${cor}"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="ms-anel" cx="50" cy="50" r="42"/><path class="ms-check" d="M30 52 L45 66 L71 37"/></svg></div>
+    <div class="ms-tit" style="--c:${cor}">${perfeita ? "MISSÃO PERFEITA" : "MISSÃO CONCLUÍDA"}</div>
+    <div class="ms-sub">${sub}</div>
+    ${perfeita ? `<div class="fx-burst">${particles(26, "var(--ok)")}</div>` : ""}`, perfeita ? 2600 : 2100);
+}

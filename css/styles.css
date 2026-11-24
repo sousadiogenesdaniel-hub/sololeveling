@@ -610,3 +610,20 @@ li.ex-ok { animation: exOk .9s ease-out; }
 .ativ-barra > b.ok span { color: var(--ok); }
 .ativ-dia { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
 .ativ-dia .list { margin-top: 4px; }
+
+/* ---- missão concluída ---- */
+.fx-missao .fx-dark { background: radial-gradient(circle at 50% 45%, rgba(10, 18, 34, .92), rgba(0, 0, 0, .94) 70%); animation: show .2s forwards; }
+.ms-selo { position: absolute; left: 50%; top: 50%; width: 130px; height: 130px; margin: -110px 0 0 -65px; filter: drop-shadow(0 0 14px var(--c));
+  opacity: 0; transform: scale(.6); animation: msSelo .45s .1s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+.ms-selo svg { width: 100%; height: 100%; overflow: visible; }
+.ms-anel { fill: none; stroke: var(--c); stroke-width: 5; stroke-dasharray: 264; stroke-dashoffset: 264; animation: msTraco .5s .15s ease-out forwards; }
+.ms-check { fill: none; stroke: var(--c); stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 70; stroke-dashoffset: 70; animation: msTraco .35s .55s ease-out forwards; }
+@keyframes msSelo { to { opacity: 1; transform: none; } }
+@keyframes msTraco { to { stroke-dashoffset: 0; } }
+.ms-tit { position: absolute; top: calc(50% + 40px); left: 16px; right: 16px; text-align: center; font-size: 1.7rem; font-weight: 900; letter-spacing: .14em; color: #fff;
+  text-shadow: 0 0 18px var(--c); opacity: 0; transform: scale(1.4); animation: msCarimbo .3s .75s cubic-bezier(.2, .9, .3, 1.2) forwards; }
+@keyframes msCarimbo { to { opacity: 1; transform: none; } }
+.ms-sub { position: absolute; top: calc(50% + 88px); left: 16px; right: 16px; text-align: center; color: #bcd4ff; font-weight: 700; font-size: .92rem; opacity: 0; animation: up .4s 1s forwards; }
+.fx-missao.perfeita .fx-burst { animation-delay: .7s; }
+.fx-missao.perfeita .ms-selo { animation: msSelo .45s .1s cubic-bezier(.2, 1.4, .4, 1) forwards, msPulso 1.2s 1s ease-in-out infinite; }
+@keyframes msPulso { 50% { filter: drop-shadow(0 0 26px var(--c)); } }

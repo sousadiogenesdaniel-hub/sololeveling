@@ -28,6 +28,9 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   atividades, kcal e XP.
 - **Séries da missão:** cada quadradinho tem som e faísca (no alvo: verde e brilhante; abaixo do alvo: âmbar e grave;
   desmarcar: clique). Fechar todas as séries de um exercício toca um acorde; fechar o treino inteiro, uma fanfarra.
+- **Missão concluída:** ao bater o ponto de saída, antes das comemorações de nível e rank, um selo animado:
+  "Missão perfeita" (verde, com faíscas) com todas as séries no alvo, ou "Missão concluída" (âmbar) com séries
+  abaixo do alvo ou sem marcar.
 - **A cada 7 treinos seguidos:** +50 Ouro.
 - **Faltou ao treino:** −150 XP, −50 Ouro e **Zona de Penalidade** (o app fica vermelho e a Loja tranca).
 - **Sair da Zona de Penalidade:** pagar a multa por PIX a cada pessoa do grupo (cadastradas em Penalidades),

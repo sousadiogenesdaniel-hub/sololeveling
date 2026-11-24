@@ -479,7 +479,7 @@ function finish(w) {
   const events = completeWorkout();
   const pos = posMissao(w, today()); // baú, exército, marcos e títulos
   refresh();
-  return telaMissaoConcluida(events, pos);
+  return telaMissaoConcluida(events, pos, w);
 }
 
 actions.cancelWorkout = async () => {

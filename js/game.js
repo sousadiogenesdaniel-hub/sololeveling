@@ -197,6 +197,7 @@ export function completeWorkout(date = today()) {
   const totalSets = w.plano.itens.reduce((n, i) => n + i.series, 0);
   const marks = Object.values(w.sets || {}).flat();
   const doneSets = marks.filter(Boolean).length, lowSets = marks.filter(m => m === "low").length;
+  w.series = { total: totalSets, feitas: doneSets, baixas: lowSets }; // para a animação de missão concluída
   const especial = !!w.plano?.modo;        // Dia de Avaliação / Teste de Rank: vale a missão, não a carga
   w.full = !especial && doneSets >= totalSets;  // todas as séries feitas (mesmo abaixo do alvo)
   w.hit = w.full && lowSets === 0;              // todas no alvo: conta para subir a carga

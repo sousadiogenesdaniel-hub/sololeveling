@@ -3,7 +3,7 @@ import { go, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { today, esc, fmt, iso } from "../util.js";
 import { aviso, modal, closeModal, toast } from "../ui.js";
-import { celebrate, bauFx, recordeFx, tituloFx, portaoFx, itemFx, evolucaoFx } from "../fx.js";
+import { celebrate, bauFx, recordeFx, tituloFx, portaoFx, itemFx, evolucaoFx, missaoFx } from "../fx.js";
 import { arteItem } from "../arte-itens.js";
 import { levelInfo, grant } from "../game.js";
 import { RAR, itemBase, migrarArsenal, possui, HP } from "../premios.js";
@@ -62,9 +62,10 @@ export const linhaEv = e => {
 };
 const linhaTxt = t => `<li><span class="grow" style="text-align:left">${esc(t)}</span></li>`;
 
-// Missão concluída: comemoração de nível/rank → janela da missão → Baú → títulos → classe
-export async function telaMissaoConcluida(events, pos) {
+// Missão concluída: animação da missão → comemoração de nível/rank → janela da missão → Baú → títulos → classe
+export async function telaMissaoConcluida(events, pos, w = null) {
   const todos = [...events, ...pos.ev];
+  if (w) await missaoFx(w);
   await celebrate(todos);
   const li = levelInfo();
   const corposNovos = pos.marcos.length;
