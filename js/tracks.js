@@ -519,7 +519,7 @@ export const TEST_KEY = {
   "Correr sem parar": "corrida",
 };
 // Exercício do treino → prova que mede o mesmo movimento (só estes são calibrados)
-const EX_KEY = {
+export const EX_KEY = {
   "Flexão de braço": "flexoes", "Série longa de flexões": "flexoes",
   "Mergulho nas paralelas": "mergulhos", "Série longa de mergulhos": "mergulhos",
   "Remada australiana nas paralelas": "remadas", "Remada australiana": "remadas", "Série longa de remadas australianas": "remadas",

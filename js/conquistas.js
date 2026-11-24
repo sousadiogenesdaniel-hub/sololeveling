@@ -41,7 +41,7 @@ export function totais(ate = today(), desde = "") {
 }
 
 // ---- marcos (cada marco novo deixa um corpo para o Exército) --------------------------------
-const MARCOS = {
+export const MARCOS = {
   flexoes: [100, 500, 1000, 2500, 5000, 10000, 25000], agachamentos: [100, 500, 1000, 2500, 5000, 10000, 25000],
   abdominais: [100, 500, 1000, 2500, 5000, 10000, 25000], barras: [50, 100, 250, 500, 1000, 2500],
   mergulhos: [100, 500, 1000, 2500, 5000], remadas: [100, 500, 1000, 2500, 5000],

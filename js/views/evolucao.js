@@ -57,6 +57,7 @@ views.evolucao = () => {
   return `${header()}
     <div class="tabs">${PERIODS.map(([v, n]) => `<button class="btn sm ${period === v ? "on" : ""}" data-act="evoPeriod" data-v="${v}">${n}</button>`).join("")}</div>
     <div class="stack">
+    <a class="btn block" href="#/contadores">🔢 Contadores: quantas flexões, agachamentos… você já fez</a>
     ${panel("Resumo", `<table class="t"><tr><th></th><th>Início</th><th>Atual</th><th>Variação</th><th>Meta</th></tr>
       ${row("Peso", ini, atual, p.metaPeso, p.metaMargem ? `± ${fmt(p.metaMargem)} kg` : "kg")}${row("Abdômen", abdIni, abdAt, p.metaAbdomen, "cm")}</table>`)}
     ${attendanceBoard()}
