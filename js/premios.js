@@ -22,13 +22,13 @@ export const ITENS = [
   { id: "manto-necromante", nome: "Manto do Necromante", slot: "manto", rank: "D", rar: "raro", cor: "#b892ff", dado: "classe",
     hist: "O Sistema entrega este manto a quem escolhe comandar os mortos. Dizem que o capuz nunca fica vazio por muito tempo." },
   { id: "adaga-coveiro", nome: "Adaga do Coveiro", slot: "arma", rank: "D", rar: "comum", cor: "#d0b98a",
-    hist: "Pertenceu a um coveiro que enterrava os caçadores caídos nos primeiros Portões. Ele jurava que, à noite, alguns pediam para voltar." },
+    hist: "Pertenceu a um coveiro que enterrava os caçadores caídos nas primeiras Dungeons. Ele jurava que, à noite, alguns pediam para voltar." },
   { id: "cajado-osso", nome: "Cajado de Osso", slot: "arma", rank: "D", rar: "comum", cor: "#7fe0c8",
     hist: "Montado com ossos de feras do rank D. A pedra no topo brilha mais perto de um corpo que ainda pode se levantar." },
   { id: "grimorio-chamado", nome: "Grimório do Primeiro Chamado", slot: "livro", rank: "D", rar: "comum", cor: "#c2acf2",
     hist: "As primeiras páginas ensinam uma única palavra. Todo Necromante começa por ela." },
   { id: "anel-ferro", nome: "Anel de Ferro Negro", slot: "anel", rank: "D", rar: "comum", cor: "#a3adc6",
-    hist: "Ferro forjado no fundo de um Portão sem luz. Continua frio ao toque, mesmo no verão." },
+    hist: "Ferro forjado no fundo de uma Dungeon sem luz. Continua frio ao toque, mesmo no verão." },
   { id: "lamina-luto", nome: "Lâmina do Luto", slot: "arma", rank: "C", rar: "comum", cor: "#a9c0e0",
     hist: "A fita preta no cabo é de alguém que não voltou. Quem a empunha luta por dois." },
   { id: "cetro-ebano", nome: "Cetro de Ébano", slot: "arma", rank: "C", rar: "comum", cor: "#a682ff",
@@ -58,9 +58,9 @@ export const ITENS = [
   { id: "foice-almas", nome: "Foice das Mil Almas", slot: "arma", rank: "A", rar: "epico", cor: "#ff5a2e",
     hist: "Forjada para colher o que sobra de mil batalhas. As almas presas no cabo sussurram o nome de quem a carrega." },
   { id: "grimorio-noite", nome: "Grimório da Noite Eterna", slot: "livro", rank: "A", rar: "lendario", cor: "#93a0ff", portao: "inferno",
-    hist: "Arrancado do fundo do Portão do Inferno. Ao abrir, a noite cai em volta de quem lê, mesmo ao meio-dia. Com ele, os seis livros se completam e o Marechal ouve o chamado." },
+    hist: "Arrancado do fundo da Dungeon do Inferno. Ao abrir, a noite cai em volta de quem lê, mesmo ao meio-dia. Com ele, os seis livros se completam e o Marechal ouve o chamado." },
   { id: "anel-dominio", nome: "Anel do Domínio", slot: "anel", rank: "S", rar: "lendario", cor: "#ffc94d", portao: "trono",
-    hist: "Forjado no Portão do Trono para governar todos os outros. Quem o usa não pede: ordena." },
+    hist: "Forjado na Dungeon do Trono para governar todos os outros. Quem o usa não pede: ordena." },
 ].map(i => ({ classe: "necromante", ...i }));
 export const itemBase = id => ITENS.find(i => i.id === id);
 export const LIVROS = ITENS.filter(i => i.slot === "livro").map(i => i.id);
@@ -68,14 +68,14 @@ export const LIVROS = ITENS.filter(i => i.slot === "livro").map(i => i.id);
 // Poderes: cada espaço tem um só. Arma = Ouro, anel = XP, livro = chance de extração, Manto = HP.
 // O bônus vale no que se ganha (missões, Portões e baús), nunca diminui o que se perde.
 export const PODER = { pct: { comum: 5, raro: 10, epico: 15, lendario: 25 }, ext: { comum: 3, raro: 5, epico: 8, lendario: 12 } };
-export const efeitoTxt = b => b.slot === "arma" ? `+${PODER.pct[b.rar]}% de Ouro nas missões, Portões e baús`
-  : b.slot === "anel" ? `+${PODER.pct[b.rar]}% de XP nas missões e Portões${b.id === "anel-dominio" ? " · invoca todos os seus Comandantes de uma vez" : ""}`
+export const efeitoTxt = b => b.slot === "arma" ? `+${PODER.pct[b.rar]}% de Ouro nas missões, Dungeons e baús`
+  : b.slot === "anel" ? `+${PODER.pct[b.rar]}% de XP nas missões e Dungeons${b.id === "anel-dominio" ? " · invoca todos os seus Comandantes de uma vez" : ""}`
   : b.slot === "livro" ? `+${PODER.ext[b.rar]} pontos na chance de extração`
   : "Guarda HP: 100 HP valem um dia de folga";
 export const ondeCai = b => b.dado === "classe" ? "Mudança de classe, ao virar Necromante no rank D"
-  : b.portao ? `Só no ${PORTAO_NOME[b.portao]} (abre no rank ${b.rank})`
-  : `${{ comum: "Portões comuns e de Emergência", raro: "Portões de Emergência e Vermelhos", epico: "Portões Vermelhos" }[b.rar]}, a partir do rank ${b.rank}`;
-export const PORTAO_NOME = { inferno: "Portão do Inferno", trono: "Portão do Trono" };
+  : b.portao ? `Só na ${PORTAO_NOME[b.portao]} (abre no rank ${b.rank})`
+  : `${{ comum: "Dungeons comuns e de Emergência", raro: "Dungeons de Emergência e Red Dungeons", epico: "Red Dungeons" }[b.rar]}, a partir do rank ${b.rank}`;
+export const PORTAO_NOME = { inferno: "Dungeon do Inferno", trono: "Dungeon do Trono" };
 
 export const inventario = () => (S.itens ||= []);
 export const equipados = () => (S.equip ||= {});
@@ -145,7 +145,7 @@ export function migrarArsenal() {
 }
 
 // ---- HP (do Manto do Necromante) ----------------------------------------------------------
-// +1 por missão, por Portão vencido e por dia de atividades com 250 kcal (+2 acima de 700); uma falta tira 25.
+// +1 por missão, por Dungeon vencida e por dia de atividades com 250 kcal (+2 acima de 700); uma falta tira 25.
 // Com 100 HP dá para trocar por um dia de folga: só no próprio dia, antes de cumprir a missão, nunca para apagar
 // uma falta. Guarda no máximo 100 (uma folga por vez).
 export const HP = { max: 100, folga: 100, missao: 1, portao: 1 };

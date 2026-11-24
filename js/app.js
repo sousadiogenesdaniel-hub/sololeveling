@@ -2,7 +2,7 @@
 import { $, $$, today } from "./util.js";
 import { S, load, save } from "./store.js";
 import { actions, views, setRender } from "./core.js";
-import { processDays, inPenalty, applyAutoKcal, migrarCurva, levelInfo } from "./game.js";
+import { processDays, inPenalty, applyAutoKcal, migrarCurva, levelInfo, isRestDay } from "./game.js";
 import { aplicarFoco } from "./tracks.js";
 import { showEvents, toast, sysMessage, aviso } from "./ui.js";
 import { celebrate } from "./fx.js";
@@ -20,6 +20,9 @@ import "./views/titulos.js";
 import "./views/portao.js";
 import "./views/arsenal.js";
 import "./views/porque.js";
+import "./views/dungeons.js";
+import { missaoAberturaFx } from "./fx.js";
+import { workoutFor } from "./tracks.js";
 import { ritualDoDia } from "./ritual.js";
 import "./cartao.js";
 import { avisosDoSistema } from "./views/recompensas-ui.js";
@@ -39,6 +42,7 @@ function render() {
   const [rota = "inicio", arg] = location.hash.replace(/^#\/?/, "").split("/");
   const view = views[rota] || views.inicio;
   const y = window.scrollY, same = app.dataset.rota === rota + "/" + (arg || "");
+  const entrouNaMissao = rota === "treino" && !(app.dataset.rota || "").startsWith("treino/") && !!app.dataset.rota;
   app.innerHTML = view(arg);
   restoreDrafts();
   app.dataset.rota = rota + "/" + (arg || "");
@@ -51,6 +55,17 @@ function render() {
   });
   view.after?.();
   syncNative(); // app Android: informa o estado da Zona de Penalidade
+  if (entrouNaMissao) abrirMissao();
+}
+
+// Ao entrar na aba Missão: a animação da classe (Humano por enquanto). Completa na primeira vez do dia; depois, curta.
+// Nunca por cima de outra janela ou animação.
+function abrirMissao() {
+  if (!S.track || document.querySelector(".overlay, .fx, .ritual")) return;
+  const t = today(), w = S.days[t]?.workout, completa = S.missaoFxDia !== t;
+  if (completa) { S.missaoFxDia = t; save(); }
+  const txt = w?.done ? "Missão de hoje cumprida" : isRestDay(t) && !inPenalty() ? "Hoje é dia de descanso" : (workoutFor(t)?.titulo || "");
+  missaoAberturaFx({ classe: S.classe || "humano", texto: txt, completa });
 }
 setRender(render);
 

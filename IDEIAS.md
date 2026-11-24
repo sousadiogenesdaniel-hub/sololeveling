@@ -59,10 +59,22 @@ número e ficha (sem blockchain). Hoje todas do mesmo grau têm o mesmo desenho.
 - **Próximo passo, quando voltar ao assunto:** esboçar 10 sombras (Soldados, Elites, um Cavaleiro e a evolução de
   uma delas) para aprovar o estilo antes de fazer as 100.
 
+### Abertura da Missão por classe
+Hoje a animação de entrada na aba Missão usa o personagem Humano (a imagem do Daniel, em icons/classes/humano.png).
+Fazer um personagem para cada classe: Necromante, Mago, Guerreiro, Assassino e Tanque.
+
+### Arte especial das Dungeons nomeadas
+No Registro de Dungeons, a Dungeon do Inferno e a do Trono precisam de um card bem especial (hoje é provisório: o
+portal com uma coroa). O Daniel ainda vai pensar no que pode ser.
+
+### Dungeons no lugar da missão bônus (em conversa)
+Ver o documento "Dungeons: frequência e prêmios": 2 a 3 dungeons por semana, a Dungeon de Campo (verde, pelo GPS)
+no lugar da missão bônus e prêmios raros (baú Lendário garantido, item a mais, Tesouro do Monarca).
+
 ### Recompensas: próximos passos
-- **Portões de corrida:** hoje os Portões são de calistenia (peso do corpo). Com a Corrida ativa, poderiam pedir uma
+- **Dungeons de corrida:** hoje as Dungeons são de calistenia (peso do corpo). Com a Corrida ativa, poderiam pedir uma
   distância rastreada pelo GPS.
-- **Aviso no Android quando um Portão abrir** (hoje ele aparece ao abrir o app).
+- **Aviso no Android quando uma Dungeon abrir** (hoje ele aparece ao abrir o app).
 - **Arte das sombras:** desenhada em SVG pelo próprio app (silhuetas originais). Dá para trocar por imagens feitas
   pelo Daniel no futuro.
 - **Comandantes dos ranks C a S:** nomes e poderes já definidos no código (aparecem como "???" até o chefe cair).

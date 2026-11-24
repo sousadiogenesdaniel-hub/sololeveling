@@ -38,8 +38,8 @@ function conteudo(tipo, d) {
       texto: `Levante-se. ${d.nome} agora faz parte do meu exército.` };
     case "item": return { cor: RAR[d.rar].cor, topo: "ITEM DO ARSENAL", titulo: d.nome, linhas: [`${d.tipo} · ${RAR[d.rar].nome}`.toUpperCase()], arte: d.arte, quadrada: true,
       texto: `${d.nome} (${RAR[d.rar].nome}) agora está no meu Arsenal.` };
-    case "portao": return { cor: d.cor, topo: "PORTÃO VENCIDO", titulo: d.nome, linhas: [`Rank ${d.rank}`, d.tempo ? `${d.tempo} min` : ""],
-      texto: `Venci o ${d.nome} (rank ${d.rank}) no O Sistema.` };
+    case "portao": return { cor: d.cor, topo: "DUNGEON VENCIDA", titulo: d.nome, linhas: [`Rank ${d.rank}`, d.tempo ? `${d.tempo} min` : ""],
+      texto: `Venci a ${d.nome} (rank ${d.rank}) no O Sistema.` };
     default: return { cor: "#3fb8ff", topo: "RELATÓRIO SEMANAL", titulo: `${d.missoes}/${d.cobradas} missões`, linhas: [`+${d.xp} XP`, `Nível ${d.nivelIni} → ${d.nivelFim}`],
       texto: `Minha semana no O Sistema: ${d.missoes} de ${d.cobradas} missões, nível ${d.nivelIni} → ${d.nivelFim}.` };
   }

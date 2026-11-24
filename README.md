@@ -100,7 +100,7 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   Comandantes (O Carmesim, O Devorador, O Asa Negra, O General das Mil Lâminas) e O Marechal das Trevas. Por rank:
   D 20, C 25, B 25, A 20, S 10; uma sombra só se levanta com o jogador no rank dela ou acima, então o Registro só fecha
   no S (título Mítico "Rei dos Mil Soldados"). As que faltam aparecem como silhueta "???" com o grau.
-  Cada feito deixa um corpo: recorde (Soldado, no máximo 1 por prova a cada 7 dias), marco (Soldado ou Elite), Portão
+  Cada feito deixa um corpo: recorde (Soldado, no máximo 1 por prova a cada 7 dias), marco (Soldado ou Elite), Dungeon
   comum (Elite, às vezes Cavaleiro), Vermelho (Cavaleiro + esquadrão de 3 Soldados), de Emergência (esquadrão de 2),
   Inferno e Trono (esquadrão de 5) e chefe do Teste de Rank (Comandante). Só Soldados vêm em esquadrão. "Levante-se!"
   extrai: Soldado 80%, Elite 50%, Cavaleiro 35% por tentativa (+ pontos do livro), 3 tentativas (falhou 3 vezes, o
@@ -123,23 +123,23 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   tocar: 9 armas, 6 livros de invocação, 5 anéis e o Manto. Por rank: D 5, C 8, B 4, A 3, S 1. Raridades: 10 Comuns,
   5 Raros, 4 Épicos e 2 Lendários. Os não obtidos aparecem como silhueta "???" com a raridade; os Lendários têm aura
   dourada. A ficha mostra poder, onde cai, quando, nível e rank em que caiu e a história. Um de cada espaço equipado:
-  **arma** = +5/10/15/25% de Ouro (missões, Portões e baús); **anel** = mesma % de XP (missões e Portões); **livro** =
+  **arma** = +5/10/15/25% de Ouro (missões, Dungeons e baús); **anel** = mesma % de XP (missões e Dungeons); **livro** =
   +3/5/8/12 pontos na chance de extração; **Manto** = HP. O Manto vem com a classe (rank D); os outros caem só dos
-  Portões, nunca repetidos, em qualquer rank igual ou maior que o do item: Portão comum dá Comum (30%), de Emergência
+  Dungeons, nunca repetidos, em qualquer rank igual ou maior que o do item: Dungeon comum dá Comum (30%), de Emergência
   Comum ou Raro (40%), Vermelho Raro ou Épico (50%). Com item, metade das vezes vem só ele, sem baú. Os itens
   provisórios de antes viraram Ouro.
-- **HP e dia de folga:** o Manto guarda HP: +1 por missão, por Portão vencido e por dia de atividades com 250 kcal
+- **HP e dia de folga:** o Manto guarda HP: +1 por missão, por Dungeon vencido e por dia de atividades com 250 kcal
   (+2 acima de 700); uma falta tira 25. Guarda até 100. Com 100 HP, troque por um dia de folga: sem missão e sem
   penalidade, só no próprio dia e antes de cumprir a missão (nunca apaga uma falta).
-- **Portões nomeados:** o **Portão do Inferno** (abre no rank A, dá o Grimório da Noite Eterna, o 6º livro) e o
-  **Portão do Trono** (abre no S, dá o Anel do Domínio). Avisam ao abrir e dão 7 dias para escolher o dia. Desafio:
+- **Dungeons nomeadas:** o **Dungeon do Inferno** (abre no rank A, dá o Grimório da Noite Eterna, o 6º livro) e o
+  **Dungeon do Trono** (abre no S, dá o Anel do Domínio). Avisam ao abrir e dão 7 dias para escolher o dia. Desafio:
   todas as provas da fase a 110–120% do último máximo, em até 2 séries somadas (sem chegar à meta do próximo teste),
   100 burpees, 200 afundos, 21 km de corrida e 40 km de bike pelo GPS do app; umas 4 h ou mais. No dia, quem entra
   não deve a missão diária. Vencer: o item Lendário, +1000 XP e +500 Ouro. 3 chances por rank (a próxima abre 2 a 6
   semanas depois); gastou as 3, volta no rank seguinte; no S, 3 meses depois. Nunca some.
-- **Portões:** um por semana, num dia sorteado e sem aviso, com desafio calculado pelos máximos (contra o relógio,
+- **Dungeons:** um por semana, num dia sorteado e sem aviso, com desafio calculado pelos máximos (contra o relógio,
   circuito ou resistência) e 48 h para entrar. Normal (73%, opcional: +100 XP, baú Épico+, corpo e chance de item),
-  Vermelho (15%, mais difícil; depois de entrar, sair ou estourar o tempo custa 50 XP) e de Emergência (12%,
+  Red (15%, mais difícil; depois de entrar, sair ou estourar o tempo custa 50 XP) e de Emergência (12%,
   obrigatório: ignorar ou falhar custa 150 XP e 50 Ouro, sem Zona de Penalidade). Nunca na Zona de Penalidade nem
   colado num Teste de Rank. Não substitui a missão do dia.
 - **Teste de Rank como chefe:** o card mostra o chefe com barra de vida; cada prova é uma parte da vida dele.
@@ -150,16 +150,23 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   saldo, não libera. A tela do bloqueio oferece "Vencer o impulso" no lugar de pagar. Depois das 5h, abrir O Sistema
   pergunta se quer liberar a manhã. As cobranças entram no Registro na próxima abertura do app. Na Zona de
   Penalidade vale o bloqueio total. Desligar leva 24 h.
+- **Registro de Dungeons:** cada dungeon vencida vira um card numerado por tipo (Dungeon #001, Red Dungeon #001,
+  Dungeon de Emergência #001; as nomeadas só com o nome), com a cor do tipo (azul, vermelho, laranja), o desafio, os
+  exercícios, o tempo e o que foi recebido. Só aparecem as vencidas. Filtro por tipo e por rank (Mais → Registro de
+  Dungeons).
+- **Abertura da Missão:** ao entrar na aba Missão, o personagem da classe aparece com "MISSÃO DIÁRIA" e o treino do
+  dia; completa na primeira vez do dia, curta nas outras. A imagem vem de icons/classes/<classe>.png (Humano por
+  enquanto); sem ela, uma silhueta.
 - **Ritual do dia (Meu porquê):** na primeira abertura de cada dia, antes de qualquer aviso, uma tela com três fotos
   de frente (Antes, que você escolhe; Agora, a foto de frente mais recente de Fotos; Meta, que você escolhe), a linha
   do que falta e da missão de hoje, e uma mensagem sua escolhida pelo contexto (Geral, Depois de uma falta, Zona de
-  Penalidade, Semana perfeita, Dia de Teste ou Portão, Noite), sem repetir as últimas 3. O botão "Eu lembro" só ativa
+  Penalidade, Semana perfeita, Dia de Teste ou Dungeon, Noite), sem repetir as últimas 3. O botão "Eu lembro" só ativa
   depois de 5 s e precisa ser segurado. Configura em Mais → Meu porquê; vazio, o ritual não aparece. As mensagens de
   Noite e da Zona de Penalidade com até 90 caracteres também aparecem numa linha nas telas de bloqueio (app Android 2.0).
   Tudo fica só no aparelho.
 - **Trilha escolhida:** cada trilha tem a sua animação com som ao ser iniciada (Calistenia: a silhueta sobe na barra;
   Corrida: contagem, pegadas e largada). O jogador começa sem trilha; o Início avisa que o jogo começa quando escolher.
-- **Card de conquista** para compartilhar no WhatsApp (rank, recorde, título, sombra, item do Arsenal, Portão, relatório). No app
+- **Card de conquista** para compartilhar no WhatsApp (rank, recorde, título, sombra, item do Arsenal, Dungeon, relatório). No app
   Android precisa da versão 1.7.
 
 ## Como o treino é verificado

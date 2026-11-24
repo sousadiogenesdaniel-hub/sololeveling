@@ -2,17 +2,17 @@
 // máximos. Normal (opcional), Vermelho (mais difícil; depois de entrar, tem que terminar) e, mais raro,
 // Emergência (obrigatório: ignorar ou falhar custa como uma falta, mas sem Zona de Penalidade nem multa).
 import { S } from "./store.js";
-import { today, addDays } from "./util.js";
+import { today, addDays, uid } from "./util.js";
 import { possui } from "./premios.js";
 import { weekStart, isRestDay, inPenalty, levelInfo, grant, RANK_ORDER } from "./game.js";
 import { pr, currentPhase, testKey } from "./tracks.js";
 import { novoCorpo } from "./feitos.js";
-import { abrirBau, bonus, bonusEquip, darItem, sortearItemPortao, eventoHp, HP } from "./premios.js";
+import { abrirBau, bonus, bonusEquip, darItem, sortearItemPortao, eventoHp, HP, RAR, itemBase } from "./premios.js";
 
 export const TIPOS = {
-  normal: { nome: "Portão", cor: "#3fb8ff", xp: 100, fator: 1, chance: .73 },
-  vermelho: { nome: "Portão Vermelho", cor: "#ff2e4d", xp: 200, fator: 1.3, chance: .15 },
-  emergencia: { nome: "Portão de Emergência", cor: "#ffb020", xp: 100, fator: .85, chance: .12 },
+  normal: { nome: "Dungeon", cor: "#3fb8ff", xp: 100, fator: 1, chance: .73 },
+  vermelho: { nome: "Red Dungeon", cor: "#ff2e4d", xp: 200, fator: 1.3, chance: .15 },
+  emergencia: { nome: "Dungeon de Emergência", cor: "#ff7a1a", xp: 100, fator: .85, chance: .12 },
 };
 export const PENA = { vermelho: { xp: -50, ouro: 0 }, emergencia: { xp: -150, ouro: -50 } };
 const fimDaSemana = ws => addDays(ws, 6);
@@ -65,12 +65,12 @@ export function atualizarPortoes() {
   let abriu = null;
   for (const p of Object.values(S.portoes || {})) {
     if (p.status === "aberto" && t > p.fecha) {
-      if (p.tipo === "emergencia") { p.status = "ignorado"; eventos.push(grant(PENA.emergencia.xp, PENA.emergencia.ouro, "Portão de Emergência ignorado")); }
+      if (p.tipo === "emergencia") { p.status = "ignorado"; eventos.push(grant(PENA.emergencia.xp, PENA.emergencia.ouro, "Dungeon de Emergência ignorada")); }
       else p.status = "expirou";
     }
     if (p.status === "ativo" && minutos(p) > p.desafio.limite + 120) { // entrou e não voltou para concluir
       p.status = "falhou"; const pe = PENA[p.tipo];
-      if (pe) eventos.push(grant(pe.xp, pe.ouro, `${TIPOS[p.tipo].nome} não concluído`));
+      if (pe) eventos.push(grant(pe.xp, pe.ouro, `${TIPOS[p.tipo].nome} não concluída`));
     }
     if (p.status === "oculto" && p.ws < weekStart()) p.status = "perdido";
   }
@@ -115,14 +115,14 @@ export function concluirPortao(tudoFeito) {
     return { venceu: false, porTempo: tudoFeito, eventos: pe ? [grant(pe.xp, pe.ouro, `${T.nome} falhou`)] : [] };
   }
   p.status = "vencido";
-  const eventos = [grant(T.xp, 0, `${T.nome} vencido`), ...bonusEquip(T.xp, 0, "no Portão")];
-  const hp = eventoHp(HP.portao, `Manto do Necromante: ${T.nome} vencido`); if (hp) eventos.push(hp);
+  const eventos = [grant(T.xp, 0, `${T.nome} vencida`), ...bonusEquip(T.xp, 0, "na Dungeon")];
+  const hp = eventoHp(HP.portao, `Manto do Necromante: ${T.nome} vencida`); if (hp) eventos.push(hp);
   const it = sortearItemPortao(p.tipo);
   const item = it && darItem(it.id, `${T.nome} (rank ${p.rank})`) ? it : null;
   let bau = null;
   if (!item || Math.random() < .5) {
     const b = bonus();
-    bau = abrirBau({ sorte: b.sorteTotal + (p.tipo === "vermelho" ? 30 : 0), minimo: p.tipo === "emergencia" ? "raro" : "epico", motivo: `Baú do ${T.nome}` });
+    bau = abrirBau({ sorte: b.sorteTotal + (p.tipo === "vermelho" ? 30 : 0), minimo: p.tipo === "emergencia" ? "raro" : "epico", motivo: `Baú da ${T.nome}` });
     eventos.push(...bau.eventos);
   }
   // corpos: comum = Elite (20% Cavaleiro); Vermelho = Cavaleiro + esquadrão de 3 Soldados; Emergência = esquadrão de 2
@@ -130,7 +130,43 @@ export function concluirPortao(tudoFeito) {
   const corpo = novoCorpo({ grau, origem: `${T.nome} rank ${p.rank}`, qtd: p.tipo === "emergencia" ? 2 : 1 });
   const esquadrao = p.tipo === "vermelho" ? novoCorpo({ grau: "soldado", qtd: 3, origem: `${T.nome} rank ${p.rank}` }) : null;
   if (item) p.item = item.id;
+  const corpos = [corpo.qtd ? `Esquadrão de ${corpo.qtd} Soldados` : `Corpo de ${grau === "cavaleiro" ? "Cavaleiro" : "Elite"}`, esquadrao && `Esquadrão de ${esquadrao.qtd} Soldados`];
+  p.reg = registrarDungeon({ tipo: p.tipo, rank: p.rank, desafio: p.desafio, minutos: p.minutos,
+    premios: premiosTxt(eventos, [bau && `Baú ${RAR[bau.raridade].nome}`, item && `Arsenal: ${item.nome}`, ...corpos]) }).id;
   return { venceu: true, eventos, bau, corpo, esquadrao, item };
+}
+
+// ---- Registro de Dungeons: cada dungeon vencida vira um card numerado por tipo (coleção) -----------
+// Só as vencidas aparecem. Guarda o desafio, as metas, o tempo e o que foi recebido.
+export const DUNGEON = {
+  normal: { nome: "Dungeon", cor: "#3fb8ff" }, vermelho: { nome: "Red Dungeon", cor: "#ff2e4d" }, emergencia: { nome: "Dungeon de Emergência", cor: "#ff7a1a" },
+  inferno: { nome: "Dungeon do Inferno", cor: "#ff5a2e", nomeada: true }, trono: { nome: "Dungeon do Trono", cor: "#ffc94d", nomeada: true },
+};
+export const MODO_NOME = { relogio: "Contra o relógio", circuito: "Circuito", resistencia: "Resistência" };
+export const registroDungeons = () => (S.dungeons ||= []);
+function premiosTxt(eventos, extras) {
+  const soma = k => eventos.reduce((n, e) => n + (e[k] > 0 ? e[k] : 0), 0);
+  const xp = soma("xp"), ouro = soma("gold"), hp = soma("hp");
+  return [xp && `+${xp} XP`, ouro && `+${ouro} Ouro`, hp && `+${hp} HP`, ...extras].filter(Boolean);
+}
+function registrarDungeon({ tipo, rank, desafio = {}, minutos = null, premios = [], d = today() }) {
+  const lista = registroDungeons(), n = lista.filter(x => x.tipo === tipo).length + 1;
+  const reg = { id: uid(), tipo, n, d, rank, titulo: desafio.titulo || DUNGEON[tipo].nome, modo: desafio.modo || null, desc: desafio.desc || "",
+    limite: desafio.limite || null, itens: desafio.itens || [], gps: desafio.gps || null, minutos, premios };
+  lista.push(reg);
+  return reg;
+}
+// Dungeons vencidas antes do Registro entram com o que ficou guardado (sem a lista completa de prêmios)
+export function migrarRegistroDungeons() {
+  if (S.dungeonsV) return 0;
+  S.dungeonsV = 1;
+  const antigas = Object.values(S.portoes || {}).filter(p => p.status === "vencido" && !p.reg).sort((a, b) => (a.fim || 0) - (b.fim || 0));
+  for (const p of antigas) p.reg = registrarDungeon({ tipo: p.tipo, rank: p.rank, desafio: p.desafio, minutos: p.minutos, d: p.abertoEm || p.ws,
+    premios: [`+${TIPOS[p.tipo].xp} XP`, p.item && itemBase(p.item) && `Arsenal: ${itemBase(p.item).nome}`].filter(Boolean) }).id;
+  for (const [k, g] of Object.entries(S.nomeados || {})) if (g.status === "vencido" && !g.reg)
+    g.reg = registrarDungeon({ tipo: k, rank: g.fase, desafio: { titulo: NOMEADOS[k].nome, itens: g.desafio?.itens, gps: g.desafio?.gps }, d: g.vencidoEm,
+      premios: [`+${NOM.xp} XP`, `+${NOM.ouro} Ouro`, `Arsenal: ${itemBase(NOMEADOS[k].item).nome}`] }).id;
+  return antigas.length;
 }
 
 // ---- Portões nomeados ---------------------------------------------------------------------
@@ -140,8 +176,8 @@ export function concluirPortao(tudoFeito) {
 // a próxima chance abre de 2 a 6 semanas depois. Gastou as 3, volta no rank seguinte; no S, 3 meses depois.
 // Nunca some: a coleção sempre pode ser completada.
 export const NOMEADOS = {
-  inferno: { nome: "Portão do Inferno", rank: "A", item: "grimorio-noite", cor: "#ff5a2e" },
-  trono: { nome: "Portão do Trono", rank: "S", item: "anel-dominio", cor: "#ffc94d" },
+  inferno: { nome: "Dungeon do Inferno", rank: "A", item: "grimorio-noite", cor: "#ff5a2e" },
+  trono: { nome: "Dungeon do Trono", rank: "S", item: "anel-dominio", cor: "#ffc94d" },
 };
 export const NOM = { chances: 3, escolher: 7, primeira: [7, 21], intervalo: [14, 42], pausaS: 90, xp: 1000, ouro: 500,
   gps: [{ tipo: "corrida", nome: "Corrida", km: 21 }, { tipo: "bike", nome: "Bicicleta", km: 40 }],
@@ -217,7 +253,10 @@ export function concluirNomeado(k) {
   g.status = "vencido"; g.vencidoEm = today();
   darItem(N.item, `${N.nome} (rank ${g.fase})`);
   novoCorpo({ grau: "soldado", qtd: 5, origem: N.nome });
-  const eventos = [grant(NOM.xp, NOM.ouro, `${N.nome} vencido`), ...bonusEquip(NOM.xp, NOM.ouro, "no Portão")];
-  const hp = eventoHp(HP.portao, `Manto do Necromante: ${N.nome} vencido`); if (hp) eventos.push(hp);
+  const eventos = [grant(NOM.xp, NOM.ouro, `${N.nome} vencida`), ...bonusEquip(NOM.xp, NOM.ouro, "na Dungeon")];
+  const hp = eventoHp(HP.portao, `Manto do Necromante: ${N.nome} vencida`); if (hp) eventos.push(hp);
+  g.reg = registrarDungeon({ tipo: k, rank: g.fase, minutos: g.inicio ? Math.round((Date.now() - g.inicio) / 60000) : null,
+    desafio: { titulo: N.nome, desc: "Prova de um dia inteiro: força a 110–120% dos máximos, em até 2 séries, e resistência pelo GPS.", itens: g.desafio.itens, gps: g.desafio.gps },
+    premios: premiosTxt(eventos, [`Arsenal: ${itemBase(N.item).nome}`, "Esquadrão de 5 Soldados"]) }).id;
   return { venceu: true, item: N.item, eventos };
 }

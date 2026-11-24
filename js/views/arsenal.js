@@ -20,7 +20,7 @@ function hpPanel() {
   return panel("HP do Manto", `<div class="row between"><b class="hpv num" style="font-size:1.4rem">${S.hp} / ${HP.max}</b>
       <span class="small muted">${(S.folgas || []).length} folga${(S.folgas || []).length === 1 ? "" : "s"} usada${(S.folgas || []).length === 1 ? "" : "s"}</span></div>
     <div class="hpbar" style="margin:8px 0"><i style="width:${S.hp / HP.max * 100}%"></i></div>
-    <p class="small muted" style="margin:0">+1 HP por missão cumprida, por Portão vencido e por dia de atividades com 250 kcal (+2 acima de 700). Uma falta tira 25.
+    <p class="small muted" style="margin:0">+1 HP por missão cumprida, por Dungeon vencida e por dia de atividades com 250 kcal (+2 acima de 700). Uma falta tira 25.
       Com ${HP.folga} HP, troque por um <b>dia de folga</b>: sem missão e sem penalidade, só no próprio dia e antes de cumprir a missão.</p>
     ${pf.ok ? `<button class="btn primary block" style="margin-top:10px" data-act="usarFolga">Usar o dia de folga hoje (−${HP.folga} HP)</button>`
       : hoje ? `<p class="ok small" style="margin-bottom:0">Hoje é o seu dia de folga.</p>` : ""}`);
@@ -33,7 +33,7 @@ function resumo() {
       : "Os itens são da classe: o Arsenal abre quando você vira Necromante, no rank D. Até lá, tudo fica em silhueta."}</p>
     <ul class="list small">${Object.entries(SLOTS).map(([k, nome]) => { const b = eq[k] && itemBase(eq[k]);
       return `<li><span class="muted" style="width:4.5em">${nome}</span><span class="grow">${b ? `<b style="color:${RAR[b.rar].cor}">${esc(b.nome)}</b><br><span class="muted">${efeitoTxt(b)}</span>` : `<span class="muted">vazio</span>`}</span></li>`; }).join("")}</ul>
-    <p class="small muted" style="margin-bottom:0">Caem dos Portões (nunca repetido); os 2 Lendários, só dos Portões do Inferno e do Trono.
+    <p class="small muted" style="margin-bottom:0">Caem das Dungeons (nunca repetido); os 2 Lendários, só das Dungeons do Inferno e do Trono.
       O Marechal só se levanta com os 6 livros e o Manto: você tem <b>${m.livros}/6 livros</b>${m.manto ? " e o Manto" : ""}.</p>`);
 }
 
@@ -54,7 +54,7 @@ function nomeadosPanel() {
   const ativos = Object.entries(NOMEADOS).filter(([k]) => nomeados()[k]);
   if (!ativos.length) return "";
   const st = { espera: "Vai abrir sem aviso", aberto: "Aberto: escolha o dia", marcado: "Dia marcado", ativo: "Em andamento", vencido: "Vencido", esgotado: "Chances esgotadas" };
-  return panel("Portões nomeados", `<ul class="list small">${ativos.map(([k, N]) => { const g = nomeados()[k];
+  return panel("Dungeons nomeadas", `<ul class="list small">${ativos.map(([k, N]) => { const g = nomeados()[k];
     return `<li><span class="grow"><b style="color:${N.cor}">${N.nome}</b><br><span class="muted">${st[g.status]}${g.status === "marcado" ? ` · ${fmtDate(g.dia)}` : ""}
       ${g.status !== "vencido" ? ` · chance ${Math.min(g.usadas + 1, NOM.chances)} de ${NOM.chances} no rank ${g.fase}` : ""}</span></span>
       <a class="btn sm" href="#/portao">Ver</a></li>`; }).join("")}</ul>`);

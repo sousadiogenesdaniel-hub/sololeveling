@@ -13,7 +13,7 @@ export const CONTEXTOS = {
   falta: { nome: "Depois de uma falta", desc: "No dia seguinte a uma missão perdida." },
   penalidade: { nome: "Zona de Penalidade", desc: "Enquanto estiver na Zona. As de até 90 caracteres também vão para a tela de bloqueio." },
   perfeita: { nome: "Semana perfeita", desc: "No primeiro dia depois de uma semana sem falta." },
-  teste: { nome: "Dia de Teste de Rank ou Portão", desc: "Com Portão aberto, Portão nomeado marcado ou Dia de Teste." },
+  teste: { nome: "Dia de Teste de Rank ou Dungeon", desc: "Com Dungeon aberta, Dungeon nomeada marcada ou Dia de Teste." },
   noite: { nome: "Noite / toque de recolher", desc: "Ritual à noite. As de até 90 caracteres também vão para a tela do toque de recolher." },
 };
 export const CURTA = 90, ESPERA_S = 5, SEGURAR_MS = 1500;

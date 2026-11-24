@@ -17,7 +17,8 @@ views.mais = () => {
     ${item("exercito", "🗡️", "Exército das Sombras", S.classe ? "Sombras, corpos e invocação" : "Classe e corpos guardados", corpos ? `<span class="chip">${corpos}</span>` : "")}
     ${item("arsenal", "⚔️", "Arsenal", "Armas, livros, anéis e o Manto (HP e folga)", typeof S.hp === "number" && S.hp >= 100 ? `<span class="chip hpv">Folga</span>` : "")}
     ${item("titulos", "🏆", "Sala dos Títulos", "Títulos por raridade, do Comum ao Mítico")}
-    ${item("portao", "🌀", "Portões", "Um por semana, sem aviso; e os do Inferno e do Trono", portao ? `<span class="chip warn">Aberto</span>` : "")}
+    ${item("portao", "🌀", "Dungeons", "Uma por semana, sem aviso; e as do Inferno e do Trono", portao ? `<span class="chip warn">Aberta</span>` : "")}
+    ${item("dungeons", "🗂️", "Registro de Dungeons", "A coleção das dungeons vencidas", (S.dungeons || []).length ? `<span class="chip">${S.dungeons.length}</span>` : "")}
     ${item("impulso", "⚡", "Impulso", "Bateu a vontade? Um desafio na hora")}
     ${item("relatorio", "📊", "Relatório semanal", "A sua semana comparada com a anterior")}
     ${item("extras", "🚶", "Atividades extras", "Caminhada, bike, esporte... somam no gasto do dia", S.tracking ? `<span class="chip warn">Ao vivo</span>` : "")}

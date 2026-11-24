@@ -62,7 +62,7 @@ views.relatorio = arg => {
     ${panel("Destaques", `<ul class="list small">
       ${r.recordes.map(x => `<li><span class="grow">Recorde: ${esc(x.nome)}</span><b class="gold num">${x.de} → ${x.para}</b></li>`).join("")}
       ${r.titulos.map(t => `<li><span class="grow">Título: <b style="color:${RAR[t.rar].cor}">${esc(t.nome)}</b></span></li>`).join("")}
-      ${r.portao?.status === "vencido" ? `<li><span class="grow">Portão vencido (rank ${r.portao.rank})</span></li>` : r.portao?.status === "falhou" ? `<li><span class="grow bad">Portão: falhou</span></li>` : ""}
+      ${r.portao?.status === "vencido" ? `<li><span class="grow">Dungeon vencida (rank ${r.portao.rank})</span></li>` : r.portao?.status === "falhou" ? `<li><span class="grow bad">Dungeon: falhou</span></li>` : ""}
       ${r.sombras ? `<li><span class="grow">${r.sombras} sombra${r.sombras > 1 ? "s" : ""} extraída${r.sombras > 1 ? "s" : ""}</span></li>` : ""}
       ${r.impulsos ? `<li><span class="grow">${r.impulsos} impulso${r.impulsos > 1 ? "s" : ""} vencido${r.impulsos > 1 ? "s" : ""}</span></li>` : ""}
       ${!r.recordes.length && !r.titulos.length && !r.sombras && !r.impulsos && r.portao?.status !== "vencido" ? `<li class="muted">Nenhum destaque nesta semana.</li>` : ""}</ul>

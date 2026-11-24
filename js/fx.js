@@ -187,7 +187,7 @@ export function portaoFx(nome, cor, linha) {
   navigator.vibrate?.([60, 60, 60, 60, 300]);
   playPortao();
   return overlay("fx-portao", `<div class="fx-dark"></div>
-    <div class="fx-type">${typing("[ AVISO DO SISTEMA ] Um Portão se abriu.")}</div>
+    <div class="fx-type">${typing("[ AVISO DO SISTEMA ] Uma Dungeon se abriu.")}</div>
     <div class="fx-portal" style="--c:${cor}"></div>
     <div class="fx-name" style="--c:${cor};top:calc(50% + 110px);letter-spacing:.1em;font-size:1.4rem">${nome.toUpperCase()}</div>
     <div class="fx-lvl" style="top:calc(50% + 190px)">${linha}</div>`, 5000);
@@ -393,4 +393,25 @@ export function missaoFx(w) {
     <div class="ms-tit" style="--c:${cor}">${perfeita ? "MISSÃO PERFEITA" : "MISSÃO CONCLUÍDA"}</div>
     <div class="ms-sub">${sub}</div>
     ${perfeita ? `<div class="fx-burst">${particles(26, "var(--ok)")}</div>` : ""}`, perfeita ? 2600 : 2100);
+}
+
+// ---- abertura da aba Missão: o personagem da classe (Humano por enquanto) -----------------------
+// A imagem vem de icons/classes/<classe>.png; sem ela, uma silhueta desenhada aqui. Completa na primeira vez do dia
+// (com som); depois, uma versão curta e silenciosa. Pulável com um toque.
+const silhuetaHumano = `<svg class="ma-svg" viewBox="0 0 100 120" aria-hidden="true">
+  <path d="M50 14 C58 14 63 20 63 28 C63 35 59 40 55 42 C65 44 74 50 77 58 L81 84 C82 96 76 106 72 120 L28 120 C24 106 18 96 19 84 L23 58 C26 50 35 44 45 42 C41 40 37 35 37 28 C37 20 42 14 50 14 Z"
+    fill="#04060c" stroke="var(--glow)" stroke-width="1.2"/>
+  <ellipse cx="45.5" cy="29" rx="2.4" ry="1.2" fill="var(--glow)"/><ellipse cx="54.5" cy="29" rx="2.4" ry="1.2" fill="var(--glow)"/></svg>`;
+export function missaoAberturaFx({ classe = "humano", texto = "", completa = true }) {
+  if (completa) {
+    const ctx = soundOn() && audio();
+    if (ctx) { noise(ctx, 0, .5, .1); tone(ctx, { f: 523.25, t: .55, d: .3, type: "sine", v: .07 }); tone(ctx, { f: 783.99, t: .7, d: .5, type: "sine", v: .07 }); }
+    navigator.vibrate?.(30);
+  }
+  return overlay(`fx-mab${completa ? "" : " curta"}`, `<div class="fx-dark"></div>
+    <div class="ma-luz"></div>
+    <div class="ma-char">${silhuetaHumano}<img class="ma-img" src="icons/classes/${classe}.png" alt="" onerror="this.remove()"></div>
+    <div class="ma-sys">[ O SISTEMA ]</div>
+    <div class="ma-tit">MISSÃO DIÁRIA</div>
+    ${texto ? `<div class="ma-sub">${texto.replace(/[<>&]/g, "")}</div>` : ""}`, completa ? 2600 : 900);
 }

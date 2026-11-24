@@ -16,10 +16,10 @@ import { janelaStatus } from "./titulos.js";
 function portaoCard() {
   const p = portaoAberto(); if (!p) return "";
   const T = TIPOS[p.tipo];
-  return panel(p.status === "ativo" ? "Portão em andamento" : "Um Portão se abriu", `<p class="mid" style="color:${T.cor};margin-top:0">${T.nome} · rank ${p.rank}</p>
+  return panel(p.status === "ativo" ? "Dungeon em andamento" : "Uma Dungeon se abriu", `<p class="mid" style="color:${T.cor};margin-top:0">${T.nome} · rank ${p.rank}</p>
     <p class="small muted">${p.status === "ativo" ? "Você está dentro. Volte e conclua antes do tempo acabar."
-      : `Fecha em ${fmtDate(p.fecha, { day: "2-digit", month: "2-digit" })} à meia-noite. ${p.tipo === "emergencia" ? "Obrigatório." : "Opcional: só prêmio."}`}</p>
-    <a class="btn primary block" href="#/portao">${p.status === "ativo" ? "Voltar ao Portão" : "Ver o Portão"}</a>`, "portao").replace('class="panel portao"', `class="panel portao" style="--pc:${T.cor}"`);
+      : `Fecha em ${fmtDate(p.fecha, { day: "2-digit", month: "2-digit" })} à meia-noite. ${p.tipo === "emergencia" ? "Obrigatória." : "Opcional: só prêmio."}`}</p>
+    <a class="btn primary block" href="#/portao">${p.status === "ativo" ? "Voltar à Dungeon" : "Ver a Dungeon"}</a>`, "portao").replace('class="panel portao"', `class="panel portao" style="--pc:${T.cor}"`);
 }
 // Portão do Inferno / do Trono esperando a escolha do dia, ou marcado para hoje
 function nomeadoCard() {
@@ -28,7 +28,7 @@ function nomeadoCard() {
     const g = nomeados()[k];
     if (!g || !(g.status === "aberto" || g.status === "ativo" || (g.status === "marcado" && g.dia === t))) return "";
     const txt = g.status === "aberto" ? `Escolha o dia até ${fmtDate(g.prazo, { day: "2-digit", month: "2-digit" })}.` : g.status === "ativo" ? "Você está dentro: conclua até a meia-noite." : "É hoje. Hoje você não deve a missão diária se entrar.";
-    return panel(N.nome, `<p class="small" style="margin-top:0">${txt}</p><a class="btn primary block" href="#/portao">${g.status === "aberto" ? "Escolher o dia" : "Ir ao Portão"}</a>`, "portao")
+    return panel(N.nome, `<p class="small" style="margin-top:0">${txt}</p><a class="btn primary block" href="#/portao">${g.status === "aberto" ? "Escolher o dia" : "Ir à Dungeon"}</a>`, "portao")
       .replace('class="panel portao"', `class="panel portao" style="--pc:${N.cor}"`);
   }).join("");
 }

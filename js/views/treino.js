@@ -139,7 +139,7 @@ const dano = (ph, vals) => ph.tests.reduce((n, [, meta], i) => n + Math.min(1, (
 function chefeHtml(ph, st) {
   const k = COMANDANTES[ph.rank], hp = st.tentativa === 2 ? Math.max(0, 1 - dano(ph, st.t1.vals)) : 1;
   return `<div class="cmd" style="margin-bottom:10px">${arteSombra({ grau: k.grau || "comandante", cmd: ph.rank }, { tam: 72 })}
-    <div class="grow"><div class="small muted">Chefe do Portão do rank ${ph.rank}</div><b style="color:${k.cor}">${k.nome}</b>
+    <div class="grow"><div class="small muted">Chefe da Dungeon do rank ${ph.rank}</div><b style="color:${k.cor}">${k.nome}</b>
     <div class="hp" style="margin-top:6px"><i style="width:${Math.round(hp * 100)}%"></i></div>
     <div class="small muted">${st.tentativa === 2 ? `A 1ª tentativa causou ${Math.round((1 - hp) * 100)}% de dano. Cada prova é uma parte da vida dele.` : "Cada prova é uma parte da vida dele. Bata todas as metas para derrotá-lo."}</div>
     ${ph.rank === "D" && !S.classe ? `<div class="small glow" style="margin-top:4px">Vencer este chefe libera a escolha de classe.</div>` : ""}</div></div>`;

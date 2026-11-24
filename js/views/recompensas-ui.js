@@ -11,7 +11,7 @@ import { CLASSES, escolherClasse, precisaEscolherClasse, corpos, sombras, migrar
 import { checarConquistas, relatorioPendente } from "../conquistas.js";
 import { recordesNaoVistos } from "../feitos.js";
 import { bauPendente, marcarBauAberto, iniciarRecompensas } from "../recompensas.js";
-import { atualizarPortoes, TIPOS, atualizarNomeados, NOMEADOS, NOM } from "../portoes.js";
+import { atualizarPortoes, TIPOS, atualizarNomeados, NOMEADOS, NOM, migrarRegistroDungeons } from "../portoes.js";
 import { botaoCompartilhar } from "../cartao.js";
 import { nativo, temToque, toqueStatus, toqueCobrancas, syncNative, conferirAtualizacao, atualizacao } from "../native.js";
 
@@ -142,7 +142,7 @@ export function escolhaDeClasse() {
       await itemFx({ arte: arteItem(manto, { tam: 260 }), nome: manto.nome, cor: RAR[manto.rar].cor, sub: "Manto · Raro", item: manto });
       await aviso("Você agora é um Necromante", `<p>Os seus feitos deixaram <b>${n} corpo${n === 1 ? "" : "s"}</b> esperando. Diga "Levante-se" e forme o seu exército.</p>
         <p class="small muted">O <b>Manto do Necromante</b> é a primeira peça do seu Arsenal: ele guarda HP (+1 por missão), e ${HP.folga} HP valem um dia de folga.
-        As outras 20 peças caem dos Portões.</p>`, { botao: "Ir para o Exército" });
+        As outras 20 peças caem das Dungeons.</p>`, { botao: "Ir para o Exército" });
       save(); go("exercito");
     });
   });
@@ -157,6 +157,7 @@ export async function avisosDoSistema() {
   iniciarRecompensas();
   const mig = migrarArsenal(); save();
   const reg = migrarRegistro(); save();
+  migrarRegistroDungeons(); save();
   const antes = !!atualizacao;
   const atual = nativo ? !!(await conferirAtualizacao()) : false;
   const { eventos, abriu } = atualizarPortoes();
@@ -179,8 +180,8 @@ export async function avisosDoSistema() {
   }
   if (arsenal) {
     if (mig.ev) await celebrate([mig.ev]);
-    await aviso("O Arsenal chegou", `${possui("manto-necromante") ? `<p>São <b>21 peças do Necromante</b> para colecionar: 9 armas, 6 livros de invocação, 5 anéis e o seu Manto. Elas caem dos Portões, nunca repetidas.</p>
-      <p>O seu <b>Manto</b> agora guarda <b class="hpv">HP</b>: +1 por missão, por Portão vencido e por dia de atividades com 250 kcal. Com ${HP.folga} HP, troque por um dia de folga.</p>
+    await aviso("O Arsenal chegou", `${possui("manto-necromante") ? `<p>São <b>21 peças do Necromante</b> para colecionar: 9 armas, 6 livros de invocação, 5 anéis e o seu Manto. Elas caem das Dungeons, nunca repetidas.</p>
+      <p>O seu <b>Manto</b> agora guarda <b class="hpv">HP</b>: +1 por missão, por Dungeon vencida e por dia de atividades com 250 kcal. Com ${HP.folga} HP, troque por um dia de folga.</p>
       <p class="small muted">O Marechal só se levanta com os 6 livros e o Manto no Arsenal.</p>` : ""}
       ${mig.ouro ? `<p class="small">Os ${mig.velhos} itens provisórios saíram e viraram <b class="gold">+${mig.ouro} Ouro</b>.</p>` : ""}`, { botao: "Abrir o Arsenal" });
   }
@@ -190,7 +191,7 @@ export async function avisosDoSistema() {
     await aviso(N.nome, `<p>Abriu. Você tem <b>${NOM.escolher} dias</b> para escolher o dia: são umas 4 horas ou mais, com 21 km de corrida e 40 km de bike pelo GPS.</p>
       <a class="btn primary block" href="#/portao" data-close>Ver o desafio e escolher o dia</a>`, { botao: "Depois" });
   }
-  if (eventos.length) await aviso("Portão", `<ul class="list">${eventos.map(linhaEv).join("")}</ul>`);
+  if (eventos.length) await aviso("Dungeon", `<ul class="list">${eventos.map(linhaEv).join("")}</ul>`);
   if (rel) {
     await aviso("Relatório semanal do Sistema", `<p>Semana de ${fmtD(rel.ws)} a ${fmtD(rel.we)}</p>
       <div class="grid3"><div class="tile"><div class="lbl">Missões</div><div class="val num">${rel.missoes}/${rel.cobradas}</div></div>
@@ -199,7 +200,7 @@ export async function avisosDoSistema() {
       <a class="btn block" style="margin-top:10px" href="#/relatorio/${rel.ws}" data-close>Ver relatório completo</a>`, { botao: "Fechar" });
   }
   if (abriu) await portaoFx(TIPOS[abriu.tipo].nome + " · rank " + abriu.rank, TIPOS[abriu.tipo].cor,
-    abriu.tipo === "emergencia" ? "Obrigatório · fecha amanhã à meia-noite" : "Fecha amanhã à meia-noite · toque para continuar");
+    abriu.tipo === "emergencia" ? "Obrigatória · fecha amanhã à meia-noite" : "Fecha amanhã à meia-noite · toque para continuar");
   await mostrarClasseSePreciso();
   return mostrou;
 }

@@ -30,7 +30,7 @@ function bloqueado() {
     <div class="grow"><p style="margin-top:0">Você ainda é <b>Humano</b>. Ao vencer o chefe do rank <b>D</b>, o Sistema libera a <b>mudança de classe</b>. Como <b>Necromante</b>, você forma este exército.</p>
     <p class="small">Seus feitos já estão guardando corpos: <b class="glow">${n}</b> esperando a extração.</p></div></div>
     ${precisaEscolherClasse() ? `<button class="btn primary block" data-act="abrirClasse">Escolher a classe</button>` : ""}
-    <p class="small muted" style="margin-bottom:0">Cada recorde pessoal, marco (1.000 flexões, 100 km…), Portão vencido e chefe de Teste de Rank deixa um corpo. O chefe do rank D vira o seu primeiro Comandante. Com a classe vem também o Arsenal.</p>`)}
+    <p class="small muted" style="margin-bottom:0">Cada recorde pessoal, marco (1.000 flexões, 100 km…), Dungeon vencida e chefe de Teste de Rank deixa um corpo. O chefe do rank D vira o seu primeiro Comandante. Com a classe vem também o Arsenal.</p>`)}
     ${panel("Classes do rank D", `${listaClasses()}<p class="small muted" style="margin-bottom:0">As classes em construção chegam em atualizações futuras, cada uma com a sua coleção.</p>`)}`;
 }
 
