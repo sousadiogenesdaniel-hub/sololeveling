@@ -12,7 +12,7 @@ import { posMissao } from "../recompensas.js";
 import { COMANDANTES, arteSombra, derrotarChefe } from "../sombras.js";
 import { telaMissaoConcluida, mostrarRecordes, mostrarClasseSePreciso } from "./recompensas-ui.js";
 import { botaoCompartilhar } from "../cartao.js";
-import { trilhaFx } from "../fx.js";
+import { trilhaFx, serieFx } from "../fx.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
 const PUNCH_EXPIRES_H = 5;    // ponto de entrada vence depois disso
@@ -243,6 +243,11 @@ actions.toggleSet = ({ e, i }, el) => {
   el.setAttribute("aria-pressed", !!w.sets[e][i]);
   el.setAttribute("aria-label", el.getAttribute("aria-label").replace(/( —.*)?$/, w.sets[e][i] === "low" ? " — abaixo do alvo" : w.sets[e][i] ? " — no alvo" : ""));
   save();
+  // som e efeito: série no alvo, abaixo do alvo ou desmarcada; e se fechou o exercício ou o treino inteiro
+  const estado = w.sets[e][i] === true ? "on" : w.sets[e][i] === "low" ? "low" : "off";
+  const feito = k => w.plano.itens[k] && Array.from({ length: w.plano.itens[k].series }, (_, j) => w.sets[k]?.[j]).every(Boolean);
+  const extra = estado === "off" ? null : w.plano.itens.every((_, k) => feito(k)) ? "treino" : feito(+e) ? "exercicio" : null;
+  serieFx(el, estado, extra);
 };
 
 // Dias especiais: a avaliação ou o Teste de Rank viram a missão do dia (com ponto). A fila de treinos

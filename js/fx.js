@@ -337,3 +337,32 @@ export function trilhaFx({ id, nome, icone = "", fase = "", rank = "", cor = "va
     ${fase ? `<div class="tr-sub">Fase ${fase}${rank ? ` · rumo ao rank ${rank}` : ""}</div>` : ""}
     <div class="fx-lvl">toque para continuar</div>`, 5400);
 }
+
+// ---- séries da missão: som e efeito a cada quadradinho ---------------------------------------
+// no alvo = "ding" brilhante e faísca verde; abaixo do alvo = "tok" grave e faísca âmbar; desmarcar = clique seco.
+// Fechou todas as séries de um exercício = pequeno acorde; fechou o treino inteiro = fanfarra curta.
+export function playSerie(estado, extra = null) {
+  const ctx = soundOn() && audio(); if (!ctx) return;
+  if (estado === "on") { tone(ctx, { f: 1046.5, d: .18, type: "sine", v: .12 }); tone(ctx, { f: 1568, t: .03, d: .14, type: "sine", v: .05 }); }
+  else if (estado === "low") tone(ctx, { f: 330, d: .13, type: "triangle", v: .13, slide: 250 });
+  else noise(ctx, 0, .04, .12);
+  if (extra === "exercicio") [784, 987.8, 1174.7].forEach((f, i) => tone(ctx, { f, t: .12 + i * .06, d: .3, type: "sine", v: .07 }));
+  if (extra === "treino") {
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(ctx, { f, t: .15 + i * .09, d: .35, v: .09 }));
+    [523.25, 659.25, 783.99].forEach(f => tone(ctx, { f, t: .55, d: 1.1, v: .06 }));
+  }
+}
+export function serieFx(el, estado, extra = null) {
+  navigator.vibrate?.(extra === "treino" ? [50, 40, 140] : extra === "exercicio" ? 40 : estado === "low" ? [10, 30, 10] : estado === "on" ? 15 : 0);
+  playSerie(estado, extra);
+  if (reduced() || estado === "off") return;
+  const fx = document.createElement("span");
+  fx.className = `set-fx ${estado}`;
+  fx.innerHTML = Array.from({ length: 6 }, (_, i) => { const a = i / 6 * Math.PI * 2 + Math.random() * .5;
+    return `<i style="--dx:${Math.round(Math.cos(a) * 26)}px;--dy:${Math.round(Math.sin(a) * 22)}px"></i>`; }).join("");
+  el.append(fx); setTimeout(() => fx.remove(), 700);
+  if (extra) {
+    const li = el.closest("li"); li?.classList.remove("ex-ok"); void li?.offsetWidth; li?.classList.add("ex-ok");
+    if (extra === "treino") el.closest(".list")?.classList.add("treino-ok");
+  }
+}

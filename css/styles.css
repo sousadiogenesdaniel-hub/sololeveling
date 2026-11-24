@@ -587,3 +587,26 @@ body.penalty.penalty.penalty .btn.primary { background: var(--glow); }
 @keyframes trNome { from { opacity: 0; letter-spacing: .9em; } to { opacity: 1; letter-spacing: .14em; } }
 .tr-sub { position: absolute; top: calc(50% + 120px); left: 16px; right: 16px; text-align: center; color: #bcd4ff; font-weight: 700; letter-spacing: .08em; opacity: 0; animation: up .5s 3s forwards; }
 .fx-trilha .fx-lvl { top: calc(50% + 165px); left: 0; right: 0; text-align: center; animation-delay: 3.6s; }
+
+/* ---- séries: faísca a cada quadradinho ---- */
+.set { position: relative; overflow: visible; }
+.set-fx { position: absolute; inset: -5px; pointer-events: none; border: 2px solid var(--fxc); opacity: 0; animation: setAnel .5s ease-out; }
+.set-fx.on { --fxc: var(--ok); } .set-fx.low { --fxc: var(--warn); }
+@keyframes setAnel { 0% { opacity: 1; transform: scale(.8); } 100% { opacity: 0; transform: scale(1.35); } }
+.set-fx i { position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: var(--fxc); box-shadow: 0 0 6px var(--fxc);
+  animation: setFaisca .55s ease-out forwards; }
+@keyframes setFaisca { 0% { opacity: 1; transform: translate(0, 0); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
+li.ex-ok { animation: exOk .9s ease-out; }
+@keyframes exOk { 0% { box-shadow: inset 0 0 0 2px var(--ok), 0 0 18px rgba(61, 255, 181, .35); } 100% { box-shadow: inset 0 0 0 0 transparent; } }
+.treino-ok { animation: treinoOk 1.2s ease-out; }
+@keyframes treinoOk { 0% { box-shadow: 0 0 0 2px var(--ok), 0 0 40px rgba(61, 255, 181, .45); } 100% { box-shadow: none; } }
+
+/* ---- atividades: faixas do dia e diário ---- */
+.ativ-barra { position: relative; height: 10px; margin: 6px 0 0; background: rgba(255, 255, 255, .06); border: 1px solid var(--line); }
+.ativ-barra > i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #1d6fbf, var(--glow)); box-shadow: 0 0 10px rgba(var(--glow-rgb), .5); }
+.ativ-barra > b { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--muted); }
+.ativ-barra > b.ok { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+.ativ-barra > b span { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-size: .62rem; color: var(--muted); font-weight: 700; }
+.ativ-barra > b.ok span { color: var(--ok); }
+.ativ-dia { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.ativ-dia .list { margin-top: 4px; }

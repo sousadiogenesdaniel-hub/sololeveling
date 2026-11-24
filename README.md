@@ -23,7 +23,11 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   energia e foco), até o dia seguinte: +5 XP, seja qual for a resposta. **Medidas semanais:** +30 XP. **Dia dentro
   da meta de calorias:** +20 XP.
 - **Atividades extras do dia** (somadas, inclusive a da missão bônus): a partir de 250 kcal, +10 XP e +1 HP; acima
-  de 700 kcal, mais +20 XP e +2 HP (o HP só com o Manto do Necromante). Editar ou excluir recalcula.
+  de 700 kcal, mais +20 XP e +2 HP (o HP só com o Manto do Necromante). Editar ou excluir recalcula. A tela mostra a
+  barra do dia até as duas faixas e um diário (como o da Comida): totais da semana e do mês e cada dia com as suas
+  atividades, kcal e XP.
+- **Séries da missão:** cada quadradinho tem som e faísca (no alvo: verde e brilhante; abaixo do alvo: âmbar e grave;
+  desmarcar: clique). Fechar todas as séries de um exercício toca um acorde; fechar o treino inteiro, uma fanfarra.
 - **A cada 7 treinos seguidos:** +50 Ouro.
 - **Faltou ao treino:** −150 XP, −50 Ouro e **Zona de Penalidade** (o app fica vermelho e a Loja tranca).
 - **Sair da Zona de Penalidade:** pagar a multa por PIX a cada pessoa do grupo (cadastradas em Penalidades),

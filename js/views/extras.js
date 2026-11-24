@@ -74,16 +74,50 @@ export function estimate(tipo, d, intensidade, date) {
 
 export const extrasOf = date => S.days[date]?.extras || [];
 
+// ---- diário das atividades (como o da Comida): total por dia, semana e mês -----------------------
+function resumoDia(d) {
+  const ex = extrasOf(d), dd = S.days[d] || {};
+  const faixa = dd.ativFaixa ?? (dd.extraXp ? 1 : 0);
+  return { ex, kcal: extrasKcal(d), min: ex.reduce((n, e) => n + (e.dados?.tempo || 0), 0), km: ex.reduce((n, e) => n + (e.dados?.dist || 0), 0),
+    xp: ATIV.slice(0, faixa).reduce((n, f) => n + f.xp, 0) };
+}
+function somaPeriodo(de, ate) {
+  const r = { kcal: 0, min: 0, km: 0, dias: 0, xp: 0 };
+  for (let d = de; d <= ate; d = addDays(d, 1)) { const x = resumoDia(d); if (!x.ex.length) continue; r.dias++; r.kcal += x.kcal; r.min += x.min; r.km += x.km; r.xp += x.xp; }
+  return r;
+}
+// Barra do dia até as faixas de 250 e 700 kcal
+function faixasHoje(t) {
+  const k = extrasKcal(t), max = Math.max(ATIV[1].kcal * 1.15, k), pct = v => Math.min(100, v / max * 100);
+  const prox = ATIV.find(f => f.acima ? k <= f.kcal : k < f.kcal);
+  return `<div class="ativ-barra" role="img" aria-label="${fmt(k)} kcal hoje"><i style="width:${pct(k)}%"></i>
+      ${ATIV.map(f => `<b class="${(f.acima ? k > f.kcal : k >= f.kcal) ? "ok" : ""}" style="left:${pct(f.kcal)}%"><span>${f.kcal}</span></b>`).join("")}</div>
+    <p class="small ${prox ? "muted" : "ok"}" style="margin:22px 0 6px">${prox ? `Faltam <b>${fmt(Math.max(1, f2(prox, k)))} kcal</b> para ${prox.acima ? "passar de" : "chegar a"} ${prox.kcal} kcal (+${prox.xp} XP).` : "As duas faixas do dia batidas."}</p>`;
+}
+const f2 = (f, k) => f.acima ? f.kcal + 1 - k : f.kcal - k;
+function diario(t, dias, item) {
+  const ws = weekStart(t), sem = somaPeriodo(ws, t), mes = somaPeriodo(t.slice(0, 8) + "01", t);
+  const tile = (rot, r) => `<div class="tile"><div class="lbl">${rot}</div><div class="val num">~${fmt(r.kcal)} kcal</div>
+    <div class="small muted">${r.dias} dia${r.dias === 1 ? "" : "s"} · ${fmt(r.min)} min${r.km ? ` · ${fmt(r.km, 1)} km` : ""}${r.xp ? ` · +${r.xp} XP` : ""}</div></div>`;
+  return panel("Diário das atividades", `<div class="grid2">${tile("Esta semana", sem)}${tile("Este mês", mes)}</div>
+    ${dias.length ? dias.map(d => { const r = resumoDia(d);
+      return `<div class="ativ-dia"><div class="row between"><b>${fmtDate(d, { weekday: "short", day: "2-digit", month: "2-digit" })}</b>
+          <span class="num small">~${fmt(r.kcal)} kcal${r.xp ? ` · <b class="ok">+${r.xp} XP</b>` : ""}</span></div>
+        <div class="small muted">${r.ex.length} atividade${r.ex.length > 1 ? "s" : ""} · ${fmt(r.min)} min${r.km ? ` · ${fmt(r.km, 1)} km` : ""}</div>
+        <ul class="list">${r.ex.map(e => item(d, e, true)).join("")}</ul></div>`; }).join("")
+      : `<p class="muted small" style="margin-bottom:0">Nada nos últimos 30 dias.</p>`}`, "", `<span class="small muted">30 dias</span>`);
+}
+
 // ---- tela -----------------------------------------------------------------------
 views.extras = () => {
   adotar();
   const t = today(), hoje = extrasOf(t), tr = S.tracking;
-  const recentes = [];
-  for (let i = 1; i <= 30; i++) { const d = addDays(t, -i); extrasOf(d).forEach(e => recentes.push([d, e])); }
-  const item = (d, e) => `<li><span style="font-size:1.3rem">${typeOf(e.tipo)?.icone || "✨"}</span>
+  const dias = [];
+  for (let i = 1; i <= 30; i++) { const d = addDays(t, -i); if (extrasOf(d).length) dias.push(d); }
+  const item = (d, e, semData) => `<li><span style="font-size:1.3rem">${typeOf(e.tipo)?.icone || "✨"}</span>
     <button class="item" data-act="editExtra" data-date="${d}" data-id="${e.id}"><div>${esc(typeOf(e.tipo)?.nome || e.tipo)}</div>
     <div class="small muted">${[e.dados.dist && fmt(e.dados.dist, 2) + " km", e.dados.tempo + " min", e.dados.elev && fmt(e.dados.elev) + " m ↑"].filter(Boolean).join(" · ")}</div></button>
-    <span class="num">${d !== t ? `<span class="small muted">${fmtShort(d)}</span> ` : ""}~${fmt(e.kcal)} kcal</span></li>`;
+    <span class="num">${d !== t && !semData ? `<span class="small muted">${fmtShort(d)}</span> ` : ""}~${fmt(e.kcal)} kcal</span></li>`;
   const tracking = tr ? panel(tr.pausado ? "Pausado" : "Rastreando", `
       <p class="mid glow center num" id="tr-dist">${fmt(tr.dist / 1000, 2)} km</p>
       <p class="center timer num ${tr.pausado ? "muted" : "glow"}" id="tr-time" style="font-size:1.8rem">${relogio(ativoMs(tr))}</p>
@@ -102,9 +136,9 @@ views.extras = () => {
       <button class="btn primary block" data-act="newExtra">+ Registrar atividade</button>
       ${tr ? "" : `<button class="btn block" style="margin-top:8px" data-act="startTrack">📍 Rastrear agora com GPS</button>`}`)}
     ${bonusPanel()}
-    ${panel("Hoje", hoje.length ? `<ul class="list">${hoje.map(e => item(t, e)).join("")}</ul>` : `<p class="muted small">Nenhuma atividade extra hoje.</p>`,
+    ${panel("Hoje", `${faixasHoje(t)}${hoje.length ? `<ul class="list">${hoje.map(e => item(t, e)).join("")}</ul>` : `<p class="muted small" style="margin-bottom:0">Nenhuma atividade extra hoje.</p>`}`,
       "", hoje.length ? `<span class="num small muted">~${fmt(extrasKcal(t))} kcal</span>` : "")}
-    ${recentes.length ? panel("Últimos 30 dias", `<ul class="list">${recentes.map(([d, e]) => item(d, e)).join("")}</ul>`) : ""}</div>`;
+    ${diario(t, dias, item)}</div>`;
 };
 
 // ---- missão bônus ----------------------------------------------------------------
