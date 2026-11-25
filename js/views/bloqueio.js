@@ -12,6 +12,8 @@ const appNovo = () => typeof nativo?.emergencyRequest === "function";
 const versaoAtual = st => parseFloat(st.version) >= 1.2; // lista fixa + Spotify
 const APK = "download/o-sistema.apk";
 
+const quando = t => `${fmtDate(iso(new Date(t)), { day: "2-digit", month: "2-digit" })} ${fmtTime(t)}`;
+
 function instalar() {
   return `${header()}<div class="stack">
     ${panel("App Android", `<p style="margin-top:0">O app Android é o mesmo Sistema, com quatro coisas a mais:</p>
@@ -76,7 +78,7 @@ function painel(st) {
       ${perm(st.usageAccess, "Acesso ao uso", "Saber qual app está aberto (nunca o conteúdo). Procure “O Sistema” na lista e ative.", "usage", true)}
       ${perm(st.overlay, "Sobrepor a outros apps", "Mostrar a tela da Zona de Penalidade por cima dos apps bloqueados.", "overlay", true)}
       ${perm(st.notifications, "Notificações", "Lembrete da missão e aviso da Zona de Penalidade.", "notifications", false)}
-      ${perm(st.battery, "Sem restrição de bateria", "Evita que o Android desligue o bloqueio para economizar bateria.", "battery", false)}</ul>`)}
+      ${perm(st.battery, "Sem restrição de bateria", "Recomendado: evita que o Android desligue o bloqueio e o toque de recolher de madrugada para economizar bateria.", "battery", false)}</ul>`)}
     ${panel("Apps bloqueados na Zona de Penalidade", `<ul class="list">${[...new Set(apps.map(a => a.nome))].map(n => `<li><span class="grow">${esc(n)}</span><span class="chip bad">🔒 Bloqueado</span></li>`).join("")}</ul>
       ${outros.length ? `<p class="small muted">Também bloqueados se você instalar: ${esc(outros.join(", "))}.</p>` : ""}
       ${versaoAtual(st) ? "" : `<p class="small warn">Spotify e a lista fixa precisam da versão 1.2 do app Android. <a href="download/o-sistema.apk">Baixar</a></p>`}
@@ -95,6 +97,8 @@ function painel(st) {
       ${st.errMsg ? `<tr><td>Último erro</td><td class="bad">${fmtTime(st.errAt)} · ${esc(st.errMsg)}</td></tr>` : ""}` : ""}
       <tr><td>Acesso ao uso / Sobrepor</td><td>${st.usageAccess ? "✔" : "✖"} / ${st.overlay ? "✔" : "✖"}</td></tr>
       <tr><td>Notificações / Bateria livre</td><td>${st.notifications ? "✔" : "✖"} / ${st.battery ? "✔" : "✖"}</td></tr>
+      ${st.vigiaVivo !== undefined ? `<tr><td>Vigia (tela de bloqueio)</td><td>${st.vigiaVivo ? `<span class="ok">ligado</span> desde ${quando(st.vigiaDesde)}`
+        : `desligado${st.vigiaFim ? ` desde ${quando(st.vigiaFim)}` : ""}${st.vigiaParou ? ` · ${esc(st.vigiaParou)}` : ""}`}</td></tr>` : ""}
       <tr><td>Bloqueio ligado</td><td>${st.blockingEnabled ? "sim" : "não"}${st.disableAt ? " (pedido de desligar)" : ""}</td></tr>
       <tr><td>Apps marcados</td><td>${esc((st.apps || []).filter(a => a.bloqueado).map(a => a.nome).join(", ") || "nenhum")}</td></tr></table>`)}
     <p class="small muted center">App Android ${esc(st.version || "")}</p></div>`;

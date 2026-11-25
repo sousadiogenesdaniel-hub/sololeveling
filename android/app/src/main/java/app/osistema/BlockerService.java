@@ -40,6 +40,8 @@ public class BlockerService extends Service {
     private String lastPkg, shownFor, shownModo, modoNotif;
     private boolean primeira = true; // primeira conferência: olha mais para trás para achar o app já aberto
     private boolean telaRegistrada;
+    /** Desde quando o vigia está vivo (0 = parado). Aparece no Diagnóstico. */
+    static volatile long vivoDesde = 0;
 
     // Tela apagada: o vigia dorme (não gasta bateria). Tela acesa: volta a conferir.
     private final BroadcastReceiver tela = new BroadcastReceiver() {
@@ -70,6 +72,14 @@ public class BlockerService extends Service {
         else startForeground(1, n);
     }
 
+    @Override public void onCreate() {
+        super.onCreate();
+        vivoDesde = System.currentTimeMillis();
+        Prefs.sp(this).edit().putLong("vigiaInicio", vivoDesde).apply();
+    }
+
+    private boolean telaAcesa() { return getSystemService(android.os.PowerManager.class).isInteractive(); }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         wm = getSystemService(WindowManager.class);
@@ -83,7 +93,7 @@ public class BlockerService extends Service {
         }
         primeira = true;
         h.removeCallbacks(loop);
-        h.post(loop);
+        if (telaAcesa()) h.post(loop); // com a tela apagada, espera ela acender (o alarme de segurança pode religar à noite)
         return START_STICKY;
     }
 
@@ -96,8 +106,12 @@ public class BlockerService extends Service {
     private final Runnable loop = new Runnable() {
         @Override public void run() {
             String modo = modo();
-            if (modo == null) { hide(); stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); Scheduler.scheduleNext(BlockerService.this); return; }
+            if (modo == null) {
+                Prefs.sp(BlockerService.this).edit().putString("vigiaParou", "nada a bloquear").apply();
+                hide(); stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); Scheduler.scheduleNext(BlockerService.this); return;
+            }
             notificar(modo);
+            if (!telaAcesa()) return; // tela apagada: dorme até o SCREEN_ON
             // começou a bloquear agora: olha as últimas horas para saber qual app JÁ está na frente
             String fg = foreground(primeira ? 6 * 60 * 60 * 1000L : 5000);
             primeira = false;
@@ -276,6 +290,8 @@ public class BlockerService extends Service {
     }
 
     @Override public void onDestroy() {
+        vivoDesde = 0;
+        Prefs.sp(this).edit().putLong("vigiaFim", System.currentTimeMillis()).apply();
         h.removeCallbacks(loop); hide();
         if (telaRegistrada) { try { unregisterReceiver(tela); } catch (Exception ignored) {} telaRegistrada = false; }
         super.onDestroy();

@@ -74,3 +74,6 @@ TrackerService.java GPS da atividade rastreada, com a tela bloqueada
 Rastreio.java       estado do rastreamento (salvo a cada ponto)
 Percurso.java       soma da distância e da subida (as mesmas regras do app web)
 ```
+- **Alarme de segurança** (2.1): enquanto houver penalidade ou toque de recolher ativo, um alarme exato a cada 15 min
+  confere se o vigia continua vivo e religa se o Android (ou o economizador de bateria) tiver matado ele. O vigia não
+  roda com a tela apagada; o Diagnóstico mostra se ele está ligado, desde quando, e por que parou da última vez.

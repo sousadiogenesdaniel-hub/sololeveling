@@ -69,6 +69,11 @@ final class NativeBridge {
             o.put("errAt", p.getLong("errAt", 0));
             o.put("errMsg", p.getString("errMsg", ""));
             o.put("reminderHour", p.getInt("reminderHour", 20));
+            o.put("vigiaVivo", BlockerService.vivoDesde > 0);
+            o.put("vigiaDesde", BlockerService.vivoDesde);
+            o.put("vigiaInicio", p.getLong("vigiaInicio", 0));
+            o.put("vigiaFim", p.getLong("vigiaFim", 0));
+            o.put("vigiaParou", p.getString("vigiaParou", ""));
             JSONArray apps = new JSONArray();
             Set<String> bl = Prefs.blocked(a);
             for (Map.Entry<String, String> e : Prefs.BLOQUEAVEIS.entrySet()) {

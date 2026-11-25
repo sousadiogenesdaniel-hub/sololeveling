@@ -1,6 +1,6 @@
 {
-  "versionCode": 11,
-  "versionName": "2.0",
-  "sha256": "c32c971b26aa06e9e09d5de9f27a6f4030b33dfad688219c325eb2e47df8990c",
-  "novidades": "Meu porquê: uma das suas frases curtas aparece nas telas da Zona de Penalidade e do toque de recolher."
+  "versionCode": 12,
+  "versionName": "2.1",
+  "sha256": "a27eee83b2831b20fe74efe6f6cff9bc8a41544a7242acd6d74247def9524ce4",
+  "novidades": "O vigia do bloqueio e do toque de recolher se religa sozinho se o Android desligar ele de madrugada."
 }

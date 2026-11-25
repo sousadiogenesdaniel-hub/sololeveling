@@ -27,6 +27,7 @@ final class Scheduler {
         return agora.isBefore(hoje) ? hoje : hoje.plusDays(1);
     }
     static final String ACT_EVAL = "app.osistema.EVAL", ACT_LEMBRETE = "app.osistema.LEMBRETE";
+    static final long VIGIA_MS = 15 * 60 * 1000L;
 
     static void channels(Context c) {
         NotificationManager nm = c.getSystemService(NotificationManager.class);
@@ -86,6 +87,9 @@ final class Scheduler {
         // toque de recolher: liga às 20h e desliga às 8h (o vigia também se desliga sozinho ao passar das 8h)
         set(c, 6, ACT_EVAL, Toque.ms(Toque.proximoInicio(LocalDateTime.now())) + 1000);
         set(c, 7, ACT_EVAL, Toque.ms(Toque.fim(LocalDateTime.now())) + 1000);
+        // alarme de segurança: enquanto houver o que bloquear, confere a cada 15 min se o vigia continua vivo
+        // (o Android ou o economizador de bateria podem matar o vigia de madrugada)
+        if (Prefs.shouldBlock(c) || (Toque.ativo(c) && !Toque.manhaLiberada(c))) set(c, 9, ACT_EVAL, now + VIGIA_MS);
         long toqueDes = Prefs.sp(c).getLong("toqueDesligarEm", 0);
         if (toqueDes > now) set(c, 8, ACT_EVAL, toqueDes + 1000);
         int hora = Prefs.sp(c).getInt("reminderHour", 20);
