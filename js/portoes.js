@@ -291,7 +291,9 @@ export function atualizarNomeados() {
 }
 function falhaNomeado(k, motivo) {
   const g = nomeados()[k];
-  (g.historico ||= []).push({ d: g.dia || g.prazo || today(), motivo, fase: g.fase });
+  // os itens feitos ficam no histórico: somam nos Contadores mesmo sem vencer
+  const feitos = (g.desafio?.itens || []).filter((_, i) => g.feitos?.[i]);
+  (g.historico ||= []).push({ d: g.dia || g.prazo || today(), motivo, fase: g.fase, ...(feitos.length ? { itens: feitos } : {}) });
   g.usadas++;
   delete g.dia; delete g.inicio; delete g.feitos;
   if (g.usadas < NOM.chances) Object.assign(g, { status: "espera", abreEm: addDays(today(), entre(NOM.intervalo)) });

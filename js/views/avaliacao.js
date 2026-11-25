@@ -52,7 +52,7 @@ actions.savePR = ({ key, nome }, el) => {
   if (!liberada()) return toast(`A avaliação desta semana já foi feita. Próxima em ${fmtDate(proximaAvaliacao())}.`, 4000);
   const input = el.closest(".field").querySelector("input"), v = num(input.value);
   if (v == null || !(v > 0)) return toast("Digite o número antes de salvar.");
-  setPR(key, v);
+  setPR(key, v, today(), "avaliacao");
   marcaAvaliacao();
   if (S.rascunhos?.avaliacao?.v) delete S.rascunhos.avaliacao.v[key];
   save();
@@ -81,7 +81,7 @@ actions.saveAvaliacao = d => {
   const vals = Object.entries(d).map(([k, v]) => [k, num(v)]).filter(([, v]) => v != null && v > 0);
   if (!vals.length) return toast("Preencha pelo menos uma prova.");
   const keys = new Set(ph.tests.map(([n]) => testKey(n)));
-  for (const [k, v] of vals) if (keys.has(k)) setPR(k, v);
+  for (const [k, v] of vals) if (keys.has(k)) setPR(k, v, today(), "avaliacao");
   marcaAvaliacao();
   if (S.rascunhos) delete S.rascunhos.avaliacao;
   save();

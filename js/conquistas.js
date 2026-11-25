@@ -1,14 +1,14 @@
 // Contadores da vida inteira, marcos, títulos (conquistas) com raridade, atributos da Janela de Status e o
 // relatório semanal do Sistema.
 import { S } from "./store.js";
-import { today, addDays, fmt } from "./util.js";
+import { today, addDays, fmt, iso } from "./util.js";
 import { levelInfo, isObligated, weightOn, weightGoal, mealsOf, totals as totalDieta, cotaKcal, RANK_ORDER, weekStart } from "./game.js";
-import { pr } from "./tracks.js";
+import { pr, EX_KEY, TEST_KEY, TRACKS } from "./tracks.js";
 import { novoCorpo } from "./feitos.js";
 import { RAR, ORDEM_RAR } from "./premios.js";
 
 // ---- contadores da vida inteira ------------------------------------------------------------
-// Somam as séries marcadas (no alvo ou abaixo) × repetições de cada exercício, por família de movimento.
+// Somam tudo o que foi feito (missão, Teste de Rank, Avaliação e dungeons; ver feitosExercicios), por família de movimento.
 export const CONTADORES = [
   { id: "flexoes", nome: "Flexões", re: /flex[aã]o|flexões/i, un: "reps" },
   { id: "agachamentos", nome: "Agachamentos", re: /agachamento/i, un: "reps" },
@@ -18,23 +18,70 @@ export const CONTADORES = [
   { id: "remadas", nome: "Remadas", re: /remada/i, un: "reps" },
   { id: "prancha", nome: "Prancha e isometria", re: /prancha|hollow|l-sit|suspensão|front lever/i, un: "s" },
 ];
+// ---- tudo o que foi feito, de todas as fontes ----------------------------------------------------
+// Missão (séries marcadas × alvo), Teste de Rank e Avaliação (o resultado de cada prova), dungeons (os itens marcados
+// como feitos, vencida ou não) e Dungeons nomeadas. As provas e os itens de dungeon entram com o nome do exercício da
+// missão ("Flexões seguidas" e "Flexões" da dungeon → "Flexão de braço"). "cada perna/lado" conta os dois lados.
+const PROVA = Object.fromEntries(Object.entries(TEST_KEY).map(([n, k]) => [n.replace(/ seguid[oa]s$/, ""), k]));
+const CANON = {}; for (const [n, k] of Object.entries(EX_KEY)) CANON[k] ??= n;
+export function nomeCanonico(nome) {
+  if (EX_KEY[nome]) return nome;
+  const k = TEST_KEY[nome] || PROVA[nome] || (/^prancha/i.test(nome) ? "prancha" : null);
+  return (k && CANON[k]) || nome;
+}
+let UN_PROVA = null; // unidade de cada prova (reps, s, km), pelas fases das trilhas
+const unProva = key => (UN_PROVA ||= Object.fromEntries(TRACKS.flatMap(t => (t.phases || []).flatMap(ph => (ph.tests || []).map(([n, , un]) => [TEST_KEY[n], un])))))[key] || "reps";
+const CIRCUITO = [[/(\d+) flexões/, "flexoes", "reps"], [/(\d+) agachamentos/, "agachamentos", "reps"], [/(\d+) abdominais/, "abdominais", "reps"], [/(\d+) s de prancha/, "prancha", "s"]];
+// Antes do histórico de provas existir, só o último resultado de cada prova ficou guardado: ele entra uma vez
+function migrarProvas() {
+  if (S.provasV) return;
+  S.provasV = 1;
+  const l = (S.provas ||= []);
+  for (const [key, r] of Object.entries(S.pr || {}))
+    if (key !== "corrida" && r?.v > 0 && r.d && !l.some(x => x.key === key && x.d === r.d)) l.push({ d: r.d, key, v: r.v, o: "anterior" });
+}
+export function feitosExercicios() {
+  migrarProvas();
+  const out = [];
+  const add = (d, nome, un, qtd, fonte, ref, series = 0) => {
+    if (!d || !(qtd > 0)) return;
+    const n = nomeCanonico(nome);
+    out.push({ d, nome: n, un, qtd: qtd * ((un === "reps" || un === "s") && /cada (perna|lado)/i.test(n) ? 2 : 1), fonte, ref, series });
+  };
+  for (const [d, rec] of Object.entries(S.days)) {
+    const w = rec.workout; if (!w?.done || w.plano?.modo) continue;
+    (w.plano?.itens || []).forEach((it, e) => { const n = (w.sets?.[e] || []).filter(Boolean).length; add(d, it.nome, it.un, it.alvo * n, "missao", d, n); });
+  }
+  for (const p of S.provas || []) if (p.key !== "corrida" && CANON[p.key]) add(p.d, CANON[p.key], unProva(p.key), p.v, p.o, p.d + p.o); // teste, avaliacao ou anterior
+  const itensDungeon = (d, ref, itens) => itens.forEach(it => {
+    if (it.un !== "rodada") return add(d, it.nome, it.un, it.alvo, "dungeon", ref);
+    for (const [re, key, un] of CIRCUITO) { const m = it.nome.match(re); if (m) add(d, CANON[key], un, +m[1], "dungeon", ref); }
+  });
+  for (const [id, p] of Object.entries(S.portoes || {})) {
+    if (!p.feitos?.length || !p.desafio?.itens || p.status === "ativo") continue;
+    itensDungeon(p.fim ? iso(new Date(p.fim)) : p.abertoEm, "p" + id, p.desafio.itens.filter((_, i) => p.feitos[i]));
+  }
+  for (const [k, g] of Object.entries(S.nomeados || {})) {
+    if (g.status === "vencido" && g.desafio?.itens) itensDungeon(g.vencidoEm || g.dia, "n" + k, g.desafio.itens.filter((_, i) => g.feitos?.[i]));
+    (g.historico || []).forEach((h, i) => { if (h.itens) itensDungeon(h.d, `n${k}${i}`, h.itens); });
+  }
+  return out;
+}
+// Família do contador de um exercício (pelo nome e pela unidade)
+export const familia = (nome, un) => CONTADORES.find(c => c.re.test(nome) && (c.un === "s") === (un === "s")) || null;
+
 export function totais(ate = today(), desde = "") {
   const t = { missoes: 0, km: 0 };
   CONTADORES.forEach(c => { t[c.id] = 0; });
   for (const [d, rec] of Object.entries(S.days)) {
     if (d < desde || d > ate) continue;
-    const w = rec.workout;
-    if (w?.done) {
-      t.missoes++;
-      (w.plano?.itens || []).forEach((it, e) => {
-        const n = (w.sets?.[e] || []).filter(Boolean).length; if (!n) return;
-        if (it.un === "km") { t.km += it.alvo * n; return; }
-        const c = CONTADORES.find(x => x.re.test(it.nome));
-        if (!c || (c.un === "s") !== (it.un === "s")) return;
-        t[c.id] += it.alvo * n * (/cada (perna|lado)/i.test(it.nome) ? 2 : 1);
-      });
-    }
+    if (rec.workout?.done) t.missoes++;
     for (const e of rec.extras || []) if (e.dados?.dist) t.km += e.dados.dist;
+  }
+  for (const f of feitosExercicios()) {
+    if (f.d < desde || f.d > ate) continue;
+    if (f.un === "km") { if (f.fonte === "missao") t.km += f.qtd; continue; }
+    const c = familia(f.nome, f.un); if (c) t[c.id] += f.qtd;
   }
   t.km = Math.round(t.km * 10) / 10;
   return t;

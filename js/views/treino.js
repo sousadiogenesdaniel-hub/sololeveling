@@ -188,7 +188,7 @@ actions.submitTest = data => {
   const ph = currentPhase(), st = testStatus(), p = progress();
   if (!st || st.nextTry) return toast("O teste não está disponível agora.");
   const vals = ph.tests.map((_, i) => num(data["t" + i]) ?? 0);
-  ph.tests.forEach(([n], i) => setPR(testKey(n), vals[i])); // cada tentativa, mesmo reprovada, atualiza seus máximos
+  ph.tests.forEach(([n], i) => setPR(testKey(n), vals[i], today(), "teste")); // cada tentativa, mesmo reprovada, atualiza seus máximos
   day().testeFeito = true; // vale para concluir o "Dia de Teste de Rank"
   if (S.rascunhos) delete S.rascunhos.teste;
   if (st.tentativa === 1) {

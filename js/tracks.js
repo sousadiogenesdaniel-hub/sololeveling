@@ -533,9 +533,15 @@ export const EX_KEY = {
 export const testKey = nome => TEST_KEY[nome] || null;
 export const pr = key => S.pr?.[key]?.v ?? null;
 // Grava o máximo de uma prova. Se superar o melhor histórico (e já havia um), é RECORDE: devolve o recorde.
-export function setPR(key, v, date = today()) {
+// origem ("teste" ou "avaliacao") guarda o resultado no histórico de provas, que soma nos Contadores; corrigir a
+// mesma prova no mesmo dia substitui.
+export function setPR(key, v, date = today(), origem = null) {
   if (!key || !(v > 0)) return null;
   S.pr ||= {};
+  if (origem) {
+    const l = (S.provas ||= []), i = l.findIndex(x => x.d === date && x.key === key && x.o === origem), e = { d: date, key, v, o: origem };
+    if (i >= 0) l[i] = e; else l.push(e);
+  }
   const old = S.pr[key];
   S.pr[key] = { v, d: date, best: Math.max(v, old?.best ?? 0) };
   if (old?.best != null && v > old.best) {
