@@ -26,6 +26,9 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   de 700 kcal, mais +20 XP e +2 HP (o HP só com o Manto do Necromante). Editar ou excluir recalcula. A tela mostra a
   barra do dia até as duas faixas e um diário (como o da Comida): totais da semana e do mês e cada dia com as suas
   atividades, kcal e XP.
+- **Passos** (app Android 2.2): na caminhada, trilha e corrida rastreadas pelo GPS, o app conta os passos com o contador
+  do próprio celular (permissão "Atividade física"). Aparecem ao vivo, ficam na atividade salva e somam no diário. Só
+  informativo: não muda kcal, XP nem a Dungeon de Campo.
 - **Séries da missão:** cada quadradinho tem som e faísca (no alvo: verde e brilhante; abaixo do alvo: âmbar e grave;
   desmarcar: clique). Fechar todas as séries de um exercício toca um acorde; fechar o treino inteiro, uma fanfarra.
 - **Missão concluída:** ao bater o ponto de saída, antes das comemorações de nível e rank, um selo animado:

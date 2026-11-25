@@ -1,6 +1,6 @@
 {
-  "versionCode": 12,
-  "versionName": "2.1",
-  "sha256": "a27eee83b2831b20fe74efe6f6cff9bc8a41544a7242acd6d74247def9524ce4",
-  "novidades": "O vigia do bloqueio e do toque de recolher se religa sozinho se o Android desligar ele de madrugada."
+  "versionCode": 13,
+  "versionName": "2.2",
+  "sha256": "ac438599b6eb47f0b4d249c08e5605d08b147a453624ac0b1ee2538a4e30cf94",
+  "novidades": "Passos na caminhada, trilha e corrida: o app lê o contador de passos do próprio celular durante o rastreamento (pede a permissão Atividade física)."
 }

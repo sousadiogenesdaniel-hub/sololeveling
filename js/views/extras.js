@@ -82,11 +82,11 @@ function resumoDia(d) {
   const ex = extrasOf(d), dd = S.days[d] || {};
   const faixa = dd.ativFaixa ?? (dd.extraXp ? 1 : 0);
   return { ex, kcal: extrasKcal(d), min: ex.reduce((n, e) => n + (e.dados?.tempo || 0), 0), km: ex.reduce((n, e) => n + (e.dados?.dist || 0), 0),
-    xp: ATIV.slice(0, faixa).reduce((n, f) => n + f.xp, 0) };
+    passos: ex.reduce((n, e) => n + (e.gps?.passos || 0), 0), xp: ATIV.slice(0, faixa).reduce((n, f) => n + f.xp, 0) };
 }
 function somaPeriodo(de, ate) {
-  const r = { kcal: 0, min: 0, km: 0, dias: 0, xp: 0 };
-  for (let d = de; d <= ate; d = addDays(d, 1)) { const x = resumoDia(d); if (!x.ex.length) continue; r.dias++; r.kcal += x.kcal; r.min += x.min; r.km += x.km; r.xp += x.xp; }
+  const r = { kcal: 0, min: 0, km: 0, passos: 0, dias: 0, xp: 0 };
+  for (let d = de; d <= ate; d = addDays(d, 1)) { const x = resumoDia(d); if (!x.ex.length) continue; r.dias++; r.kcal += x.kcal; r.min += x.min; r.km += x.km; r.passos += x.passos; r.xp += x.xp; }
   return r;
 }
 // Barra do dia até as faixas de 250 e 700 kcal
@@ -98,15 +98,17 @@ function faixasHoje(t) {
     <p class="small ${prox ? "muted" : "ok"}" style="margin:22px 0 6px">${prox ? `Faltam <b>${fmt(Math.max(1, f2(prox, k)))} kcal</b> para ${prox.acima ? "passar de" : "chegar a"} ${prox.kcal} kcal (+${prox.xp} XP).` : "As duas faixas do dia batidas."}</p>`;
 }
 const f2 = (f, k) => f.acima ? f.kcal + 1 - k : f.kcal - k;
+// Passos: contados pelo celular durante o rastreamento a pé (app Android 2.2)
+const passosTxt = n => n > 0 ? ` · ${fmt(n)} passos` : "";
 function diario(t, dias, item) {
   const ws = weekStart(t), sem = somaPeriodo(ws, t), mes = somaPeriodo(t.slice(0, 8) + "01", t);
   const tile = (rot, r) => `<div class="tile"><div class="lbl">${rot}</div><div class="val num">~${fmt(r.kcal)} kcal</div>
-    <div class="small muted">${r.dias} dia${r.dias === 1 ? "" : "s"} · ${fmt(r.min)} min${r.km ? ` · ${fmt(r.km, 1)} km` : ""}${r.xp ? ` · +${r.xp} XP` : ""}</div></div>`;
+    <div class="small muted">${r.dias} dia${r.dias === 1 ? "" : "s"} · ${fmt(r.min)} min${r.km ? ` · ${fmt(r.km, 1)} km` : ""}${passosTxt(r.passos)}${r.xp ? ` · +${r.xp} XP` : ""}</div></div>`;
   return panel("Diário das atividades", `<div class="grid2">${tile("Esta semana", sem)}${tile("Este mês", mes)}</div>
     ${dias.length ? dias.map(d => { const r = resumoDia(d);
       return `<div class="ativ-dia"><div class="row between"><b>${fmtDate(d, { weekday: "short", day: "2-digit", month: "2-digit" })}</b>
           <span class="num small">~${fmt(r.kcal)} kcal${r.xp ? ` · <b class="ok">+${r.xp} XP</b>` : ""}</span></div>
-        <div class="small muted">${r.ex.length} atividade${r.ex.length > 1 ? "s" : ""} · ${fmt(r.min)} min${r.km ? ` · ${fmt(r.km, 1)} km` : ""}</div>
+        <div class="small muted">${r.ex.length} atividade${r.ex.length > 1 ? "s" : ""} · ${fmt(r.min)} min${r.km ? ` · ${fmt(r.km, 1)} km` : ""}${passosTxt(r.passos)}</div>
         <ul class="list">${r.ex.map(e => item(d, e, true)).join("")}</ul></div>`; }).join("")
       : `<p class="muted small" style="margin-bottom:0">Nada nos últimos 30 dias.</p>`}`, "", `<span class="small muted">30 dias</span>`);
 }
@@ -119,10 +121,11 @@ views.extras = () => {
   for (let i = 1; i <= 30; i++) { const d = addDays(t, -i); if (extrasOf(d).length) dias.push(d); }
   const item = (d, e, semData) => `<li><span style="font-size:1.3rem">${typeOf(e.tipo)?.icone || "✨"}</span>
     <button class="item" data-act="editExtra" data-date="${d}" data-id="${e.id}"><div>${esc(typeOf(e.tipo)?.nome || e.tipo)}</div>
-    <div class="small muted">${[e.dados.dist && fmt(e.dados.dist, 2) + " km", e.dados.tempo + " min", e.dados.elev && fmt(e.dados.elev) + " m ↑"].filter(Boolean).join(" · ")}</div></button>
+    <div class="small muted">${[e.dados.dist && fmt(e.dados.dist, 2) + " km", e.dados.tempo + " min", e.dados.elev && fmt(e.dados.elev) + " m ↑", e.gps?.passos > 0 && fmt(e.gps.passos) + " passos"].filter(Boolean).join(" · ")}</div></button>
     <span class="num">${d !== t && !semData ? `<span class="small muted">${fmtShort(d)}</span> ` : ""}~${fmt(e.kcal)} kcal</span></li>`;
   const tracking = tr ? panel(tr.pausado ? "Pausado" : "Rastreando", `
       <p class="mid glow center num" id="tr-dist">${fmt(tr.dist / 1000, 2)} km</p>
+      ${tr.nativo && A_PE.includes(tr.tipo) ? `<p class="center small muted num" id="tr-passos" style="margin-top:-6px">${tr.passos >= 0 ? `${fmt(tr.passos)} passos` : ""}</p>` : ""}
       <p class="center timer num ${tr.pausado ? "muted" : "glow"}" id="tr-time" style="font-size:1.8rem">${relogio(ativoMs(tr))}</p>
       <p class="center small muted">${typeOf(tr.tipo).icone} ${typeOf(tr.tipo).nome} · <span id="tr-gps">${tr.pausado ? "pausado" : "aguardando GPS…"}</span></p>
       ${tr.pausado ? `<p class="small warn">Pausado: nada é somado${tr.nativo ? " e o GPS fica desligado" : ""}. O tempo parado não conta, e ao retomar o percurso recomeça de onde você estiver.${tr.nativo ? " Dá para retomar pela notificação também." : ""}</p>`
@@ -244,6 +247,15 @@ const relogio = ms => { const s = Math.floor(ms / 1000);
 const podePausar = tr => !tr.nativo || typeof nativo?.trackPause === "function";
 // Pausa/retomada do Android (a fonte da verdade quando é ele quem rastreia)
 const copiaPausa = (tr, st) => { tr.pausado = !!st.pausado; tr.pausadoMs = st.pausadoMs || 0; tr.pausaInicio = st.pausaInicio || 0; };
+// Passos: o Android 2.2 lê o contador de passos do celular nas atividades a pé (-1 = sem contador; ausente = app antigo)
+const A_PE = ["caminhada", "trilha", "corrida"];
+function mostraPassos(tr, st) {
+  const el = $("#tr-passos"); if (!el) return;
+  if (st.passos == null) return el.remove(); // app Android antigo: não conta passos
+  tr.passos = st.passos;
+  el.textContent = st.passos >= 0 ? `${fmt(st.passos)} passos`
+    : Date.now() - tr.start > 30000 ? "Sem passos: permita \"Atividade física\" para O Sistema nas permissões do Android" : "";
+}
 
 // Rastreamento que está rodando no Android sem o app saber (ex.: dados restaurados): assume ele
 function adotar() {
@@ -297,11 +309,11 @@ actions.resumeTrack = () => setPausa(false);
 
 actions.stopTrack = () => {
   const tr = S.tracking;
-  if (tr.nativo) { const st = nativeTrack("trackStop"); if (st) { tr.dist = st.dist || 0; tr.elev = st.elev || 0; copiaPausa(tr, st); } }
+  if (tr.nativo) { const st = nativeTrack("trackStop"); if (st) { tr.dist = st.dist || 0; tr.elev = st.elev || 0; tr.passos = st.passos; copiaPausa(tr, st); } }
   stopWatch(); keepScreenOn(false);
   delete S.tracking; save(); refresh();
   const tempo = Math.max(1, Math.round(ativoMs(tr) / 60000));
-  form({ date: tr.date, tipo: tr.tipo, gps: { km: Math.round(tr.dist / 10) / 100, tipo: tr.tipo },
+  form({ date: tr.date, tipo: tr.tipo, gps: { km: Math.round(tr.dist / 10) / 100, tipo: tr.tipo, ...(tr.passos > 0 ? { passos: tr.passos } : {}) },
     dados: { dist: tr.dist >= 50 ? Math.round(tr.dist / 10) / 100 : "", tempo, elev: tr.elev >= 5 ? Math.round(tr.elev) : "" } });
 };
 
@@ -349,6 +361,7 @@ views.extras.after = () => {
         if (mudou) { save(); return refresh(); }
         tr.dist = st.dist || 0;
         const d = $("#tr-dist"); if (d) d.textContent = `${fmt(tr.dist / 1000, 2)} km`;
+        mostraPassos(tr, st);
         if (gpsEl) gpsEl.textContent = st.pausado ? "pausado" : st.gps === false ? "localização do celular desligada"
           : !st.fixAt ? "aguardando GPS…" : Date.now() - st.fixAt > 30000 ? "sem sinal de GPS" : `GPS ±${Math.round(st.acc)} m`;
       }

@@ -173,6 +173,10 @@ final class NativeBridge {
             return "permissao";
         }
         if (!a.getSystemService(LocationManager.class).isProviderEnabled(LocationManager.GPS_PROVIDER)) return "gpsoff";
+        // a pé: pede "Atividade física" para contar os passos (sem ela, rastreia do mesmo jeito, só sem passos)
+        if (Rastreio.aPe(tipo) && android.os.Build.VERSION.SDK_INT >= 29
+            && a.checkSelfPermission(android.Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED)
+            a.runOnUiThread(() -> a.requestPermissions(new String[]{android.Manifest.permission.ACTIVITY_RECOGNITION}, MainActivity.REQ_PASSOS));
         Rastreio.iniciar(a, tipo, start, novo);
         try { a.startForegroundService(new Intent(a, TrackerService.class)); }
         catch (Exception e) { Prefs.logError(a, "GPS: " + e.getClass().getSimpleName() + ": " + e.getMessage()); return "erro"; }

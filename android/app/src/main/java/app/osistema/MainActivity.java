@@ -34,6 +34,7 @@ public class MainActivity extends Activity {
     static final String BASE = "https://" + HOST + "/sololeveling/";
     private static final int REQ_FILE = 10, REQ_GEO = 11, REQ_NOTIF = 12;
     static final int REQ_LOC = 13; // localização pedida pelo rastreamento de atividade
+    static final int REQ_PASSOS = 14; // "Atividade física": contador de passos na caminhada, trilha e corrida
 
     private WebView web;
     private ValueCallback<Uri[]> fileCb;
@@ -165,6 +166,9 @@ public class MainActivity extends Activity {
             geoCb.invoke(geoOrigin, ok, false);
             geoCb = null;
         }
+        // deu a permissão de passos com o rastreamento já correndo: o serviço liga o contador na hora
+        if (req == REQ_PASSOS && res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED && Rastreio.ativo(this))
+            try { startForegroundService(new Intent(this, TrackerService.class)); } catch (Exception ignored) {}
     }
 
     private String versionName() {

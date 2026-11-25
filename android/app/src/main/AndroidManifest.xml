@@ -33,6 +33,8 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- vibração das comemorações -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- contador de passos do celular durante caminhada, trilha e corrida (2.2) -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
     <!-- só para saber se os apps bloqueáveis estão instalados (Android 11+ exige declarar) -->
     <queries>

@@ -26,7 +26,7 @@ import java.util.Locale;
  * com o botão Pausar/Retomar. Na pausa o GPS fica desligado.
  * Usa só o GPS do aparelho; não guarda o trajeto, só a distância e a subida somadas, e não envia nada.
  */
-public class TrackerService extends Service implements LocationListener {
+public class TrackerService extends Service implements LocationListener, android.hardware.SensorEventListener {
     static final int ID = 7;
     static final String ACT_PAUSAR = "app.osistema.PAUSAR", ACT_RETOMAR = "app.osistema.RETOMAR";
     private static final long INTERVALO_MS = 2000, MAX_DURACAO_MS = 6L * 60 * 60 * 1000;
@@ -36,6 +36,26 @@ public class TrackerService extends Service implements LocationListener {
     private PowerManager.WakeLock wl;
     private Percurso p;
     private long ultimaNotif;
+    private boolean passosLigado;
+
+    /** Contador de passos do celular (só a pé e com a permissão "Atividade física"). */
+    private void ligarPassos() {
+        if (passosLigado || !Rastreio.aPe(Rastreio.tipo(this))) return;
+        if (Build.VERSION.SDK_INT >= 29 && checkSelfPermission(android.Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) return;
+        android.hardware.SensorManager sm = getSystemService(android.hardware.SensorManager.class);
+        android.hardware.Sensor s = sm == null ? null : sm.getDefaultSensor(android.hardware.Sensor.TYPE_STEP_COUNTER);
+        if (s == null) return;
+        passosLigado = sm.registerListener(this, s, android.hardware.SensorManager.SENSOR_DELAY_NORMAL);
+    }
+    @Override public void onSensorChanged(android.hardware.SensorEvent e) {
+        if (e.values.length == 0) return;
+        // e.timestamp é o relógio desde que o celular ligou (ns); vira hora do relógio comum para comparar com a pausa
+        long quando = System.currentTimeMillis() - (android.os.SystemClock.elapsedRealtimeNanos() - e.timestamp) / 1_000_000;
+        Rastreio.passos(this, (long) e.values[0], quando);
+        long agora = System.currentTimeMillis();
+        if (agora - ultimaNotif > 10_000) { ultimaNotif = agora; atualizar(); }
+    }
+    @Override public void onAccuracyChanged(android.hardware.Sensor s, int a) {}
 
     @Override public IBinder onBind(Intent i) { return null; }
 
@@ -57,6 +77,7 @@ public class TrackerService extends Service implements LocationListener {
         if (lm == null) lm = getSystemService(LocationManager.class);
         p = Rastreio.carregar(this); // relê: ao retomar, o percurso recomeça do ponto atual
         if (!aplicarGps()) return START_NOT_STICKY;
+        ligarPassos();
         Rastreio.rodando = true;
         return START_STICKY;
     }
@@ -129,7 +150,9 @@ public class TrackerService extends Service implements LocationListener {
         Scheduler.channels(this);
         boolean pausado = Rastreio.pausado(this);
         long agora = System.currentTimeMillis();
-        String km = String.format(new Locale("pt", "BR"), "%.2f km", Rastreio.sp(this).getFloat("dist", 0) / 1000f);
+        android.content.SharedPreferences sp = Rastreio.sp(this);
+        String km = String.format(new Locale("pt", "BR"), "%.2f km", sp.getFloat("dist", 0) / 1000f)
+            + (sp.contains("passosUlt") ? String.format(new Locale("pt", "BR"), " · %,d passos", sp.getLong("passos", 0)) : "");
         String texto = pausado
             ? km + " em " + duracao(Rastreio.ativoMs(this, agora)) + "\nPausado: o GPS está desligado e o tempo parado não conta."
             : km + (gpsDesligado ? " · localização do celular desligada" : "")
@@ -153,6 +176,7 @@ public class TrackerService extends Service implements LocationListener {
 
     @Override
     public void onDestroy() {
+        if (passosLigado) { getSystemService(android.hardware.SensorManager.class).unregisterListener(this); passosLigado = false; }
         if (lm != null && gpsLigado) lm.removeUpdates(this);
         gpsLigado = false;
         if (wl != null && wl.isHeld()) wl.release();

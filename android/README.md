@@ -19,6 +19,10 @@ num WebView preso a esse endereço e adiciona o que o navegador não faz:
   coberto por testes). Só roda enquanto você rastreia; não guarda o trajeto. Se o Android fechar o app no meio,
   o percurso fica salvo e continua ao abrir de novo. **Pausar/Retomar** pelo app ou pelo botão da notificação: na
   pausa o GPS desliga, o tempo parado não conta e, ao retomar, o percurso recomeça do ponto atual.
+- **Passos** (2.2): na caminhada, trilha e corrida rastreadas, o serviço lê o contador de passos do próprio celular
+  (`TYPE_STEP_COUNTER`, o mesmo que o app de saúde usa) e soma só a diferença entre as leituras, fora da pausa
+  (`Rastreio.somaPassos`, testada em `PassosTest`). Pede a permissão "Atividade física" ao começar; sem ela, rastreia
+  do mesmo jeito, só sem passos. Os passos aparecem na notificação, na tela do rastreamento e ficam na atividade salva.
 - **Lembrete** à noite se a missão do dia não foi feita. Backup salvo em Downloads.
 - **Toque de recolher** (1.8): 20h às 8h, o vigia cobre os apps de vício (lista da penalidade + Chrome) com a opção de
   pagar Ouro e XP (15 min, preço dobrando por noite; mesma lista da penalidade; regras em `Toque`, cobertas por `ToqueTest`), vencer o impulso

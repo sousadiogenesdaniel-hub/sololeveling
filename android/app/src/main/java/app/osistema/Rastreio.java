@@ -53,9 +53,30 @@ final class Rastreio {
         long agora = System.currentTimeMillis();
         SharedPreferences.Editor e = p.edit().putBoolean("pausado", pausar);
         if (pausar) e.putLong("pausaInicio", agora);
-        else e.putLong("pausadoMs", p.getLong("pausadoMs", 0) + Math.max(0, agora - p.getLong("pausaInicio", agora)))
+        else e.putLong("pausadoMs", p.getLong("pausadoMs", 0) + Math.max(0, agora - p.getLong("pausaInicio", agora))).putLong("retomadoEm", agora)
             .remove("lat").remove("lon").remove("alt").remove("t");
         e.commit();
+    }
+
+    /** Atividades a pé: o contador de passos do celular vale para elas. */
+    static boolean aPe(String tipo) { return "caminhada".equals(tipo) || "trilha".equals(tipo) || "corrida".equals(tipo); }
+
+    /**
+     * Uma leitura do contador de passos do celular (TYPE_STEP_COUNTER: total desde que o celular ligou), feita em
+     * quandoMs. Soma só a diferença desde a leitura anterior, e só fora da pausa. Com a tela apagada o celular pode
+     * entregar as leituras atrasadas, todas juntas: as que foram feitas antes de retomar só servem de ponto de partida.
+     * (Regra pura em somaPassos, testada em PassosTest.)
+     */
+    static synchronized void passos(Context c, long total, long quandoMs) {
+        SharedPreferences p = sp(c);
+        if (!p.getBoolean("ativo", false)) return;
+        long ultimo = p.getLong("passosUlt", -1), soma = p.getLong("passos", 0);
+        boolean conta = !p.getBoolean("pausado", false) && quandoMs >= p.getLong("retomadoEm", 0);
+        p.edit().putLong("passos", somaPassos(soma, ultimo, total, conta)).putLong("passosUlt", total).apply();
+    }
+    static long somaPassos(long soma, long ultimo, long total, boolean conta) {
+        if (ultimo < 0 || !conta || total < ultimo) return soma; // primeira leitura, pausa ou o celular reiniciou
+        return soma + (total - ultimo);
     }
 
     static synchronized Percurso carregar(Context c) {
@@ -100,6 +121,7 @@ final class Rastreio {
             o.put("acc", p.getFloat("acc", -1));
             o.put("fixAt", p.getLong("fixAt", 0));
             o.put("gps", c.getSystemService(LocationManager.class).isProviderEnabled(LocationManager.GPS_PROVIDER));
+            o.put("passos", p.contains("passosUlt") ? p.getLong("passos", 0) : -1); // -1 = sem contador (sem sensor ou sem permissão)
         } catch (Exception ignored) {}
         return o;
     }
