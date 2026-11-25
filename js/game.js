@@ -404,6 +404,14 @@ export const campoXp = ouro => Math.round(ouro * CAMPO_XP);
 // extra (exclusivos), mas as calorias entram no gasto do dia. A chave é o tipo da atividade.
 export const CAMPO = { corrida: { nome: "correndo", rotulo: "Corrida", km: 5 }, caminhada: { nome: "de caminhada", rotulo: "Caminhada", km: 10 },
   trilha: { nome: "de trilha", rotulo: "Trilha", km: 10 }, bike: { nome: "de bike", rotulo: "Bike", km: 35 } };
+// A distância sobe com o rank (o prêmio não: cada nível já custa mais XP, e o Ouro compra comida de verdade).
+// No S fica abaixo da Dungeon do Inferno (21 km correndo + 40 km de bike).
+export const CAMPO_KM = { E: { corrida: 5, caminhada: 10, trilha: 10, bike: 35 }, D: { corrida: 6, caminhada: 12, trilha: 12, bike: 40 },
+  C: { corrida: 8, caminhada: 14, trilha: 14, bike: 50 }, B: { corrida: 10, caminhada: 16, trilha: 16, bike: 60 },
+  A: { corrida: 12, caminhada: 18, trilha: 18, bike: 70 }, S: { corrida: 15, caminhada: 20, trilha: 20, bike: 80 } };
+export const metaCampo = (k, rank = levelInfo().rank) => CAMPO_KM[rank]?.[k] ?? CAMPO[k]?.km ?? 5;
+// A meta de uma tentativa é a do rank em que ela começou (guardada na atividade)
+export const metaDe = e => e?.campo?.meta ?? CAMPO[e?.tipo]?.km ?? 5;
 export const campoDe = k => CAMPO[k] || (k === "andando" ? CAMPO.caminhada : CAMPO.corrida); // "andando" = regra antiga
 // A tentativa de cada tipo no dia: a primeira atividade da dungeon daquele tipo (null = ainda não tentou)
 export const tentativaCampo = (date, k) => (S.days[date]?.extras || []).find(e => e.campo && e.tipo === k) || null;
@@ -411,7 +419,7 @@ export const tentouCampo = (date, k) => !!tentativaCampo(date, k) || (S.days[dat
 export function kmCampo(date = today()) {
   return Object.fromEntries(Object.keys(CAMPO).map(k => { const e = tentativaCampo(date, k); return [k, e ? e.gps?.km || 0 : null]; }));
 }
-export const campoBatido = (date = today()) => { const km = kmCampo(date); return Object.keys(CAMPO).find(k => km[k] >= CAMPO[k].km) || null; };
+export const campoBatido = (date = today()) => Object.keys(CAMPO).find(k => { const e = tentativaCampo(date, k); return e && (e.gps?.km || 0) >= metaDe(e); }) || null;
 export function weekStart(date = today()) {
   const ini = ((S.profile?.restDay ?? 0) + 1) % 7;
   let d = date; while (weekday(d) !== ini) d = addDays(d, -1);
@@ -475,7 +483,7 @@ export function checkGpsBonus(date = today()) {
   const km = kmCampo(date)[k];
   const emXp = Math.random() < .5; // sorteio: Ouro ou XP
   const ev = payBonus(date, "gps", gpsBonusValor(date), `Dungeon de Campo vencida: ${fmt(km, 1)} km ${CAMPO[k].nome} pelo GPS`, emXp);
-  if (ev) { Object.assign(bonusLog().at(-1), { campo: k, km: Math.round(km * 10) / 10 }); ev.sorteio = emXp ? "xp" : "ouro"; save(); }
+  if (ev) { Object.assign(bonusLog().at(-1), { campo: k, km: Math.round(km * 10) / 10, meta: metaDe(tentativaCampo(date, k)) }); ev.sorteio = emXp ? "xp" : "ouro"; save(); }
   return ev;
 }
 

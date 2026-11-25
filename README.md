@@ -50,7 +50,19 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 - **Loja:** só abre de sexta a domingo. Uma semana perfeita (6 treinos = 600 de Ouro) paga exatamente uma pizza.
 - **Dungeon de Campo (no lugar da antiga missão bônus de GPS):** opcional: o jogador escolhe entrar (animação com som)
   e escolhe o percurso. Lá dentro é **um percurso só**, rastreado pelo GPS do começo ao fim (pode pausar; não dá para
-  editar): 5 km correndo, 10 km de caminhada, 10 km de trilha ou 35 km de bike. **Uma tentativa por tipo no dia**: só a
+  editar). **As metas sobem com o rank** (a meta de cada tentativa é a do rank em que ela começou; o prêmio não muda,
+  porque cada nível já custa mais XP e o Ouro compra comida de verdade):
+
+  | Rank | Corrida | Caminhada | Trilha | Bike |
+  |---|---|---|---|---|
+  | E | 5 km | 10 km | 10 km | 35 km |
+  | D | 6 km | 12 km | 12 km | 40 km |
+  | C | 8 km | 14 km | 14 km | 50 km |
+  | B | 10 km | 16 km | 16 km | 60 km |
+  | A | 12 km | 18 km | 18 km | 70 km |
+  | S | 15 km | 20 km | 20 km | 80 km |
+
+  **Uma tentativa por tipo no dia**: só a
   primeira de cada tipo conta (desistir antes de 100 m não gasta). O percurso da dungeon **não é atividade extra**
   (não soma para as faixas de 250/700 kcal nem para a corrida das outras dungeons), mas as calorias entram no gasto do
   dia. Vence num dia de missão cumprida (1 por dia; o prêmio entra ao concluir a missão). O prêmio é **sorteado

@@ -217,7 +217,7 @@ export function finalizarCampo(date = today()) {
   let bau = null;
   if (Math.random() < CAMPO_SURPRESA) { bau = abrirBau({ sorte: bonus().sorteTotal, motivo: "Baú da Dungeon de Campo" }); eventos.push(...bau.eventos); }
   b.reg = registrarDungeon({ tipo: "campo", rank: levelInfo().rank, d: date,
-    desafio: { titulo: "Dungeon de Campo", desc: b.campo === "andando" ? `${fmtKm(C.km)} km andando no dia, rastreados pelo GPS.` : `${fmtKm(C.km)} km ${C.nome} num percurso só, rastreado pelo GPS.`,
+    desafio: { titulo: "Dungeon de Campo", desc: b.campo === "andando" ? `${fmtKm(C.km)} km andando no dia, rastreados pelo GPS.` : `${fmtKm(b.meta || C.km)} km ${C.nome} num percurso só, rastreado pelo GPS (meta do rank ${levelInfo().rank}).`,
       gps: [{ nome: b.campo === "andando" ? "Andando" : C.rotulo, km: b.km || C.km }] },
     premios: [b.xp ? `+${b.xp} XP` : `+${b.ouro} Ouro`, bau && `Surpresa: Baú ${RAR[bau.raridade].nome} (${bau.premios.join(", ")})`].filter(Boolean) }).id;
   return { reg: b.reg, bau, eventos };

@@ -8,7 +8,7 @@ import { today, iso, esc, fmt, num, uid, fmtDate, fmtShort, addDays, distM, $ } 
 import { header, panel, modal, closeModal, toast, confirmBox, showEvents } from "../ui.js";
 import { checarMarcos, checarConquistas } from "../conquistas.js";
 import { mostrarTitulos } from "./recompensas-ui.js";
-import { tmb, weightOn, grant, extrasKcal, BONUS, campoXp, CAMPO, kmCampo, tentouCampo, gpsBonusStatus, checkGpsBonus, bonusWeek, weekStart, weekEnd } from "../game.js";
+import { tmb, weightOn, grant, extrasKcal, BONUS, campoXp, CAMPO, metaCampo, metaDe, levelInfo, kmCampo, tentouCampo, tentativaCampo, gpsBonusStatus, checkGpsBonus, bonusWeek, weekStart, weekEnd } from "../game.js";
 import { finalizarCampo } from "../portoes.js";
 import { bauFx, portaoFx, falhaFx } from "../fx.js";
 import { RAR } from "../premios.js";
@@ -123,7 +123,7 @@ views.extras = () => {
     <button class="item" data-act="editExtra" data-date="${d}" data-id="${e.id}"><div>${esc(typeOf(e.tipo)?.nome || e.tipo)}${e.campo ? ` <span class="small" style="color:${VERDE}">· Dungeon de Campo ${e.campo.venceu ? "✔" : "✗"}</span>` : ""}</div>
     <div class="small muted">${[e.dados.dist && fmt(e.dados.dist, 2) + " km", e.dados.tempo + " min", e.dados.elev && fmt(e.dados.elev) + " m ↑", e.gps?.passos > 0 && fmt(e.gps.passos) + " passos"].filter(Boolean).join(" · ")}</div></button>
     <span class="num">${d !== t && !semData ? `<span class="small muted">${fmtShort(d)}</span> ` : ""}~${fmt(e.kcal)} kcal</span></li>`;
-  const meta = tr?.campo ? CAMPO[tr.tipo]?.km : null;
+  const meta = tr?.campo ? metaTr(tr) : null;
   const tracking = tr ? panel(tr.campo ? `Dungeon de Campo${tr.pausado ? ": pausado" : ""}` : tr.pausado ? "Pausado" : "Rastreando", `
       <p class="mid glow center num" id="tr-dist">${fmt(tr.dist / 1000, 2)} km</p>
       ${meta ? `<div class="bar" style="height:8px"><i id="tr-meta" style="width:${Math.min(100, tr.dist / 10 / meta)}%;background:${VERDE};box-shadow:0 0 8px ${VERDE}"></i></div>
@@ -155,17 +155,19 @@ views.extras = () => {
 // Uma tentativa por tipo no dia; o que é feito lá dentro não é atividade extra (as calorias entram no gasto do dia).
 const VERDE = "#3ddc84";
 const CAMPO_TIPOS = Object.keys(CAMPO);
+const metaTr = tr => tr.meta ?? metaCampo(tr.tipo); // meta do rank em que o percurso começou
 const podeEntrarCampo = (st = gpsBonusStatus()) => (st.ok || st.pendente) && CAMPO_TIPOS.some(k => !tentouCampo(today(), k));
 export function bonusPanel() {
   const st = gpsBonusStatus(), usado = bonusWeek(), km = kmCampo(), tr = S.tracking;
-  const linha = k => { const c = CAMPO[k], T = typeOf(k), v = km[k], tentou = tentouCampo(today(), k);
-    return `<li><span class="grow">${T.icone} ${T.nome.split(" /")[0]} <span class="muted">· ${c.km} km</span></span>
-      <b class="num ${v >= c.km ? "ok" : ""}">${v == null ? (tentou ? (tr?.campo && tr.tipo === k ? "na dungeon" : "tentativa gasta") : "—") : `${fmt(v, 1)} km ${v >= c.km ? "✔" : "✗"}`}</b></li>`; };
+  const linha = k => { const T = typeOf(k), v = km[k], tentou = tentouCampo(today(), k), e = tentativaCampo(today(), k), meta = e ? metaDe(e) : metaCampo(k);
+    return `<li><span class="grow">${T.icone} ${T.nome.split(" /")[0]} <span class="muted">· ${meta} km</span></span>
+      <b class="num ${v >= meta ? "ok" : ""}">${v == null ? (tentou ? (tr?.campo && tr.tipo === k ? "na dungeon" : "tentativa gasta") : "—") : `${fmt(v, 1)} km ${v >= meta ? "✔" : "✗"}`}</b></li>`; };
   const entrar = tr ? (tr.campo ? "" : `<p class="small muted">Finalize o rastreamento atual para entrar.</p>`)
     : podeEntrarCampo(st) ? `<button class="btn primary block" style="margin-top:4px;background:${VERDE};border-color:${VERDE};color:#04140b" data-act="entrarCampo">Entrar na Dungeon de Campo</button>`
     : (st.ok || st.pendente) ? `<p class="small muted">Você já tentou os quatro percursos hoje. Amanhã ela abre de novo.</p>` : "";
   return panel("Dungeon de Campo", `<p style="margin-top:0">Opcional: entre quando quiser tentar. Lá dentro é <b>um percurso só</b>, rastreado pelo GPS do começo ao fim (pode pausar):
-      <b>${CAMPO.corrida.km} km correndo</b>, <b>${CAMPO.caminhada.km} km de caminhada</b>, <b>${CAMPO.trilha.km} km de trilha</b> ou <b>${CAMPO.bike.km} km de bike</b>.
+      <b>${metaCampo("corrida")} km correndo</b>, <b>${metaCampo("caminhada")} km de caminhada</b>, <b>${metaCampo("trilha")} km de trilha</b> ou <b>${metaCampo("bike")} km de bike</b>
+      (metas do rank ${levelInfo().rank}; elas sobem a cada rank).
       Vencendo, o Sistema sorteia o prêmio: <b class="gold">${BONUS.gpsOuro} Ouro</b> ou <b class="ok">${campoXp(BONUS.gpsOuro)} XP</b> em semana sem falta, ou <b class="gold">${BONUS.gpsOuroSeq} Ouro</b> ou <b class="ok">${campoXp(BONUS.gpsOuroSeq)} XP</b> se a semana teve falta mas as últimas ${BONUS.seguidos} missões foram cumpridas. Às vezes vem uma surpresa. Uma vitória por dia.</p>
     <p class="small muted">Uma tentativa por tipo no dia: só a primeira de cada tipo conta. O percurso da dungeon não é atividade extra (não soma para as faixas de ${ATIV[0].kcal} e ${ATIV[1].kcal} kcal), mas as calorias entram no gasto do dia.</p>
     <ul class="list small">${CAMPO_TIPOS.map(linha).join("")}</ul>
@@ -182,7 +184,7 @@ actions.entrarCampo = async () => {
   const o = modal(`<div class="ptitle"><h2 style="color:${VERDE}">Dungeon de Campo</h2></div>
     <p class="small muted">Escolha o percurso. O GPS mede do começo ao fim: pode pausar, mas é um percurso só. Desistir depois de 100 m gasta a tentativa do dia.</p>
     <div class="grid2">${CAMPO_TIPOS.map(k => { const T = typeOf(k), usado = tentouCampo(today(), k);
-      return `<button class="btn" data-tipo="${k}" ${usado ? 'disabled aria-disabled="true"' : ""}>${T.icone} ${T.nome.split(" /")[0]}<br><span class="small ${usado ? "muted" : ""}">${usado ? "já tentou hoje" : `${CAMPO[k].km} km`}</span></button>`; }).join("")}</div>
+      return `<button class="btn" data-tipo="${k}" ${usado ? 'disabled aria-disabled="true"' : ""}>${T.icone} ${T.nome.split(" /")[0]}<br><span class="small ${usado ? "muted" : ""}">${usado ? "já tentou hoje" : `${metaCampo(k)} km`}</span></button>`; }).join("")}</div>
     <button class="btn ghost block" style="margin-top:10px" data-close>Sair da dungeon</button>`);
   o.querySelectorAll("[data-tipo]:not([disabled])").forEach(b => b.onclick = () => {
     if (!iniciarRastreio(b.dataset.tipo, true)) return;
@@ -193,12 +195,12 @@ actions.entrarCampo = async () => {
 
 // Fim do percurso da Dungeon de Campo: salva sozinho (os valores são os do GPS, não dá para editar) e mostra o resultado
 async function salvarCampo(tr) {
-  const C = CAMPO[tr.tipo], km = Math.round(tr.dist / 10) / 100, tempo = Math.max(1, Math.round(ativoMs(tr) / 60000));
+  const C = CAMPO[tr.tipo], meta = metaTr(tr), km = Math.round(tr.dist / 10) / 100, tempo = Math.max(1, Math.round(ativoMs(tr) / 60000));
   const dados = { ...(km >= 0.05 ? { dist: km } : {}), tempo, ...(tr.elev >= 5 ? { elev: Math.round(tr.elev) } : {}) };
-  const est = estimate(tr.tipo, dados, "moderada", tr.date), venceu = km >= C.km;
+  const est = estimate(tr.tipo, dados, "moderada", tr.date), venceu = km >= meta;
   day(tr.date).extras ||= [];
   S.days[tr.date].extras.push({ id: uid(), tipo: tr.tipo, dados, intensidade: "moderada", ...est,
-    gps: { km, tipo: tr.tipo, ...(tr.passos > 0 ? { passos: tr.passos } : {}) }, campo: { venceu }, salvo: Date.now() });
+    gps: { km, tipo: tr.tipo, ...(tr.passos > 0 ? { passos: tr.passos } : {}) }, campo: { venceu, meta }, salvo: Date.now() });
   const ev = [];
   const bonus = checkGpsBonus(tr.date); if (bonus) ev.push(bonus);
   const campo = bonus ? finalizarCampo(tr.date) : null; if (campo) ev.push(...campo.eventos);
@@ -206,8 +208,8 @@ async function salvarCampo(tr) {
   save(); refresh();
   const kcal = `<p class="small muted">~${fmt(est.kcal)} kcal somadas ao gasto de ${tr.date === today() ? "hoje" : fmtDate(tr.date)}.</p>`;
   if (!venceu) {
-    await falhaFx("A DUNGEON VENCEU", `${fmt(km, 2)} de ${C.km} km ${C.nome}`);
-    await showEvents("Dungeon de Campo", [{ motivo: `Faltaram ${fmt(Math.max(0.01, C.km - km), 2)} km. A tentativa ${C.nome} de hoje foi gasta.`, xp: 0, gold: 0 }], kcal);
+    await falhaFx("A DUNGEON VENCEU", `${fmt(km, 2)} de ${meta} km ${C.nome}`);
+    await showEvents("Dungeon de Campo", [{ motivo: `Faltaram ${fmt(Math.max(0.01, meta - km), 2)} km. A tentativa ${C.nome} de hoje foi gasta.`, xp: 0, gold: 0 }], kcal);
   } else if (!bonus) {
     const st = gpsBonusStatus(tr.date);
     await showEvents("Percurso cumprido", [{ motivo: `${fmt(km, 2)} km ${C.nome}: meta batida`, xp: 0, gold: 0 }],
@@ -283,11 +285,11 @@ function form({ date = today(), tipo = "caminhada", dados = {}, intensidade = "m
 
 // Percurso da Dungeon de Campo: os valores são os do GPS e não mudam; dá só para excluir (sai do gasto do dia)
 function fichaCampo(date, e) {
-  const T = typeOf(e.tipo), C = CAMPO[e.tipo];
+  const T = typeOf(e.tipo), meta = metaDe(e);
   const o = modal(`<div class="ptitle"><h2 style="color:${VERDE}">Dungeon de Campo</h2><button class="btn sm ghost" data-close aria-label="Fechar">✕</button></div>
     <p class="center mid num glow" style="margin:4px 0">${fmt(e.gps?.km || 0, 2)} km</p>
     <p class="center small muted" style="margin-top:0">${T.icone} ${T.nome} · ${fmtDate(date)} · ${e.dados.tempo} min${e.gps?.passos ? ` · ${fmt(e.gps.passos)} passos` : ""} · ~${fmt(e.kcal)} kcal</p>
-    <p class="small ${e.campo.venceu ? "ok" : "warn"}">${e.campo.venceu ? `✔ Meta de ${C?.km} km batida.` : `✗ Meta de ${C?.km} km não batida.`}</p>
+    <p class="small ${e.campo.venceu ? "ok" : "warn"}">${e.campo.venceu ? `✔ Meta de ${meta} km batida.` : `✗ Meta de ${meta} km não batida.`}</p>
     <p class="small muted">Os valores são os do GPS e não dá para editar. Excluir tira as calorias do dia; a tentativa continua gasta e o prêmio recebido fica.</p>
     <button class="btn danger block" id="xdel">Excluir</button>`);
   $("#xdel", o).onclick = async () => {
@@ -357,7 +359,7 @@ function iniciarRastreio(tipo, campo = false) {
     const r = nativeTrack("trackStart", tipo, start, true);
     if (r !== "ok") { toast(TRACK_ERR[r] || "Não consegui ligar o GPS. Tente de novo.", 5000); return false; }
   } else keepScreenOn(true);
-  S.tracking = { tipo, start, date: today(), dist: 0, last: null, ...(nat ? { nativo: true } : {}), ...(campo ? { campo: true } : {}) };
+  S.tracking = { tipo, start, date: today(), dist: 0, last: null, ...(nat ? { nativo: true } : {}), ...(campo ? { campo: true, meta: metaCampo(tipo) } : {}) };
   return true;
 }
 
@@ -390,8 +392,8 @@ actions.resumeTrack = () => setPausa(false);
 
 actions.stopTrack = async () => {
   const tr = S.tracking; if (!tr) return;
-  if (tr.campo && tr.dist / 1000 < CAMPO[tr.tipo].km && !await confirmBox("Finalizar a Dungeon de Campo",
-    `Você tem ${fmt(tr.dist / 1000, 2)} de ${CAMPO[tr.tipo].km} km. Finalizar agora encerra a tentativa ${CAMPO[tr.tipo].nome} de hoje.`, "Finalizar")) return;
+  if (tr.campo && tr.dist / 1000 < metaTr(tr) && !await confirmBox("Finalizar a Dungeon de Campo",
+    `Você tem ${fmt(tr.dist / 1000, 2)} de ${metaTr(tr)} km. Finalizar agora encerra a tentativa ${CAMPO[tr.tipo].nome} de hoje.`, "Finalizar")) return;
   if (tr.nativo) { const st = nativeTrack("trackStop"); if (st) { tr.dist = st.dist || 0; tr.elev = st.elev || 0; tr.passos = st.passos; copiaPausa(tr, st); } }
   stopWatch(); keepScreenOn(false);
   delete S.tracking; save(); refresh();
@@ -422,7 +424,7 @@ export function startWatch() {
     }
     tr.last = pt;
     const el = $("#tr-dist"); if (el) el.textContent = `${fmt(tr.dist / 1000, 2)} km`;
-    const m = $("#tr-meta"); if (m && tr.campo) m.style.width = `${Math.min(100, tr.dist / 10 / CAMPO[tr.tipo].km)}%`;
+    const m = $("#tr-meta"); if (m && tr.campo) m.style.width = `${Math.min(100, tr.dist / 10 / metaTr(tr))}%`;
     if (Date.now() - lastSave > 15000) { lastSave = Date.now(); save(); }
   }, () => { const st = $("#tr-gps"); if (st) st.textContent = "sem sinal de GPS"; },
   { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
@@ -447,7 +449,7 @@ views.extras.after = () => {
         tr.dist = st.dist || 0;
         const d = $("#tr-dist"); if (d) d.textContent = `${fmt(tr.dist / 1000, 2)} km`;
         mostraPassos(tr, st);
-        const m = $("#tr-meta"); if (m) m.style.width = `${Math.min(100, tr.dist / 10 / CAMPO[tr.tipo].km)}%`;
+        const m = $("#tr-meta"); if (m) m.style.width = `${Math.min(100, tr.dist / 10 / metaTr(tr))}%`;
         if (gpsEl) gpsEl.textContent = st.pausado ? "pausado" : st.gps === false ? "localização do celular desligada"
           : !st.fixAt ? "aguardando GPS…" : Date.now() - st.fixAt > 30000 ? "sem sinal de GPS" : `GPS ±${Math.round(st.acc)} m`;
       }
