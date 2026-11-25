@@ -103,10 +103,27 @@ export function tmb(date = today()) { // Mifflin-St Jeor
   const base = 10 * weightOn(date) + 6.25 * (p.altura || 170) - 5 * age(date);
   return Math.round(base + (p.sexo === "feminino" ? -161 : 5));
 }
-// Gasto do dia = repouso × 1,2 + treino + atividades extras (sem contar o repouso duas vezes)
-export const extrasKcal = date => (S.days[date]?.extras || []).reduce((n, e) => n + e.kcal, 0);
+// Gasto do dia = repouso × 1,2 + a soma de tudo o que você fez (sem contar o repouso duas vezes): missão, atividades
+// extras, Dungeon de Campo, as outras dungeons e os impulsos vencidos.
+// As atividades da Dungeon de Campo ficam na lista do dia (campo: true), mas não são atividades extras: não contam
+// para as faixas de 250/700 kcal (campo: false tira elas da soma).
+export const extrasKcal = (date, { campo = true } = {}) => (S.days[date]?.extras || []).filter(e => campo || !e.campo).reduce((n, e) => n + e.kcal, 0);
+const gastosKcal = date => Object.values(S.days[date]?.gastos || {}).reduce((n, v) => n + v, 0);
 export function spent(date = today()) {
-  return Math.round(tmb(date) * 1.2 + (S.days[date]?.workout?.kcal || 0) + extrasKcal(date));
+  return Math.round(tmb(date) * 1.2 + (S.days[date]?.workout?.kcal || 0) + extrasKcal(date) + gastosKcal(date));
+}
+// As partes do gasto do dia (para mostrar de onde veio)
+export function gastoPartes(date = today()) {
+  const g = S.days[date]?.gastos || {}, todas = extrasKcal(date), extras = extrasKcal(date, { campo: false });
+  return { repouso: Math.round(tmb(date) * 1.2), missao: S.days[date]?.workout?.kcal || 0, extras, campo: todas - extras,
+    dungeons: g.dungeon || 0, impulsos: g.impulso || 0 };
+}
+// Esforço sem distância (dungeons de calistenia, impulsos): MET 8 = calistenia vigorosa; até 2 h por vez
+export const kcalEsforco = (date, min, met = 8) => Math.round((met - 1) * (tmb(date) / 24) * (Math.min(Math.max(0, min), 120) / 60));
+export function somarGasto(date, tipo, kcal) {
+  if (!(kcal > 0)) return;
+  const g = (day(date).gastos ||= {});
+  g[tipo] = (g[tipo] || 0) + kcal;
 }
 export function workoutKcal(date, durMin, indoor) {
   const met = indoor ? 5 : (currentTrack()?.met || 6);
@@ -377,13 +394,18 @@ export function dietVerdict(d, rec = S.days[d]) {
 // Atividade longa por GPS: semana limpa (sem falta) vale gpsOuro; semana com falta vale gpsOuroSeq se as
 // últimas `seguidos` missões estiverem cumpridas. Na Zona de Penalidade, nada.
 export const BONUS = { gpsOuro: 125, gpsOuroSeq: 75, seguidos: 3, dietaOuro: 150, teto: 300 };
-// Dungeon de Campo (no lugar da antiga missão bônus de GPS): sempre aberta; vence no dia em que as atividades
-// rastreadas pelo GPS somarem 5 km correndo, 10 km andando (caminhada + trilha) ou 35 km de bike
-export const CAMPO = { corrida: { nome: "correndo", km: 5, tipos: ["corrida"] }, andando: { nome: "andando", km: 10, tipos: ["caminhada", "trilha"] },
-  bike: { nome: "de bike", km: 35, tipos: ["bike"] } };
+// Dungeon de Campo (no lugar da antiga missão bônus de GPS): o jogador escolhe entrar. Lá dentro, um percurso só,
+// rastreado pelo GPS do começo ao fim (pode pausar): 5 km correndo, 10 km de caminhada, 10 km de trilha ou 35 km de
+// bike. Uma tentativa por tipo no dia: só a primeira de cada tipo conta. O que é feito na dungeon não é atividade
+// extra (exclusivos), mas as calorias entram no gasto do dia. A chave é o tipo da atividade.
+export const CAMPO = { corrida: { nome: "correndo", rotulo: "Corrida", km: 5 }, caminhada: { nome: "de caminhada", rotulo: "Caminhada", km: 10 },
+  trilha: { nome: "de trilha", rotulo: "Trilha", km: 10 }, bike: { nome: "de bike", rotulo: "Bike", km: 35 } };
+export const campoDe = k => CAMPO[k] || (k === "andando" ? CAMPO.caminhada : CAMPO.corrida); // "andando" = regra antiga
+// A tentativa de cada tipo no dia: a primeira atividade da dungeon daquele tipo (null = ainda não tentou)
+export const tentativaCampo = (date, k) => (S.days[date]?.extras || []).find(e => e.campo && e.tipo === k) || null;
+export const tentouCampo = (date, k) => !!tentativaCampo(date, k) || (S.days[date]?.campoTent || []).includes(k);
 export function kmCampo(date = today()) {
-  const ex = (S.days[date]?.extras || []).filter(e => e.gps);
-  return Object.fromEntries(Object.entries(CAMPO).map(([k, c]) => [k, ex.filter(e => c.tipos.includes(e.gps.tipo)).reduce((n, e) => n + (e.gps.km || 0), 0)]));
+  return Object.fromEntries(Object.keys(CAMPO).map(k => { const e = tentativaCampo(date, k); return [k, e ? e.gps?.km || 0 : null]; }));
 }
 export const campoBatido = (date = today()) => { const km = kmCampo(date); return Object.keys(CAMPO).find(k => km[k] >= CAMPO[k].km) || null; };
 export function weekStart(date = today()) {
@@ -435,12 +457,12 @@ export function gpsBonusStatus(date = today()) {
     const faltam = BONUS.seguidos - treinosSeguidos(date) - (S.days[date]?.workout?.done ? 0 : 1);
     return { ok: false, motivo: `Semana com falta: a Dungeon de Campo volta (+${BONUS.gpsOuroSeq}) depois de ${BONUS.seguidos} missões seguidas cumpridas. Falta${faltam > 1 ? "m" : ""} ${faltam} além da de hoje.` };
   }
-  if (!S.days[date]?.workout?.done) return { ok: false, pendente: true, valor, motivo: `Vale +${valor} Ouro hoje (${porque}). Ela é vencida quando a missão do dia for concluída (pode fazer a atividade antes; o prêmio entra ao concluir a missão).` };
+  if (!S.days[date]?.workout?.done) return { ok: false, pendente: true, valor, motivo: `Vale +${valor} Ouro hoje (${porque}). Ela é vencida quando a missão do dia for concluída (pode entrar antes; o prêmio entra ao concluir a missão).` };
   return { ok: true, valor, motivo: `Aberta hoje: +${valor} Ouro (${porque}).` };
 }
 
-// Paga o bônus se houver no dia uma atividade rastreada por GPS longa o bastante (chamado ao salvar
-// a atividade e ao concluir a missão)
+// Paga o bônus se a tentativa de um tipo na Dungeon de Campo bateu a distância (chamado ao finalizar o percurso
+// e ao concluir a missão)
 export function checkGpsBonus(date = today()) {
   if (!gpsBonusStatus(date).ok) return null;
   const k = campoBatido(date); if (!k) return null;

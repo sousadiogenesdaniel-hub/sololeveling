@@ -1,7 +1,7 @@
 // Orquestra as recompensas: o que acontece ao concluir a missão, o botão Impulso e a primeira inicialização.
 import { S, save } from "./store.js";
 import { today } from "./util.js";
-import { grant, R } from "./game.js";
+import { grant, R, kcalEsforco, somarGasto } from "./game.js";
 import { pr } from "./tracks.js";
 import { abrirBau, bonus, bonusEquip, eventoHp, HP } from "./premios.js";
 import { crescerSombras, invocacaoHoje, invocado, necromante, COMANDANTES } from "./sombras.js";
@@ -65,6 +65,7 @@ export function vencerImpulso() {
   if (!a || (Date.now() - a.inicio) / 1000 < a.seg) return null;
   delete im.atual;
   im.total++; im.dias[today()] = (im.dias[today()] || 0) + 1;
+  somarGasto(today(), "impulso", kcalEsforco(today(), a.seg / 60, a.seg >= 600 ? 4.3 : 8)); // caminhada rápida: MET 4,3
   const ev = im.dias[today()] <= IMPULSO.xpPorDia ? [grant(IMPULSO.xp, 0, "Impulso vencido")] : [];
   const titulos = checarConquistas();
   save();

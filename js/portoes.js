@@ -4,7 +4,7 @@
 import { S } from "./store.js";
 import { today, addDays, uid } from "./util.js";
 import { possui } from "./premios.js";
-import { weekStart, isRestDay, inPenalty, levelInfo, grant, RANK_ORDER, CAMPO } from "./game.js";
+import { weekStart, isRestDay, inPenalty, levelInfo, grant, RANK_ORDER, campoDe, kcalEsforco, somarGasto } from "./game.js";
 import { pr, currentPhase, testKey } from "./tracks.js";
 import { novoCorpo } from "./feitos.js";
 import { abrirBau, bonus, bonusEquip, darItem, sortearItemPortao, eventoHp, HP, RAR, itemBase } from "./premios.js";
@@ -94,9 +94,18 @@ function desafioCompleto(tipo) {
   return { ...d, modo: `${d.modo}+corrida`, titulo: `${d.titulo} + corrida de ${fmtKm1(km)} km`, limite: d.limite + limCorrida + 5, gps,
     desc: `${d.desc} E a corrida de ${fmtKm1(km)} km pelo GPS (em Atividades), antes ou depois, dentro do mesmo tempo.` };
 }
-// Km rastreados pelo GPS de um tipo, salvos depois da entrada na dungeon (hoje e ontem, se virou a meia-noite)
-export const kmGpsDesde = (tipo, desde) => [today(), addDays(today(), -1)].flatMap(d => S.days[d]?.extras || [])
-  .filter(e => e.gps?.tipo === tipo && (e.salvo || 0) >= desde).reduce((n, e) => n + (e.gps.km || 0), 0);
+// Km rastreados pelo GPS de um tipo, salvos depois da entrada na dungeon (hoje e ontem, se virou a meia-noite).
+// O percurso da Dungeon de Campo não conta aqui: cada esforço vale numa dungeon só.
+const gpsDesde = (tipo, desde) => [today(), addDays(today(), -1)].flatMap(d => S.days[d]?.extras || [])
+  .filter(e => e.gps?.tipo === tipo && !e.campo && (e.salvo || 0) >= desde);
+export const kmGpsDesde = (tipo, desde) => gpsDesde(tipo, desde).reduce((n, e) => n + (e.gps.km || 0), 0);
+// Calorias da parte de força de uma dungeon: o tempo lá dentro menos o tempo das corridas pelo GPS (essas já entram
+// no gasto como atividade). Vencida ou não, o esforço foi feito.
+function gastoDungeon(inicio, minutosTotal, gps = []) {
+  if (!inicio) return;
+  const tGps = gps.flatMap(x => gpsDesde(x.tipo, inicio)).reduce((n, e) => n + (e.dados?.tempo || 0), 0);
+  somarGasto(today(), "dungeon", kcalEsforco(today(), minutosTotal - tGps));
+}
 export const gpsCumprido = p => !p.desafio?.gps?.length || p.desafio.gps.every(x => kmGpsDesde(x.tipo, p.inicio || 0) >= x.km);
 
 // Abre o portão no dia sorteado, fecha os vencidos e aplica a pena da Emergência ignorada.
@@ -150,6 +159,7 @@ export function concluirPortao(tudoFeito) {
   const p = portaoAberto(); if (!p || p.status !== "ativo") return null;
   const tempo = minutos(p), gpsOk = gpsCumprido(p), venceu = tudoFeito && gpsOk && tempo <= p.desafio.limite, T = TIPOS[p.tipo];
   p.fim = Date.now(); p.minutos = Math.round(tempo * 10) / 10;
+  gastoDungeon(p.inicio, Math.min(tempo, p.desafio.limite + 10), p.desafio.gps || []);
   if (!venceu) {
     p.status = "falhou";
     const pe = PENA[p.tipo];
@@ -203,11 +213,12 @@ function registrarDungeon({ tipo, rank, desafio = {}, minutos = null, premios = 
 export const CAMPO_SURPRESA = .12;
 export function finalizarCampo(date = today()) {
   const b = (S.bonus || []).find(x => x.date === date && x.tipo === "gps" && !x.reg); if (!b) return null;
-  const C = CAMPO[b.campo] || CAMPO.corrida, eventos = [];
+  const C = campoDe(b.campo), eventos = [];
   let bau = null;
   if (Math.random() < CAMPO_SURPRESA) { bau = abrirBau({ sorte: bonus().sorteTotal, motivo: "Baú da Dungeon de Campo" }); eventos.push(...bau.eventos); }
   b.reg = registrarDungeon({ tipo: "campo", rank: levelInfo().rank, d: date,
-    desafio: { titulo: "Dungeon de Campo", desc: `${fmtKm(C.km)} km ${C.nome} no dia, rastreados pelo GPS.`, gps: [{ nome: C.nome[0].toUpperCase() + C.nome.slice(1), km: b.km || C.km }] },
+    desafio: { titulo: "Dungeon de Campo", desc: b.campo === "andando" ? `${fmtKm(C.km)} km andando no dia, rastreados pelo GPS.` : `${fmtKm(C.km)} km ${C.nome} num percurso só, rastreado pelo GPS.`,
+      gps: [{ nome: b.campo === "andando" ? "Andando" : C.rotulo, km: b.km || C.km }] },
     premios: [`+${b.ouro} Ouro`, bau && `Surpresa: Baú ${RAR[bau.raridade].nome} (${bau.premios.join(", ")})`].filter(Boolean) }).id;
   return { reg: b.reg, bau, eventos };
 }
@@ -300,12 +311,13 @@ export function entrarNomeado(k) {
   return true;
 }
 // Km rastreados pelo GPS do app no dia, por tipo
-export const kmGps = (dia, tipo) => (S.days[dia]?.extras || []).filter(e => e.gps?.tipo === tipo).reduce((n, e) => n + (e.gps.km || 0), 0);
+export const kmGps = (dia, tipo) => (S.days[dia]?.extras || []).filter(e => e.gps?.tipo === tipo && !e.campo).reduce((n, e) => n + (e.gps.km || 0), 0);
 export function concluirNomeado(k) {
   const g = nomeados()[k], N = NOMEADOS[k];
   if (!g || g.status !== "ativo") return null;
   const forca = g.desafio.itens.every((_, i) => g.feitos?.[i]);
   const gps = g.desafio.gps.every(x => kmGps(g.dia, x.tipo) >= x.km);
+  if (g.inicio) gastoDungeon(g.inicio, (Date.now() - g.inicio) / 60000, g.desafio.gps); // a parte de força (até 2 h)
   if (!forca || !gps) { const dia = g.dia; falhaNomeado(k, !gps ? "Faltaram quilômetros no GPS" : "Faltaram provas"); return { venceu: false, dia }; }
   g.status = "vencido"; g.vencidoEm = today();
   darItem(N.item, `${N.nome} (rank ${g.fase})`);

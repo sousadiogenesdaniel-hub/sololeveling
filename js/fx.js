@@ -183,11 +183,11 @@ export function falhaFx(texto, sub = "") {
   return overlay("fx-falha", `<div class="fx-dark"></div><div class="fx-falha-txt">${texto}</div><div class="fx-lvl" style="top:calc(50% + 40px);opacity:1">${sub}</div>`, 2400);
 }
 
-export function portaoFx(nome, cor, linha) {
+export function portaoFx(nome, cor, linha, aviso = "[ AVISO DO SISTEMA ] Uma Dungeon se abriu.") {
   navigator.vibrate?.([60, 60, 60, 60, 300]);
   playPortao();
   return overlay("fx-portao", `<div class="fx-dark"></div>
-    <div class="fx-type">${typing("[ AVISO DO SISTEMA ] Uma Dungeon se abriu.")}</div>
+    <div class="fx-type">${typing(aviso)}</div>
     <div class="fx-portal" style="--c:${cor}"></div>
     <div class="fx-name" style="--c:${cor};top:calc(50% + 110px);letter-spacing:.1em;font-size:1.4rem">${nome.toUpperCase()}</div>
     <div class="fx-lvl" style="top:calc(50% + 190px)">${linha}</div>`, 5000);

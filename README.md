@@ -22,7 +22,10 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 - **Medidas do dia** (peso e abdômen): +5 XP. **Condição** de um dia registrada inteira (sono, celular na cama,
   energia e foco), até o dia seguinte: +5 XP, seja qual for a resposta. **Medidas semanais:** +30 XP. **Dia dentro
   da meta de calorias:** +20 XP.
-- **Atividades extras do dia** (somadas, inclusive a da Dungeon de Campo): a partir de 250 kcal, +10 XP e +1 HP; acima
+- **Gasto do dia** (Início, Comida e Evolução): repouso × 1,2 + a soma de tudo o que foi feito: missão, atividades extras,
+  Dungeon de Campo, as outras dungeons (a parte de força, pelo tempo lá dentro, MET 8, até 2 h; as corridas pelo GPS já
+  entram como atividade) e os impulsos vencidos. O Início mostra de onde veio cada parte.
+- **Atividades extras do dia** (somadas; o percurso da Dungeon de Campo não entra): a partir de 250 kcal, +10 XP e +1 HP; acima
   de 700 kcal, mais +20 XP e +2 HP (o HP só com o Manto do Necromante). Editar ou excluir recalcula. A tela mostra a
   barra do dia até as duas faixas e um diário (como o da Comida): totais da semana e do mês e cada dia com as suas
   atividades, kcal e XP.
@@ -40,9 +43,13 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   enviar o print de cada comprovante para o app ler (valor, data, hora e recebedor; o mesmo comprovante não vale
   duas vezes) e concluir um treino. Cada dia com multa pendente custa 30 XP. As imagens não são guardadas.
 - **Loja:** só abre de sexta a domingo. Uma semana perfeita (6 treinos = 600 de Ouro) paga exatamente uma pizza.
-- **Dungeon de Campo (no lugar da antiga missão bônus de GPS):** sempre aberta, vence no dia em que as atividades
-  rastreadas pelo GPS somarem 5 km correndo, 10 km andando (caminhada ou trilha) ou 35 km de bike, num dia de missão
-  cumprida (1 por dia; registro manual não vale): **+125 Ouro** em semana sem falta; em semana com falta, **+75** se as
+- **Dungeon de Campo (no lugar da antiga missão bônus de GPS):** opcional: o jogador escolhe entrar (animação com som)
+  e escolhe o percurso. Lá dentro é **um percurso só**, rastreado pelo GPS do começo ao fim (pode pausar; não dá para
+  editar): 5 km correndo, 10 km de caminhada, 10 km de trilha ou 35 km de bike. **Uma tentativa por tipo no dia**: só a
+  primeira de cada tipo conta (desistir antes de 100 m não gasta). O percurso da dungeon **não é atividade extra**
+  (não soma para as faixas de 250/700 kcal nem para a corrida das outras dungeons), mas as calorias entram no gasto do
+  dia. Vence num dia de missão cumprida (1 por dia; o prêmio entra ao concluir a missão): **+125 Ouro** em semana sem
+  falta; em semana com falta, **+75** se as
   últimas 3 missões foram cumpridas (o descanso não quebra a sequência). Às vezes vem uma surpresa (sem itens do
   Arsenal nem corpos). Cada vitória entra no Registro de Dungeons (card verde). **Bônus da dieta:** semana inteira
   dentro da meta de calorias, +150 (só em semana sem falta). Nada na Zona de Penalidade; até 300 de Ouro de bônus por

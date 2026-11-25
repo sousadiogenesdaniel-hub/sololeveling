@@ -4,7 +4,7 @@ import { views, actions, refresh } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
 import { header, panel } from "../ui.js";
-import { mealsOf, totals, spent, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToShop, monthDebt, weightOn, weightGoal, cotaKcal, R, condicaoPendente } from "../game.js";
+import { mealsOf, totals, spent, gastoPartes, isRestDay, isObligated, inPenalty, pendingDebts, daysToShop, monthDebt, weightOn, weightGoal, cotaKcal, R, condicaoPendente } from "../game.js";
 import { workoutFor, currentTrack } from "../tracks.js";
 import { portaoAberto, TIPOS, NOMEADOS, nomeados } from "../portoes.js";
 import { podeFolga, HP } from "../premios.js";
@@ -94,9 +94,13 @@ function kcalCard() {
     <div class="tile"><div class="lbl">Carbo</div><div class="val num">${fmt(tot.c)} g</div></div>
     <div class="tile"><div class="lbl">Gordura</div><div class="val num">${fmt(tot.gord)} g</div></div></div>`;
   const saldo = tot.kcal - gasto;
+  // o gasto é a soma de tudo: repouso, missão, atividades extras, Dungeon de Campo, as outras dungeons e os impulsos
+  const g = gastoPartes(t), partes = [["repouso", g.repouso], ["missão", g.missao], ["extras", g.extras], ["Dungeon de Campo", g.campo],
+    ["dungeons", g.dungeons], ["impulsos", g.impulsos]].filter(([, v]) => v > 0).map(([n, v]) => `${n} ~${fmt(v)}`).join(" + ");
   const saldoTxt = `<p class="small muted">Gasto estimado hoje: <b class="num">${fmt(gasto)} kcal</b> · saldo
-    <b class="num ${saldo <= 0 ? "ok" : "warn"}">${signed(saldo, 0)} kcal</b>${extrasKcal(t) ? ` · inclui ~${fmt(extrasKcal(t))} kcal de extras` : ""}
-    · <a href="#/extras">${S.tracking ? "rastreando atividade…" : "fez algo a mais?"}</a></p>`;
+    <b class="num ${saldo <= 0 ? "ok" : "warn"}">${signed(saldo, 0)} kcal</b>
+    · <a href="#/extras">${S.tracking ? (S.tracking.campo ? "na Dungeon de Campo…" : "rastreando atividade…") : "fez algo a mais?"}</a></p>
+    <p class="small muted" style="margin-top:-6px">${partes}</p>`;
   if (!meta) return panel("Calorias", `<p>Consumido hoje: <b class="num">${fmt(tot.kcal)} kcal</b></p>${saldoTxt}
     <p class="small muted">Defina uma meta de calorias no Perfil para ver quanto ainda pode comer.</p>${macros}`);
   const cota = cotaKcal(t), limite = meta + cota;
