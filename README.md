@@ -10,7 +10,7 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 
 | Tela | Conteúdo |
 |---|---|
-| **Início** | Resumo do dia: missão diária, quantas calorias ainda pode consumir, macros, lembretes (com atalho para registrar), sequência, contagem para a Loja, peso e dívida do mês. |
+| **Início** | Resumo do dia: missão diária, quantas calorias ainda pode consumir, macros, lembretes de tudo o que ainda dá XP no dia, menos a missão (peso e abdômen, Condição de ontem e de hoje, medidas semanais, meta de calorias, a próxima faixa das atividades extras, dungeons abertas), cada um com o prêmio e o atalho para o lugar certo, sequência, contagem para a Loja, peso e dívida do mês. |
 | **Missão** | Treino do dia da trilha escolhida, ponto por GPS (entrada e saída), séries para marcar, treino indoor em dia de chuva forte e Teste de Rank. |
 | **Comida** | **Dieta padrão** que entra sozinha em todos os dias, e **Dia**, onde você altera só aquele dia sem mexer na dieta. Busca na tabela TACO e alimentos próprios pelo rótulo. |
 | **Evolução** | Gráficos de peso, abdômen, calorias consumidas × gastas, medidas semanais e treinos por semana. |

@@ -4,10 +4,11 @@ import { views, actions, refresh } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
 import { header, panel } from "../ui.js";
-import { mealsOf, totals, spent, gastoPartes, isRestDay, isObligated, inPenalty, pendingDebts, daysToShop, monthDebt, weightOn, weightGoal, cotaKcal, R, condicaoPendente } from "../game.js";
+import { mealsOf, totals, spent, gastoPartes, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToShop, monthDebt, weightOn, weightGoal, cotaKcal, R, condicaoPendente } from "../game.js";
 import { workoutFor, currentTrack } from "../tracks.js";
-import { portaoAberto, TIPOS, NOMEADOS, nomeados } from "../portoes.js";
-import { podeFolga, HP } from "../premios.js";
+import { portaoAberto, TIPOS, PENA, NOMEADOS, NOM, nomeados } from "../portoes.js";
+import { podeFolga, HP, bonus } from "../premios.js";
+import { ATIV } from "./extras.js";
 import { bauPendente } from "../recompensas.js";
 import { abrirBauAnimado } from "./recompensas-ui.js";
 import { janelaStatus } from "./titulos.js";
@@ -118,20 +119,40 @@ function kcalCard() {
       O Sistema confere no dia seguinte: dentro da meta +${R.kcalXp} XP; mais de ${R.dietaTolerancia} kcal acima, −${R.dietaPor100} XP e −${R.dietaPor100} Ouro a cada 100 kcal.</p>`);
 }
 
+// Lembretes: tudo o que ainda dá XP hoje (menos a missão, que tem o card próprio), cada um com o botão para o lugar
+// certo do app; depois, as pendências sem XP. Cada item: [texto, prêmio, rota, botão, detalhe]
 function reminders() {
-  const t = today(), d = S.days[t] || {}, items = [];
+  const t = today(), d = S.days[t] || {}, items = [], xpAnel = xp => xp + (bonus().xpPct ? Math.max(1, Math.round(xp * bonus().xpPct / 100)) : 0);
   if (!d.peso || !d.abdomen) items.push(["Registrar peso e abdômen de hoje", `+${R.medidasXp} XP`, "medidas"]);
-  if (condicaoPendente(addDays(t, -1))) items.push(["Registrar a Condição de ontem", `+${R.condicaoXp} XP`, "condicao/ontem"]);
+  if (condicaoPendente(addDays(t, -1))) items.push(["Registrar a Condição de ontem", `+${R.condicaoXp} XP`, "condicao/ontem", "Registrar", "vale só até hoje"]);
+  if (condicaoPendente(t)) items.push(["Registrar a Condição de hoje", `+${R.condicaoXp} XP`, "condicao/hoje", "Registrar", "sono, celular na cama, energia e foco; vale até amanhã"]);
   const lastW = Object.keys(S.weekly).sort().pop();
   if (!lastW || daysBetween(lastW, t) >= 7) items.push(["Medidas semanais pendentes", `+${R.semanalXp} XP`, "medidas/semanal"]);
+  // dieta: o Sistema confere no dia seguinte; passou da meta, o XP do dia já não vem
+  const meta = S.profile.metaKcal, comido = Math.round(totals(mealsOf(t)).kcal);
+  if (meta && comido <= meta) items.push(["Fechar o dia dentro da meta de calorias", `+${R.kcalXp} XP`, "comida", "Comida", `restam ${fmt(meta - comido)} kcal; o Sistema confere amanhã`]);
+  // atividades extras: a próxima faixa do dia
+  const ak = extrasKcal(t, { campo: false }), prox = ATIV.find(f => f.acima ? ak <= f.kcal : ak < f.kcal);
+  if (prox) items.push([`Atividades extras: ${prox.acima ? "passar de" : "chegar a"} ${prox.kcal} kcal no dia`, `+${prox.xp} XP`, "extras", "Atividades",
+    `hoje ~${fmt(ak)} kcal; faltam ~${fmt(Math.max(1, (prox.acima ? prox.kcal + 1 : prox.kcal) - ak))} kcal`]);
+  // dungeons abertas: o XP é fixo por tipo (mais o anel); o que varia é o baú ou o item
+  const p = portaoAberto();
+  if (p) { const T = TIPOS[p.tipo], pe = PENA[p.tipo];
+    items.push([p.status === "ativo" ? `${T.nome} em andamento` : `${T.nome} aberta (rank ${p.rank})`, `+${xpAnel(T.xp)} XP`, "portao", p.status === "ativo" ? "Voltar" : "Ver",
+      [`mais baú ou item`, p.status === "aberto" && `fecha ${fmtDate(p.fecha, { day: "2-digit", month: "2-digit" })} à meia-noite`,
+        pe && `${p.tipo === "emergencia" ? "ignorar ou falhar" : "falhar"} custa ${-pe.xp} XP${pe.ouro ? ` e ${-pe.ouro} Ouro` : ""}`].filter(Boolean).join("; ")]); }
+  for (const [k, N] of Object.entries(NOMEADOS)) { const g = nomeados()[k];
+    if (!g || !(g.status === "aberto" || g.status === "ativo" || (g.status === "marcado" && g.dia === t))) continue;
+    items.push([g.status === "aberto" ? `${N.nome}: escolher o dia` : `${N.nome} hoje`, `+${xpAnel(NOM.xp)} XP`, "portao", g.status === "aberto" ? "Escolher" : "Ir",
+      `mais ${NOM.ouro} Ouro e prêmios${g.status === "aberto" ? `; escolha até ${fmtDate(g.prazo, { day: "2-digit", month: "2-digit" })}` : ""}`]); }
   const lastPhoto = S.lastPhoto;
   if (!lastPhoto || daysBetween(lastPhoto, t) >= 7) items.push(["Fotos da semana pendentes", "", "fotos"]);
   if (!S.profile.home?.acc) items.push(["Cadastrar a localização da sua casa (para o ponto)", "", "perfil"]);
   if (S.track && !(S.pr && Object.keys(S.pr).length)) items.push(["Fazer o Teste de Avaliação: seus máximos ajustam os treinos", "", "avaliacao"]);
   if (!items.length) return "";
-  return panel("Lembretes", `<ul class="list">${items.map(([txt, bonus, rota]) => `<li>
-    <span class="grow">${txt} <span class="small ok">${bonus}</span></span>
-    <a class="btn sm" href="#/${rota}">Registrar</a></li>`).join("")}</ul>`);
+  return panel("Lembretes", `<ul class="list">${items.map(([txt, premio, rota, botao = "Registrar", det = ""]) => `<li>
+    <span class="grow">${txt} <span class="small ok">${premio}</span>${det ? `<br><span class="small muted">${det}</span>` : ""}</span>
+    <a class="btn sm" href="#/${rota}">${botao}</a></li>`).join("")}</ul>`);
 }
 
 function statusTiles() {

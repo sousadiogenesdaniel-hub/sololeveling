@@ -159,6 +159,6 @@ function quadro() {
 actions.condBoard = ({ m }) => { boardMetric = m; refresh(); };
 
 views.condicao = arg => {
-  if (arg === "ontem") { viewDate = addDays(today(), -1); history.replaceState(null, "", "#/condicao"); }
+  if (arg === "ontem" || arg === "hoje") { viewDate = arg === "ontem" ? addDays(today(), -1) : today(); history.replaceState(null, "", "#/condicao"); }
   return `${header()}<div class="stack">${registro()}${resumo()}${padroes()}${quadro()}</div>`;
 };
