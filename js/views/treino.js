@@ -489,11 +489,25 @@ actions.cancelWorkout = async () => {
 
 // ---- chuva forte: Dungeon Indoor ---------------------------------------------------
 const HEAVY_CODES = [63, 65, 66, 67, 81, 82, 95, 96, 99]; // chuva moderada/forte, pancadas fortes, trovoada
+// Chuva forte: agora (código do tempo ou 2 mm/h), na última hora ou na próxima (dados de 15 em 15 min, quando vêm),
+// na hora atual da previsão, ou 8 h ou mais de chuva previstas no dia.
 export function isHeavyRain(j) {
   const mm = j.current?.precipitation ?? 0, code = j.current?.weather_code;
   const horas = (j.hourly?.precipitation || []).slice(5, 23).filter(v => v >= 1).length;
-  return { heavy: HEAVY_CODES.includes(code) || mm >= 2 || horas >= 8, mm, horas };
+  const q = j.minutely_15 || {}, qp = q.precipitation || [], qc = q.weather_code || [];
+  let maxHora = 0; // maior chuva somada em 4 quartos de hora seguidos (mm/h)
+  for (let i = 0; i + 4 <= qp.length; i++) maxHora = Math.max(maxHora, qp.slice(i, i + 4).reduce((n, v) => n + (v || 0), 0));
+  const agora = (j.current?.time || "").slice(0, 13), hi = (j.hourly?.time || []).findIndex(t => t.slice(0, 13) === agora);
+  const horaAtual = hi >= 0 ? Math.max(j.hourly.precipitation?.[hi] ?? 0, j.hourly.precipitation?.[hi + 1] ?? 0) : 0;
+  const codHora = hi >= 0 ? [j.hourly.weather_code?.[hi], j.hourly.weather_code?.[hi + 1]] : [];
+  const heavy = HEAVY_CODES.includes(code) || qc.some(c => HEAVY_CODES.includes(c)) || codHora.some(c => HEAVY_CODES.includes(c))
+    || mm >= 2 || maxHora >= 2 || horaAtual >= 2 || horas >= 8;
+  return { heavy, mm: Math.max(mm, maxHora, horaAtual), horas };
 }
+// Quando o Sistema não vê a chuva (a previsão é um modelo, em grade de quilômetros), dá para provar com uma foto,
+// até 2 vezes por mês. A foto fica guardada como prova, como a selfie do treino indoor.
+export const CHUVA_FOTO_MES = 2;
+const chuvaFotosMes = () => (S.chuvaFotos || []).filter(d => d.slice(0, 7) === today().slice(0, 7)).length;
 
 actions.checkRain = async () => {
   const d = day();
@@ -502,9 +516,9 @@ actions.checkRain = async () => {
     try {
       const pos = viagem() ? await getPosition() : (S.profile.home || await getPosition()); // em viagem, o clima de onde você está
       // coordenadas arredondadas (~1 km): suficiente para o clima, sem expor o endereço
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${pos.lat.toFixed(2)}&longitude=${pos.lon.toFixed(2)}` +
-        `&current=precipitation,weather_code&hourly=precipitation&forecast_days=1&timezone=auto`;
-      const res = await fetch(url);
+      const base = `https://api.open-meteo.com/v1/forecast?latitude=${pos.lat.toFixed(2)}&longitude=${pos.lon.toFixed(2)}&forecast_days=1&timezone=auto`;
+      let res = await fetch(`${base}&current=precipitation,weather_code&hourly=precipitation,weather_code&minutely_15=precipitation,weather_code&past_minutely_15=4&forecast_minutely_15=4`);
+      if (!res.ok) res = await fetch(`${base}&current=precipitation,weather_code&hourly=precipitation`); // consulta simples, se a completa falhar
       if (!res.ok) throw new Error();
       d.rain = isHeavyRain(await res.json());
       save();
@@ -512,18 +526,35 @@ actions.checkRain = async () => {
     $("#toast")?.remove();
   }
   if (!d.rain.heavy) {
+    const restam = CHUVA_FOTO_MES - chuvaFotosMes();
     return sysMessage("Sem chuva forte", `<p>Agora: <b>${fmt(d.rain.mm, 1)} mm/h</b>. O Sistema não detectou chuva forte na sua região.</p>
-      <p class="small muted">A missão continua valendo no local de treino. Você pode verificar de novo mais tarde.</p>`,
+      <p class="small muted">A previsão é um modelo e às vezes não vê a chuva que está caindo. Garoa não vale: a missão continua no local de treino.</p>
+      ${restam > 0 ? `<label class="btn block" style="margin-top:6px">🌧 Está chovendo forte aqui: provar com foto
+        <input type="file" accept="image/*" capture="environment" class="hidden" data-chg="chuvaFoto"></label>
+        <p class="small muted">Tire uma foto da chuva (rua, janela, céu). Ela fica guardada como prova. Restam ${restam} este mês.</p>`
+        : `<p class="small warn">As ${CHUVA_FOTO_MES} provas por foto deste mês já foram usadas.</p>`}`,
       { onClose: () => { delete d.rain; save(); } });
   }
   const plan = workoutFor(today(), true);
   modal(`<div class="ptitle"><h2>Dungeon Indoor liberada</h2></div>
-    <p>Chuva forte confirmada (${fmt(d.rain.mm, 1)} mm/h agora, ${d.rain.horas} h de chuva previstas hoje). Você pode cumprir a missão ${viagem() ? "onde está hospedado" : "em casa"}.</p>
+    <p>${d.rain.foto ? "Chuva forte confirmada pela sua foto." : `Chuva forte confirmada (${fmt(d.rain.mm, 1)} mm/h, ${d.rain.horas} h de chuva previstas hoje).`} Você pode cumprir a missão ${viagem() ? "onde está hospedado" : "em casa"}.</p>
     <ul><li>Treino: <b>${esc(plan.titulo)}</b></li><li>Mínimo de ${INDOOR_MIN} min com o cronômetro do app</li>
     <li>Todas as séries marcadas</li><li>Selfie de prova no final</li></ul>
     <p class="small muted">Sem barras em casa? Use duas cadeiras firmes para mergulhos e uma mesa resistente para as remadas.</p>
     <div class="row"><button class="btn ghost grow" data-close>Agora não</button>
     <button class="btn primary grow" data-act="startIndoor">Entrar na dungeon</button></div>`);
+};
+
+actions.chuvaFoto = async (_, el) => {
+  const file = el.files[0]; el.value = "";
+  if (!file || chuvaFotosMes() >= CHUVA_FOTO_MES) return;
+  try { await photos.add({ date: today(), angulo: "chuva", tipo: "prova", blob: await shrinkImage(file, 1000) }); }
+  catch { return toast("Não consegui ler essa foto."); }
+  (S.chuvaFotos ||= []).push(today());
+  day().rain = { heavy: true, foto: true, mm: 0, horas: 0 };
+  grant(0, 0, "Chuva forte confirmada por foto (prova guardada)");
+  save(); closeModal();
+  actions.checkRain();
 };
 
 actions.startIndoor = () => {

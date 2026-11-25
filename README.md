@@ -189,8 +189,10 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
    de um deles (+ até 50 m de margem do GPS). O primeiro local vale na hora; os seguintes, só 3 dias depois.
 3. Depois de pelo menos 30 min, toque em **Bater ponto: saída**, ainda no local.
 
-**Chuva forte:** o botão "Verificar clima" consulta a previsão (Open-Meteo, com coordenadas arredondadas).
-Se confirmar chuva forte, libera o treino em casa: 25 min no cronômetro, todas as séries e uma selfie no final.
+**Chuva forte:** o botão "Verificar clima" consulta a previsão (Open-Meteo, com coordenadas arredondadas): o agora,
+a última hora e a próxima (de 15 em 15 min) e a previsão do dia. Se confirmar chuva forte, libera o treino em casa:
+25 min no cronômetro, todas as séries e uma selfie no final. Se a previsão não vir a chuva que está caindo, dá para
+provar com uma foto da chuva, até 2 vezes por mês (a foto fica guardada como prova). Garoa não vale.
 
 **Modo viagem:** em Missão (Locais de treino), "Estou viajando" só ativa a 50 km ou mais de casa (GPS preciso). Na
 viagem, o ponto vale em qualquer lugar a 50 km+ de casa, com a saída no mesmo lugar da entrada e o tempo mínimo de
