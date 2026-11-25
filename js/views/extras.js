@@ -8,7 +8,7 @@ import { today, iso, esc, fmt, num, uid, fmtDate, fmtShort, addDays, distM, $ } 
 import { header, panel, modal, closeModal, toast, confirmBox, showEvents } from "../ui.js";
 import { checarMarcos, checarConquistas } from "../conquistas.js";
 import { mostrarTitulos } from "./recompensas-ui.js";
-import { tmb, weightOn, grant, extrasKcal, BONUS, CAMPO, kmCampo, tentouCampo, gpsBonusStatus, checkGpsBonus, bonusWeek, weekStart, weekEnd } from "../game.js";
+import { tmb, weightOn, grant, extrasKcal, BONUS, campoXp, CAMPO, kmCampo, tentouCampo, gpsBonusStatus, checkGpsBonus, bonusWeek, weekStart, weekEnd } from "../game.js";
 import { finalizarCampo } from "../portoes.js";
 import { bauFx, portaoFx, falhaFx } from "../fx.js";
 import { RAR } from "../premios.js";
@@ -166,12 +166,12 @@ export function bonusPanel() {
     : (st.ok || st.pendente) ? `<p class="small muted">Você já tentou os quatro percursos hoje. Amanhã ela abre de novo.</p>` : "";
   return panel("Dungeon de Campo", `<p style="margin-top:0">Opcional: entre quando quiser tentar. Lá dentro é <b>um percurso só</b>, rastreado pelo GPS do começo ao fim (pode pausar):
       <b>${CAMPO.corrida.km} km correndo</b>, <b>${CAMPO.caminhada.km} km de caminhada</b>, <b>${CAMPO.trilha.km} km de trilha</b> ou <b>${CAMPO.bike.km} km de bike</b>.
-      Vencendo: <b class="gold">+${BONUS.gpsOuro} Ouro</b> em semana sem falta, ou <b class="gold">+${BONUS.gpsOuroSeq}</b> se a semana teve falta mas as últimas ${BONUS.seguidos} missões foram cumpridas. Às vezes vem uma surpresa. Uma vitória por dia.</p>
+      Vencendo, o Sistema sorteia o prêmio: <b class="gold">${BONUS.gpsOuro} Ouro</b> ou <b class="ok">${campoXp(BONUS.gpsOuro)} XP</b> em semana sem falta, ou <b class="gold">${BONUS.gpsOuroSeq} Ouro</b> ou <b class="ok">${campoXp(BONUS.gpsOuroSeq)} XP</b> se a semana teve falta mas as últimas ${BONUS.seguidos} missões foram cumpridas. Às vezes vem uma surpresa. Uma vitória por dia.</p>
     <p class="small muted">Uma tentativa por tipo no dia: só a primeira de cada tipo conta. O percurso da dungeon não é atividade extra (não soma para as faixas de ${ATIV[0].kcal} e ${ATIV[1].kcal} kcal), mas as calorias entram no gasto do dia.</p>
     <ul class="list small">${CAMPO_TIPOS.map(linha).join("")}</ul>
     <p class="small ${st.ok || st.feito ? "ok" : "warn"}">${st.ok || st.feito ? "✔ " : ""}${st.motivo}</p>
     ${entrar}
-    <div class="row between small" style="margin-top:10px"><span class="muted">Ouro de bônus da semana (${fmtDate(weekStart(), { day: "2-digit", month: "2-digit" })} a ${fmtDate(weekEnd(), { day: "2-digit", month: "2-digit" })})</span><b class="gold num">${usado}/${BONUS.teto}</b></div>
+    <div class="row between small" style="margin-top:10px"><span class="muted">Bônus da semana em Ouro, o XP conta pelo equivalente (${fmtDate(weekStart(), { day: "2-digit", month: "2-digit" })} a ${fmtDate(weekEnd(), { day: "2-digit", month: "2-digit" })})</span><b class="gold num">${usado}/${BONUS.teto}</b></div>
     <div class="bar" style="margin-top:4px"><i style="width:${Math.min(100, usado / BONUS.teto * 100)}%;background:var(--gold);box-shadow:0 0 8px var(--gold)"></i></div>
     <p class="small muted" style="margin-bottom:0">Cada vitória entra no <a href="#/dungeons">Registro de Dungeons</a>.</p>`, "portao").replace('class="panel portao"', `class="panel portao" style="--pc:${VERDE}"`);
 }

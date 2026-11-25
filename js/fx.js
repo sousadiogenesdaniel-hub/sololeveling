@@ -92,13 +92,99 @@ export function rankUpFx(from, to, level) {
     <div class="fx-lvl">Nível ${level} · toque para continuar</div>`, 5200);
 }
 
-// Decide a comemoração a partir dos eventos do jogo (rank tem prioridade sobre nível)
-export function celebrate(events) {
-  const rUp = events.filter(e => e.rankUp).pop();
-  if (rUp) return rankUpFx(rUp.rankFrom, rUp.rankUp, rUp.levelTo);
-  const ups = events.filter(e => e.levelUp);
-  if (ups.length) return levelUpFx(ups[0].levelFrom, ups[ups.length - 1].levelUp);
-  return Promise.resolve();
+// Decide a comemoração a partir dos eventos do jogo: o sorteio da Dungeon de Campo (se houver), depois a chuva do que
+// foi ganho e, se subiu, a animação de nível ou rank (rank tem prioridade). Quando sobe de nível, a chuva é só do
+// Ouro: o XP aparece na própria animação do nível. Perdas não têm chuva.
+export async function celebrate(events) {
+  const sorteio = events.find(e => e.sorteio)?.sorteio;
+  if (sorteio) await sorteioFx(sorteio);
+  const xp = events.reduce((n, e) => n + Math.max(0, e.xp || 0), 0), ouro = events.reduce((n, e) => n + Math.max(0, e.gold || 0), 0);
+  const rUp = events.filter(e => e.rankUp).pop(), ups = events.filter(e => e.levelUp);
+  if (rUp || ups.length) {
+    if (ouro > 0) await ganhoFx({ ouro });
+    return rUp ? rankUpFx(rUp.rankFrom, rUp.rankUp, rUp.levelTo) : levelUpFx(ups[0].levelFrom, ups[ups.length - 1].levelUp);
+  }
+  return ganhoFx({ xp, ouro });
+}
+
+// ---- ganho de Ouro e XP -----------------------------------------------------------------------
+// Ouro cai (moedas girando, tilintando); XP sobe (aura e faíscas azuis subindo, como poder absorvido). Ganhos a
+// partir de 50 têm a animação inteira (toque para pular); os pequenos, a mini: umas faíscas voando até o contador
+// do topo, sem cobrir a tela e sem esperar.
+export const GANHO_GRANDE = 50;
+function playMoedas(n) {
+  const ctx = soundOn() && audio(); if (!ctx) return;
+  for (let i = 0; i < n; i++) tone(ctx, { f: 1900 + Math.random() * 900, t: .05 + i * .07 + Math.random() * .04, d: .09, type: "triangle", v: .07 });
+}
+function playAura(curto = false) {
+  const ctx = soundOn() && audio(); if (!ctx) return;
+  tone(ctx, { f: 220, t: 0, d: curto ? .4 : 1.4, type: "sine", v: .06, slide: curto ? 660 : 880 });
+  if (!curto) [587.33, 739.99, 880, 1174.66].forEach((f, i) => tone(ctx, { f, t: .5 + i * .12, d: .5, type: "sine", v: .05 }));
+}
+const contar = (el, alvo, ms) => {
+  const t0 = performance.now(), passo = now => { const p = Math.min(1, (now - t0) / ms); el.textContent = Math.round(alvo * (1 - Math.pow(1 - p, 3))); if (p < 1 && el.isConnected) requestAnimationFrame(passo); };
+  requestAnimationFrame(passo);
+};
+const pulsaTopo = (xp, ouro) => setTimeout(() => {
+  for (const [sel, ok] of [[".topbar .gold", ouro], [".topbar .xpbar", xp]]) { const el = ok && document.querySelector(sel); if (!el) continue;
+    el.classList.remove("pulsa"); void el.offsetWidth; el.classList.add("pulsa"); setTimeout(() => el.classList.remove("pulsa"), 900); }
+}, 50);
+export function ganhoFx({ xp = 0, ouro = 0 } = {}) {
+  xp = Math.max(0, Math.round(xp)); ouro = Math.max(0, Math.round(ouro));
+  if (!xp && !ouro) return Promise.resolve();
+  if (xp < GANHO_GRANDE && ouro < GANHO_GRANDE) { ganhoMini(xp, ouro); return Promise.resolve(); }
+  navigator.vibrate?.(ouro ? [30, 40, 30, 40, 30] : [40, 60, 120]);
+  if (ouro) playMoedas(Math.min(14, 5 + Math.round(ouro / 25)));
+  if (xp) playAura();
+  const moedas = ouro ? Array.from({ length: Math.min(34, 12 + Math.round(ouro / 10)) }, () => {
+    const s = 14 + Math.random() * 12;
+    return `<i class="moeda" style="left:${(Math.random() * 96).toFixed(1)}%;width:${s.toFixed(0)}px;height:${s.toFixed(0)}px;animation-delay:${(Math.random() * .9).toFixed(2)}s;animation-duration:${(1.3 + Math.random() * .8).toFixed(2)}s"></i>`;
+  }).join("") : "";
+  const faiscas = xp ? Array.from({ length: Math.min(40, 16 + Math.round(xp / 8)) }, () => {
+    const s = 3 + Math.random() * 5;
+    return `<i class="faisca" style="left:${(Math.random() * 100).toFixed(1)}%;width:${s.toFixed(1)}px;height:${(s * 3).toFixed(1)}px;animation-delay:${(Math.random() * 1.1).toFixed(2)}s;animation-duration:${(1.2 + Math.random() * 1).toFixed(2)}s"></i>`;
+  }).join("") : "";
+  const p = overlay("fx-ganho", `<div class="fx-ganho-fundo"></div>${xp ? `<div class="fx-aura"></div>` : ""}${faiscas}${moedas}
+    <div class="fx-ganho-num">${xp ? `<div class="g-xp"><b class="num">0</b> XP</div>` : ""}${ouro ? `<div class="g-ouro"><b class="num">0</b> Ouro</div>` : ""}</div>`, 2400);
+  const o = [...document.querySelectorAll(".fx-ganho")].pop();
+  if (o) { const bx = o.querySelector(".g-xp b"), bo = o.querySelector(".g-ouro b"); if (bx) contar(bx, xp, 1200); if (bo) contar(bo, ouro, 1200); }
+  return p.then(() => pulsaTopo(xp, ouro));
+}
+// Mini: faíscas (douradas para o Ouro, azuis para o XP) saindo do meio da tela até o contador do topo
+function ganhoMini(xp, ouro) {
+  if (ouro) playMoedas(2); if (xp) playAura(true);
+  const camada = document.createElement("div"); camada.className = "fx-mini"; camada.setAttribute("aria-hidden", "true");
+  document.body.append(camada);
+  const alvo = sel => { const r = document.querySelector(sel)?.getBoundingClientRect(); return r && r.width ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: innerWidth / 2, y: 30 }; };
+  const voar = (tipo, n, destino, label) => {
+    const fim = alvo(destino), x0 = innerWidth / 2, y0 = innerHeight * .55;
+    for (let i = 0; i < n; i++) {
+      const el = document.createElement("i"); el.className = tipo; camada.append(el);
+      const dx = (Math.random() - .5) * 120, dy = (Math.random() - .5) * 60;
+      el.animate([{ transform: `translate(${x0 + dx}px, ${y0 + dy}px) scale(.4)`, opacity: 0 }, { transform: `translate(${x0 + dx * .6}px, ${y0 + dy - 40}px) scale(1)`, opacity: 1, offset: .25 },
+        { transform: `translate(${fim.x}px, ${fim.y}px) scale(.5)`, opacity: .2 }], { duration: reduced() ? 300 : 800 + i * 40, easing: "cubic-bezier(.5,0,.6,1)", fill: "forwards" });
+    }
+    const t = document.createElement("span"); t.className = `mini-txt ${tipo}`; t.textContent = label; camada.append(t);
+    t.style.left = `${Math.min(innerWidth - 90, Math.max(8, fim.x - 40))}px`; t.style.top = `${fim.y + 18}px`;
+  };
+  if (ouro) voar("m-ouro", Math.min(8, 3 + Math.round(ouro / 8)), ".topbar .gold", `+${ouro} Ouro`);
+  if (xp) voar("m-xp", Math.min(10, 4 + Math.round(xp / 5)), ".topbar .xpbar", `+${xp} XP`);
+  setTimeout(() => pulsaTopo(xp, ouro), reduced() ? 300 : 850);
+  setTimeout(() => camada.remove(), 1800);
+}
+
+// Sorteio do prêmio da Dungeon de Campo: um medalhão gira no ar (uma face de moeda de ouro, a outra com o símbolo azul
+// do Sistema) e cai numa das faces
+export function sorteioFx(lado) {
+  navigator.vibrate?.([20, 60, 20, 60, 20, 60, 80]);
+  const ctx = soundOn() && audio();
+  if (ctx) { for (let i = 0; i < 9; i++) tone(ctx, { f: 900 + i * 40, t: i * .17 * (1 + i * .05), d: .05, type: "square", v: .03 });
+    tone(ctx, { f: lado === "xp" ? 880 : 1318.5, t: 1.95, d: .7, type: "sine", v: .09 }); }
+  return overlay("fx-sorteio", `<div class="fx-dark"></div>
+    <div class="fx-type">${typing("[ SISTEMA ] Sorteando a recompensa da Dungeon de Campo.")}</div>
+    <div class="medalha-palco"><div class="medalha" style="--fim:${lado === "xp" ? 1980 : 1800}deg">
+      <div class="face ouro"><span>◆</span></div><div class="face xp"><span>XP</span></div></div></div>
+    <div class="fx-name medalha-res ${lado}">${lado === "xp" ? "XP" : "OURO"}</div>`, 3200);
 }
 
 // ---- recompensas: baú, recorde, título, extração de sombra, invocação, portão ---------------------

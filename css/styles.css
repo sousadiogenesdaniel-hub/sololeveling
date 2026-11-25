@@ -664,3 +664,41 @@ li.ex-ok { animation: exOk .9s ease-out; }
 .dg-card:nth-child(2n) .dg-gira { animation-duration: 18s; animation-direction: reverse; }
 .ct-fam { margin-top: 12px; padding: 10px 10px 2px; border: 1px solid var(--line); border-left: 3px solid var(--glow); background: rgba(var(--glow-rgb), .05); }
 .ct-fam .list { margin-top: 6px; }
+
+/* ---- ganho de Ouro e XP: moedas caindo, aura subindo; mini até o contador do topo; medalhão do sorteio ---- */
+.fx-ganho .fx-ganho-fundo { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(8, 12, 28, .72), rgba(0, 0, 0, .88)); }
+.fx-ganho .moeda { position: absolute; top: -40px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6c4, #f0c45c 45%, #a8771a 100%);
+  box-shadow: 0 0 8px rgba(240, 196, 92, .8), inset 0 0 0 2px rgba(255, 236, 160, .6); animation: moedaCai 1.6s cubic-bezier(.4, .1, .7, 1) forwards; opacity: 0; }
+@keyframes moedaCai { 0% { opacity: 0; transform: translateY(0) rotateY(0) } 10% { opacity: 1 } 85% { opacity: 1 } 100% { opacity: 0; transform: translateY(110vh) rotateY(900deg) } }
+.fx-ganho .faisca { position: absolute; bottom: -30px; border-radius: 4px; background: linear-gradient(to top, transparent, #7aa2ff 40%, #e3ecff);
+  box-shadow: 0 0 10px #5b8cff; animation: faiscaSobe 1.6s ease-out forwards; opacity: 0; }
+@keyframes faiscaSobe { 0% { opacity: 0; transform: translateY(0) } 15% { opacity: 1 } 100% { opacity: 0; transform: translateY(-105vh) } }
+.fx-ganho .fx-aura { position: absolute; left: 50%; top: 50%; width: 320px; height: 320px; margin: -160px 0 0 -160px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(122, 162, 255, .55), rgba(146, 87, 255, .25) 45%, transparent 70%); animation: auraPulsa 2.2s ease-out forwards; }
+@keyframes auraPulsa { 0% { transform: scale(.3); opacity: 0 } 30% { opacity: 1 } 60% { transform: scale(1.05) } 100% { transform: scale(1.5); opacity: 0 } }
+.fx-ganho-num { position: relative; text-align: center; font-weight: 800; letter-spacing: .08em; animation: zoomIn .35s .15s backwards; }
+.fx-ganho-num .g-xp { font-size: 2rem; color: #cfe0ff; text-shadow: 0 0 14px #5b8cff, 0 0 30px #9257ff; }
+.fx-ganho-num .g-ouro { font-size: 2rem; color: var(--gold); text-shadow: 0 0 14px rgba(240, 196, 92, .9); }
+.fx-ganho-num .g-xp b::before, .fx-ganho-num .g-ouro b::before { content: "+"; }
+.fx-mini { position: fixed; inset: 0; z-index: 320; pointer-events: none; }
+.fx-mini i { position: absolute; left: 0; top: 0; border-radius: 50%; }
+.fx-mini .m-ouro { width: 12px; height: 12px; margin: -6px; background: radial-gradient(circle at 35% 30%, #fff6c4, #f0c45c 50%, #a8771a); box-shadow: 0 0 6px #f0c45c; }
+.fx-mini .m-xp { width: 6px; height: 6px; margin: -3px; background: #cfe0ff; box-shadow: 0 0 8px #5b8cff, 0 0 14px #9257ff; }
+.fx-mini .mini-txt { position: absolute; font-weight: 800; font-size: .95rem; white-space: nowrap; animation: miniTxt 1.6s ease-out forwards; }
+.fx-mini .mini-txt.m-ouro { color: var(--gold); text-shadow: 0 0 8px rgba(240, 196, 92, .8); background: none; box-shadow: none; width: auto; height: auto; margin: 0; border-radius: 0; }
+.fx-mini .mini-txt.m-xp { color: #cfe0ff; text-shadow: 0 0 8px #5b8cff; background: none; box-shadow: none; width: auto; height: auto; margin: 0; border-radius: 0; }
+@keyframes miniTxt { 0%, 40% { opacity: 0; transform: translateY(6px) } 55% { opacity: 1; transform: none } 85% { opacity: 1 } 100% { opacity: 0; transform: translateY(-6px) } }
+.topbar .gold.pulsa { animation: pulsaOuro .9s; }
+.topbar .xpbar.pulsa { animation: pulsaXp .9s; }
+@keyframes pulsaOuro { 30% { transform: scale(1.25); text-shadow: 0 0 12px var(--gold) } }
+@keyframes pulsaXp { 30% { box-shadow: 0 0 14px #5b8cff, 0 0 24px #9257ff } }
+.fx-sorteio .medalha-palco { position: relative; perspective: 700px; width: 170px; height: 170px; }
+.fx-sorteio .medalha { position: absolute; inset: 0; transform-style: preserve-3d; animation: medalhaGira 2s cubic-bezier(.2, .7, .3, 1) .3s forwards; }
+@keyframes medalhaGira { 0% { transform: translateY(40px) rotateY(0) scale(.6) } 40% { transform: translateY(-30px) scale(1) } 100% { transform: translateY(0) rotateY(var(--fim)) scale(1) } }
+.fx-sorteio .face { position: absolute; inset: 0; border-radius: 50%; display: grid; place-items: center; backface-visibility: hidden; font-weight: 900; }
+.fx-sorteio .face.ouro { background: radial-gradient(circle at 35% 30%, #fff6c4, #f0c45c 45%, #a8771a); box-shadow: 0 0 30px rgba(240, 196, 92, .7), inset 0 0 0 6px rgba(255, 236, 160, .55); color: #7a5410; font-size: 4rem; }
+.fx-sorteio .face.xp { transform: rotateY(180deg); background: radial-gradient(circle at 35% 30%, #e3ecff, #5b8cff 45%, #2a1f7a); box-shadow: 0 0 30px rgba(91, 140, 255, .8), inset 0 0 0 6px rgba(207, 224, 255, .5); color: #fff; font-size: 3.2rem; letter-spacing: .05em; }
+.fx-sorteio .medalha-res { top: calc(50% + 110px); left: 0; right: 0; text-align: center; letter-spacing: .3em; animation-delay: 2.3s; }
+.fx-sorteio .medalha-res.ouro { --c: var(--gold); }
+.fx-sorteio .medalha-res.xp { --c: #7aa2ff; }
+@media (prefers-reduced-motion: reduce) { .fx-ganho .moeda, .fx-ganho .faisca { display: none; } .fx-sorteio .medalha { animation: none; transform: rotateY(var(--fim)); } }

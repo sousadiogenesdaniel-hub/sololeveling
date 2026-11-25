@@ -32,6 +32,11 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
 - **Passos** (app Android 2.2): na caminhada, trilha e corrida rastreadas pelo GPS, o app conta os passos com o contador
   do próprio celular (permissão "Atividade física"). Aparecem ao vivo, ficam na atividade salva e somam no diário. Só
   informativo: não muda kcal, XP nem a Dungeon de Campo.
+- **Animação de ganho:** todo Ouro e XP ganho aparece: o Ouro cai em moedas girando, tilintando; o XP sobe em aura e
+  faíscas azuis, como poder absorvido; os números contam e o contador do topo pulsa. A partir de 50, a animação
+  inteira (toque para pular); abaixo disso, a mini: faíscas voando até o contador do topo, sem cobrir a tela. Ganhos
+  juntos viram uma animação só, com o total, depois da comemoração do que foi feito (missão, dungeon, baú). Se subiu
+  de nível, só a chuva de Ouro e depois a animação do nível (o XP faz parte dela). Perdas não têm chuva.
 - **Séries da missão:** cada quadradinho tem som e faísca (no alvo: verde e brilhante; abaixo do alvo: âmbar e grave;
   desmarcar: clique). Fechar todas as séries de um exercício toca um acorde; fechar o treino inteiro, uma fanfarra.
 - **Missão concluída:** ao bater o ponto de saída, antes das comemorações de nível e rank, um selo animado:
@@ -48,9 +53,10 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   editar): 5 km correndo, 10 km de caminhada, 10 km de trilha ou 35 km de bike. **Uma tentativa por tipo no dia**: só a
   primeira de cada tipo conta (desistir antes de 100 m não gasta). O percurso da dungeon **não é atividade extra**
   (não soma para as faixas de 250/700 kcal nem para a corrida das outras dungeons), mas as calorias entram no gasto do
-  dia. Vence num dia de missão cumprida (1 por dia; o prêmio entra ao concluir a missão): **+125 Ouro** em semana sem
-  falta; em semana com falta, **+75** se as
-  últimas 3 missões foram cumpridas (o descanso não quebra a sequência). Às vezes vem uma surpresa (sem itens do
+  dia. Vence num dia de missão cumprida (1 por dia; o prêmio entra ao concluir a missão). O prêmio é **sorteado
+  (50/50) entre Ouro e XP**, com um medalhão girando: **125 Ouro ou 100 XP** em semana sem falta; em semana com falta,
+  **75 Ouro ou 60 XP** se as últimas 3 missões foram cumpridas (o descanso não quebra a sequência). O XP vale 80% do
+  Ouro (nada opcional dá mais XP que a missão) e conta no teto semanal pelo valor em Ouro. Às vezes vem uma surpresa (sem itens do
   Arsenal nem corpos). Cada vitória entra no Registro de Dungeons (card verde). **Bônus da dieta:** semana inteira
   dentro da meta de calorias, +150 (só em semana sem falta). Nada na Zona de Penalidade; até 300 de Ouro de bônus por
   semana. A semana do jogo começa no dia seguinte ao descanso (descanso na sexta → sábado a sexta). O rastreamento

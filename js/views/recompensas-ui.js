@@ -3,7 +3,7 @@ import { go, refresh } from "../core.js";
 import { S, save } from "../store.js";
 import { today, esc, fmt, iso } from "../util.js";
 import { aviso, modal, closeModal, toast } from "../ui.js";
-import { celebrate, bauFx, recordeFx, tituloFx, portaoFx, itemFx, evolucaoFx, missaoFx } from "../fx.js";
+import { celebrate, bauFx, recordeFx, tituloFx, portaoFx, itemFx, evolucaoFx, missaoFx, ganhoFx } from "../fx.js";
 import { arteItem } from "../arte-itens.js";
 import { levelInfo, grant } from "../game.js";
 import { RAR, itemBase, migrarArsenal, possui, HP } from "../premios.js";
@@ -97,6 +97,8 @@ export async function abrirBauAnimado(date = today()) {
   const b = bauPendente(date); if (!b) return;
   marcarBauAberto(date);
   await bauFx(b.raridade, RAR[b.raridade].nome, RAR[b.raridade].cor, b.premios);
+  // o Ouro do baú entra na hora em que ele foi sorteado; a chuva vem quando ele é revelado
+  await ganhoFx({ ouro: b.premios.reduce((n, p) => n + (+(/^\+(\d+) Ouro/.exec(p)?.[1]) || 0), 0) });
 }
 
 // Recordes ainda não comemorados (depois de salvar Avaliação ou Teste de Rank)

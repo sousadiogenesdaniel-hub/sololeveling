@@ -390,10 +390,14 @@ export function dietVerdict(d, rec = S.days[d]) {
 
 // ---- semana do jogo e missões bônus -----------------------------------------------------
 // A semana do jogo começa no dia seguinte ao descanso (descanso na sexta → semana de sábado a sexta).
-// Missões bônus dão só Ouro (nunca XP), nunca substituem a missão do dia e têm teto semanal.
+// Missões bônus nunca substituem a missão do dia e têm teto semanal (a Dungeon de Campo sorteia Ouro ou XP; ver CAMPO_XP).
 // Atividade longa por GPS: semana limpa (sem falta) vale gpsOuro; semana com falta vale gpsOuroSeq se as
 // últimas `seguidos` missões estiverem cumpridas. Na Zona de Penalidade, nada.
 export const BONUS = { gpsOuro: 125, gpsOuroSeq: 75, seguidos: 3, dietaOuro: 150, teto: 300 };
+// Dungeon de Campo: o prêmio é sorteado (50/50) entre o Ouro e o XP equivalente: 125 Ouro ↔ 100 XP, 75 ↔ 60. O XP
+// conta no teto semanal pelo valor em Ouro. (Nada opcional dá mais XP que a missão.)
+export const CAMPO_XP = 0.8;
+export const campoXp = ouro => Math.round(ouro * CAMPO_XP);
 // Dungeon de Campo (no lugar da antiga missão bônus de GPS): o jogador escolhe entrar. Lá dentro, um percurso só,
 // rastreado pelo GPS do começo ao fim (pode pausar): 5 km correndo, 10 km de caminhada, 10 km de trilha ou 35 km de
 // bike. Uma tentativa por tipo no dia: só a primeira de cada tipo conta. O que é feito na dungeon não é atividade
@@ -419,11 +423,12 @@ export const bonusWeek = (date = today()) => bonusLog().filter(b => weekStart(b.
 // Semana limpa: nenhuma falta desde o início da semana do jogo e fora da Zona de Penalidade
 export const cleanWeek = (date = today()) => !S.debts.some(d => d.date >= weekStart(date) && d.date <= date) && !pendingDebts().length;
 
-function payBonus(date, tipo, ouro, motivo) {
+function payBonus(date, tipo, ouro, motivo, emXp = false) {
   const v = Math.min(ouro, BONUS.teto - bonusWeek(date));
   if (v <= 0) return null;
-  bonusLog().push({ date, tipo, ouro: v });
-  return grant(0, v, motivo + (v < ouro ? " (limite semanal)" : ""), date);
+  const lim = v < ouro ? " (limite semanal)" : "";
+  bonusLog().push({ date, tipo, ouro: v, ...(emXp ? { xp: campoXp(v) } : {}) }); // ouro = o que conta no teto
+  return emXp ? grant(campoXp(v), 0, motivo + lim, date) : grant(0, v, motivo + lim, date);
 }
 
 // Missões cumpridas seguidas até `date` (a do próprio dia conta se já foi feita), pulando o descanso
@@ -455,10 +460,11 @@ export function gpsBonusStatus(date = today()) {
   const porque = limpa ? "semana sem falta" : `semana com falta, mas ${BONUS.seguidos} missões seguidas`;
   if (!valor) {
     const faltam = BONUS.seguidos - treinosSeguidos(date) - (S.days[date]?.workout?.done ? 0 : 1);
-    return { ok: false, motivo: `Semana com falta: a Dungeon de Campo volta (+${BONUS.gpsOuroSeq}) depois de ${BONUS.seguidos} missões seguidas cumpridas. Falta${faltam > 1 ? "m" : ""} ${faltam} além da de hoje.` };
+    return { ok: false, motivo: `Semana com falta: a Dungeon de Campo volta (${BONUS.gpsOuroSeq} Ouro ou ${campoXp(BONUS.gpsOuroSeq)} XP) depois de ${BONUS.seguidos} missões seguidas cumpridas. Falta${faltam > 1 ? "m" : ""} ${faltam} além da de hoje.` };
   }
-  if (!S.days[date]?.workout?.done) return { ok: false, pendente: true, valor, motivo: `Vale +${valor} Ouro hoje (${porque}). Ela é vencida quando a missão do dia for concluída (pode entrar antes; o prêmio entra ao concluir a missão).` };
-  return { ok: true, valor, motivo: `Aberta hoje: +${valor} Ouro (${porque}).` };
+  const premio = `${valor} Ouro ou ${campoXp(valor)} XP, no sorteio`;
+  if (!S.days[date]?.workout?.done) return { ok: false, pendente: true, valor, motivo: `Vale ${premio} (${porque}). Ela é vencida quando a missão do dia for concluída (pode entrar antes; o prêmio entra ao concluir a missão).` };
+  return { ok: true, valor, motivo: `Aberta hoje: ${premio} (${porque}).` };
 }
 
 // Paga o bônus se a tentativa de um tipo na Dungeon de Campo bateu a distância (chamado ao finalizar o percurso
@@ -467,8 +473,9 @@ export function checkGpsBonus(date = today()) {
   if (!gpsBonusStatus(date).ok) return null;
   const k = campoBatido(date); if (!k) return null;
   const km = kmCampo(date)[k];
-  const ev = payBonus(date, "gps", gpsBonusValor(date), `Dungeon de Campo vencida: ${fmt(km, 1)} km ${CAMPO[k].nome} pelo GPS`);
-  if (ev) { Object.assign(bonusLog().at(-1), { campo: k, km: Math.round(km * 10) / 10 }); save(); }
+  const emXp = Math.random() < .5; // sorteio: Ouro ou XP
+  const ev = payBonus(date, "gps", gpsBonusValor(date), `Dungeon de Campo vencida: ${fmt(km, 1)} km ${CAMPO[k].nome} pelo GPS`, emXp);
+  if (ev) { Object.assign(bonusLog().at(-1), { campo: k, km: Math.round(km * 10) / 10 }); ev.sorteio = emXp ? "xp" : "ouro"; save(); }
   return ev;
 }
 

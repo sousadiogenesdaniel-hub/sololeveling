@@ -5,7 +5,7 @@ import { today, esc, fmt, num, fmtDate, fmtShort, signed, shrinkImage, uid, days
 import { header, panel, modal, closeModal, toast, showEvents, confirmBox, sysMessage } from "../ui.js";
 import { nativo } from "../native.js";
 import { weightOn } from "../game.js";
-import { grant, R, inPenalty, daysToShop, pendingDebts, monthDebt, BONUS, CAMPO, bonusWeek, cleanWeek, dietWeek, weekStart, weekEnd } from "../game.js";
+import { grant, R, inPenalty, daysToShop, pendingDebts, monthDebt, BONUS, campoXp, CAMPO, bonusWeek, cleanWeek, dietWeek, weekStart, weekEnd } from "../game.js";
 
 // ---- Mais -----------------------------------------------------------------------
 views.mais = () => {
@@ -191,7 +191,7 @@ views.loja = () => {
       const dw = dietWeek(), feitos = dw.filter(Boolean).length, passados = dw.filter(x => x !== null).length, limpa = cleanWeek();
       return `<p class="small muted" style="margin-top:0">Ouro extra para quem já está cumprindo as missões. Semana do jogo: ${fmtDate(weekStart(), { day: "2-digit", month: "2-digit" })} a ${fmtDate(weekEnd(), { day: "2-digit", month: "2-digit" })}. Fora da Zona de Penalidade, até ${BONUS.teto} de Ouro por semana.</p>
       <ul class="list small">
-        <li><span class="grow">Dungeon de Campo (opcional, em Atividades): um percurso só pelo GPS de ${CAMPO.corrida.km} km correndo, ${CAMPO.caminhada.km} km de caminhada ou de trilha, ou ${CAMPO.bike.km} km de bike; o prêmio entra com a missão do dia <span class="muted">(semana com falta: +${BONUS.gpsOuroSeq} depois de ${BONUS.seguidos} missões seguidas)</span></span><b class="gold">+${BONUS.gpsOuro}</b></li>
+        <li><span class="grow">Dungeon de Campo (opcional, em Atividades): um percurso só pelo GPS de ${CAMPO.corrida.km} km correndo, ${CAMPO.caminhada.km} km de caminhada ou de trilha, ou ${CAMPO.bike.km} km de bike; o prêmio entra com a missão do dia e é sorteado entre Ouro e XP <span class="muted">(semana com falta: ${BONUS.gpsOuroSeq} Ouro ou ${campoXp(BONUS.gpsOuroSeq)} XP, depois de ${BONUS.seguidos} missões seguidas)</span></span><b class="gold">+${BONUS.gpsOuro}</b> <span class="small">ou</span> <b class="ok">+${campoXp(BONUS.gpsOuro)} XP</b></li>
         <li><span class="grow">Semana inteira dentro da meta de calorias <span class="muted">(${passados ? `${feitos} de ${passados} dia${passados > 1 ? "s" : ""} fechado${passados > 1 ? "s" : ""}${feitos < passados ? ": esta semana já não vale" : ""}` : "começa a contar amanhã"})</span></span><b class="gold">+${BONUS.dietaOuro}</b></li></ul>
       <div class="row between small"><span class="${limpa ? "ok" : "bad"}">${limpa ? "Semana limpa ✔" : "Semana com falta: só a Dungeon de Campo, com valor reduzido"}</span><b class="gold num">${bonusWeek()}/${BONUS.teto}</b></div>
       <a class="btn sm ghost block" style="margin-top:8px" href="#/extras">Rastrear atividade</a>`;

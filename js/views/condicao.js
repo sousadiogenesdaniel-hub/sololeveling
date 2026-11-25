@@ -7,6 +7,7 @@ import { today, addDays, weekday, fmt, fmtDate, num, esc, WEEKDAYS } from "../ut
 import { header, panel, toast, showEvents } from "../ui.js";
 import { premiarCondicao, R } from "../game.js";
 import { yearBoard } from "./assiduidade.js";
+import { ganhoFx } from "../fx.js";
 
 // Níveis de cada métrica: ok (verde) · warn (amarelo) · bad (vermelho)
 export const sonoNivel = h => h == null ? null : h < 6 ? "bad" : h < 7 || h > 9 ? "warn" : "ok";
@@ -53,7 +54,7 @@ function setCond(campo, v) {
   if (!Object.keys(c).length) delete d.cond;
   const ev = premiarCondicao(curDate());
   save(); refresh();
-  if (ev) ev.levelUp ? showEvents("Condição registrada", [ev]) : toast(`Condição registrada: +${ev.xp} XP`);
+  if (ev) ev.levelUp ? showEvents("Condição registrada", [ev]) : (ganhoFx({ xp: ev.xp }), toast(`Condição registrada: +${ev.xp} XP`));
 }
 actions.setCond = ({ campo, v }) => setCond(campo, v);
 actions.sonoRapido = ({ h }) => setCond("sono", +h);

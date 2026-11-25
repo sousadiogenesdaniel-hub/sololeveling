@@ -219,7 +219,7 @@ export function finalizarCampo(date = today()) {
   b.reg = registrarDungeon({ tipo: "campo", rank: levelInfo().rank, d: date,
     desafio: { titulo: "Dungeon de Campo", desc: b.campo === "andando" ? `${fmtKm(C.km)} km andando no dia, rastreados pelo GPS.` : `${fmtKm(C.km)} km ${C.nome} num percurso só, rastreado pelo GPS.`,
       gps: [{ nome: b.campo === "andando" ? "Andando" : C.rotulo, km: b.km || C.km }] },
-    premios: [`+${b.ouro} Ouro`, bau && `Surpresa: Baú ${RAR[bau.raridade].nome} (${bau.premios.join(", ")})`].filter(Boolean) }).id;
+    premios: [b.xp ? `+${b.xp} XP` : `+${b.ouro} Ouro`, bau && `Surpresa: Baú ${RAR[bau.raridade].nome} (${bau.premios.join(", ")})`].filter(Boolean) }).id;
   return { reg: b.reg, bau, eventos };
 }
 const fmtKm = n => String(n).replace(".", ",");
