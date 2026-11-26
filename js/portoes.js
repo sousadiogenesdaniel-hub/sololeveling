@@ -108,12 +108,22 @@ function gastoDungeon(inicio, minutosTotal, gps = []) {
 }
 export const gpsCumprido = p => !p.desafio?.gps?.length || p.desafio.gps.every(x => kmGpsDesde(x.tipo, p.inicio || 0) >= x.km);
 
+// Uma dungeon fica aberta por 2 dias de jogo: o dia em que abre e o seguinte. O descanso (e a folga) no meio não conta:
+// aberta na quinta com descanso na sexta, vai até o sábado à meia-noite. Entrar no dia de descanso pode (é escolha
+// do jogador abrir mão do descanso).
+export function fechaDe(abertoEm) {
+  let d = abertoEm, n = isRestDay(d) ? 0 : 1;
+  for (let i = 0; n < 2 && i < 7; i++) { d = addDays(d, 1); if (!isRestDay(d)) n++; }
+  return d;
+}
+
 // Abre o portão no dia sorteado, fecha os vencidos e aplica a pena da Emergência ignorada.
 // Devolve { eventos, abriu } (abriu = portão que acabou de abrir, para a animação).
 export function atualizarPortoes() {
   const t = today(), eventos = [];
   let abriu = null;
   for (const p of Object.values(S.portoes || {})) {
+    if (p.status === "aberto" && p.abertoEm) { const f = fechaDe(p.abertoEm); if (f > p.fecha) p.fecha = f; } // só estende
     if (p.status === "aberto" && t > p.fecha) {
       if (p.tipo === "emergencia") { p.status = "ignorado"; eventos.push(grant(PENA.emergencia.xp, PENA.emergencia.ouro, "Dungeon de Emergência ignorada")); }
       else p.status = "expirou";
@@ -127,12 +137,13 @@ export function atualizarPortoes() {
   const p = portaoSemana();
   if (p.status === "oculto" && t >= p.dia) {
     const testeColado = S.days[t]?.testeFeito || S.days[addDays(t, -1)]?.testeFeito;
-    if (inPenalty() || testeColado) { // adia: nunca na Zona de Penalidade nem colado num Teste de Rank
+    const outra = portaoAberto(); // a da semana anterior ainda aberta (passou do descanso): uma de cada vez
+    if (inPenalty() || testeColado || (outra && outra !== p)) { // adia: nunca na Zona de Penalidade nem colado num Teste de Rank
       let prox = addDays(t, 1);
       while (prox <= fimDaSemana(p.ws) && isRestDay(prox)) prox = addDays(prox, 1);
       if (prox <= fimDaSemana(p.ws)) p.dia = prox; else p.status = "perdido";
     } else {
-      Object.assign(p, { status: "aberto", abertoEm: t, fecha: addDays(t, 1), rank: levelInfo().rank, desafio: desafioCompleto(p.tipo) });
+      Object.assign(p, { status: "aberto", abertoEm: t, fecha: fechaDe(t), rank: levelInfo().rank, desafio: desafioCompleto(p.tipo) });
       abriu = p;
     }
   }

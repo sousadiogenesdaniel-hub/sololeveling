@@ -169,7 +169,9 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   não deve a missão diária. Vencer: o item Lendário, +1000 XP e +500 Ouro. 3 chances por rank (a próxima abre 2 a 6
   semanas depois); gastou as 3, volta no rank seguinte; no S, 3 meses depois. Nunca some.
 - **Dungeons:** um por semana, num dia sorteado e sem aviso, com desafio calculado pelos máximos (contra o relógio,
-  circuito ou resistência) e 48 h para entrar. Normal (73%, opcional: +100 XP, baú Épico+, corpo e chance de item),
+  circuito ou resistência) e 2 dias para entrar: o dia em que abre e o seguinte, sem contar o descanso (aberta na
+  quinta com descanso na sexta, vai até sábado à meia-noite; entrar no descanso pode, por escolha do jogador). Uma
+  aberta por vez: se a da semana anterior ainda estiver aberta, a nova espera. Normal (73%, opcional: +100 XP, baú Épico+, corpo e chance de item),
   Red (15%, mais difícil; depois de entrar, sair ou estourar o tempo custa 50 XP) e de Emergência (12%,
   obrigatório: ignorar ou falhar custa 150 XP e 50 Ouro, sem Zona de Penalidade). Nunca na Zona de Penalidade nem
   colado num Teste de Rank. Não substitui a missão do dia.
