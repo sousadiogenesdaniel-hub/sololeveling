@@ -84,7 +84,11 @@ export function grant(xp, gold, motivo, date = today()) {
 }
 
 // ---- nutrição ------------------------------------------------------------------------
-export function mealsOf(date = today()) { return S.days[date]?.meals || S.diet.meals; }
+// Dia em modo viagem (ativado na Missão; o dia em que você volta já é normal). Na viagem a comida não começa com a
+// dieta padrão: o dia começa vazio e você anota o que comer (rancho, restaurante). As medidas são só com a fita.
+export const emViagemDia = (d = today()) => (!!S.viagem && d >= S.viagem.inicio) || (S.viagens || []).some(v => d >= v.inicio && d < v.fim);
+const refeicoesVazias = () => S.diet.meals.map(m => ({ ...m, itens: [] }));
+export function mealsOf(date = today()) { return S.days[date]?.meals || (emViagemDia(date) ? refeicoesVazias() : S.diet.meals); }
 export function totals(meals) {
   const t = { kcal: 0, p: 0, c: 0, gord: 0 };
   for (const m of meals) for (const i of m.itens) { t.kcal += i.kcal; t.p += i.p; t.c += i.c; t.gord += i.gord; }
@@ -263,7 +267,7 @@ export function processDays() {
   let d = addDays(g.lastProcessed, 1);
   while (d < t) {
     const rec = day(d);
-    if (!rec.meals) rec.meals = JSON.parse(JSON.stringify(S.diet.meals)); // congela a dieta do dia
+    if (!rec.meals) rec.meals = JSON.parse(JSON.stringify(mealsOf(d))); // congela a dieta do dia (na viagem, o dia vazio)
     if (pendingDebts().length) report.push(grant(R.corrosaoXp, 0, `Dívida sem comprovante em ${fmtDate(d)}`, d));
     if (isObligated(d) && !rec.workout?.done) {
       S.debts.push({ date: d, serial: makeSerial(d), status: "pendente", pagamentos: [] });
@@ -359,6 +363,7 @@ export function autoKcal(date = today()) {
 export function applyAutoKcal(force = false, date = today()) {
   const p = S.profile;
   if (!p?.kcalAuto) return null;
+  if (emViagemDia(date)) return null; // na viagem fica pausada: sem balança e com outra comida, ajustaria com dado errado
   if (!force && p.kcalAutoEm && daysBetween(p.kcalAutoEm, date) < KCAL_AUTO.intervalo) return null;
   const calc = autoKcal(date), antes = p.metaKcal;
   let nova = calc.meta;

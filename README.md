@@ -233,6 +233,10 @@ viagem, o ponto vale em qualquer lugar a 50 km+ de casa, com a saída no mesmo l
 sempre; a chuva é conferida onde você está. Não precisa informar datas: o modo acaba sozinho no primeiro ponto batido
 perto de casa. Chegou a 30 dias, o app pergunta quantos dias a mais você fica (até responder, o ponto de viagem não
 vale). O dia de estrada é um dia normal: sem treino, é falta (a folga de 100 HP fica a critério do jogador).
+Na viagem, a **Comida** não começa com a dieta padrão: o dia começa vazio e você anota o que comer (rancho,
+restaurante); o Sistema confere a meta no dia seguinte como sempre (dia sem nada anotado não conta). As **Medidas** são
+só com a fita: o abdômen sozinho vale os +5 XP do dia (sem balança, o peso fica em branco), e as semanais seguem
+normais. A meta automática de calorias fica pausada. Ao voltar (o modo acaba), tudo volta ao normal.
 
 ## Como publicar e instalar no celular
 

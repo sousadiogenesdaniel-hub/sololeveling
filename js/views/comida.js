@@ -3,7 +3,7 @@ import { views, actions, refresh } from "../core.js";
 import { S, day, save } from "../store.js";
 import { today, esc, fmt, num, uid, norm, $, fmtDate, addDays } from "../util.js";
 import { header, panel, modal, closeModal, toast, confirmBox } from "../ui.js";
-import { mealsOf, totals, spent } from "../game.js";
+import { mealsOf, totals, spent, emViagemDia } from "../game.js";
 
 let taco = null;
 async function foods() {
@@ -19,8 +19,8 @@ const clone = o => JSON.parse(JSON.stringify(o));
 function target(ctx, write = false) {
   if (ctx === "dieta") return S.diet.meals;
   const d = day(curDate());
-  if (write && !d.meals) d.meals = clone(S.diet.meals);
-  return d.meals || S.diet.meals;
+  if (write && !d.meals) d.meals = clone(mealsOf(curDate())); // na viagem, o dia vazio
+  return d.meals || mealsOf(curDate());
 }
 
 function mealsHtml(ctx) {
@@ -57,15 +57,17 @@ views.comida = arg => {
       ${panel("Dieta padrão", `<p class="small muted" style="margin-top:0">Esta dieta entra sozinha em todos os dias novos. Mudar aqui não altera dias que você já editou nem dias passados.</p>${summary(S.diet.meals)}`)}
       ${mealsHtml("dieta")}</div>`;
   }
-  const d = curDate(), custom = !!S.days[d]?.meals, isToday = d === today();
+  const d = curDate(), custom = !!S.days[d]?.meals, isToday = d === today(), viagemDia = emViagemDia(d);
   return `${header()}${tabs}<div class="stack">
     ${panel(isToday ? "Hoje" : fmtDate(d), `
       <div class="row between" style="margin-bottom:8px">
         <button class="btn sm ghost" data-act="foodDay" data-n="-1" aria-label="Dia anterior">◀</button>
-        <span class="chip ${custom ? "warn" : ""}">${custom ? "Dia editado" : "Seguindo a dieta"}</span>
+        <span class="chip ${custom ? "warn" : ""}">${viagemDia ? "✈️ Modo viagem" : custom ? "Dia editado" : "Seguindo a dieta"}</span>
         <button class="btn sm ghost" data-act="foodDay" data-n="1" ${isToday ? "disabled" : ""} aria-label="Próximo dia">▶</button></div>
+      ${viagemDia ? `<p class="small" style="margin-top:0">Modo viagem: o dia começa vazio, sem a dieta padrão. Anote tudo o que comer; no dia seguinte o Sistema confere a meta como sempre (dia sem nada anotado não conta).</p>` : ""}
       ${summary(mealsOf(d), d)}
-      ${custom && !S.days[d].closed ? `<button class="btn sm ghost block" style="margin-top:10px" data-act="resetDay">Voltar para a dieta padrão</button>` : ""}`)}
+      ${!viagemDia && isToday && !S.viagem ? `<p class="small muted" style="margin:8px 0 0">Viajando? Ative o modo viagem na <a href="#/treino">Missão</a>: a comida começa vazia e o peso fica opcional.</p>` : ""}
+      ${custom && !S.days[d].closed && !viagemDia ? `<button class="btn sm ghost block" style="margin-top:10px" data-act="resetDay">Voltar para a dieta padrão</button>` : ""}`)}
     ${mealsHtml("dia")}</div>`;
 };
 

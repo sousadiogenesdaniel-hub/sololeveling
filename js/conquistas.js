@@ -204,7 +204,7 @@ export function atributos() {
   const p0 = S.profile?.pesoInicial, meta = weightGoal()?.alvo, pa = weightOn(t);
   const vit = p0 && meta && p0 !== meta ? (p0 - pa) / (p0 - meta) : 0;
   const ult = n => [...Array(n)].map((_, i) => addDays(t, -i - 1));
-  const per = ult(30).filter(d => S.days[d]?.peso).length / 30;
+  const per = ult(30).filter(d => S.days[d]?.peso || S.days[d]?.abdomen).length / 30; // na viagem não tem balança: a fita conta
   const metaK = S.profile?.metaKcal;
   const intel = metaK ? ult(30).filter(d => { const k = totalDieta(S.days[d]?.meals || mealsOf(d)).kcal; return k > 0 && k <= metaK + cotaKcal(d); }).length / 30 : 0;
   const obrig = ult(60).filter(d => isObligated(d));

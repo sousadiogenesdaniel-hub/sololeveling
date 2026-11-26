@@ -4,7 +4,7 @@ import { views, actions, refresh } from "../core.js";
 import { S } from "../store.js";
 import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from "../util.js";
 import { header, panel } from "../ui.js";
-import { mealsOf, totals, spent, gastoPartes, extrasKcal, isRestDay, isObligated, inPenalty, pendingDebts, daysToShop, monthDebt, weightOn, weightGoal, cotaKcal, R, condicaoPendente } from "../game.js";
+import { mealsOf, totals, spent, gastoPartes, extrasKcal, emViagemDia, isRestDay, isObligated, inPenalty, pendingDebts, daysToShop, monthDebt, weightOn, weightGoal, cotaKcal, R, condicaoPendente } from "../game.js";
 import { workoutFor, currentTrack } from "../tracks.js";
 import { portaoAberto, TIPOS, PENA, NOMEADOS, NOM, nomeados } from "../portoes.js";
 import { podeFolga, HP, bonus } from "../premios.js";
@@ -115,7 +115,7 @@ function kcalCard() {
       <p class="small muted" style="margin:0">Consumido <b class="num">${fmt(tot.kcal)}</b> de <b class="num">${fmt(limite)}</b> kcal${cota ? ` <span class="gold">(inclui ${fmt(cota)} da Loja)</span>` : ""}</p>
       ${saldoTxt}
     </div></div>${macros}
-    <p class="small muted" style="margin-bottom:0">Conta a dieta padrão inteira do dia. Comeu diferente? <a href="#/comida">Ajuste em Comida</a>.
+    <p class="small muted" style="margin-bottom:0">${emViagemDia(t) ? `✈️ Modo viagem: o dia começa vazio. <a href="#/comida">Anote tudo o que comer em Comida</a>.` : `Conta a dieta padrão inteira do dia. Comeu diferente? <a href="#/comida">Ajuste em Comida</a>.`}
       O Sistema confere no dia seguinte: dentro da meta +${R.kcalXp} XP; mais de ${R.dietaTolerancia} kcal acima, −${R.dietaPor100} XP e −${R.dietaPor100} Ouro a cada 100 kcal.</p>`);
 }
 
@@ -123,7 +123,7 @@ function kcalCard() {
 // certo do app; depois, as pendências sem XP. Cada item: [texto, prêmio, rota, botão, detalhe]
 function reminders() {
   const t = today(), d = S.days[t] || {}, items = [], xpAnel = xp => xp + (bonus().xpPct ? Math.max(1, Math.round(xp * bonus().xpPct / 100)) : 0);
-  if (!d.peso || !d.abdomen) items.push(["Registrar peso e abdômen de hoje", `+${R.medidasXp} XP`, "medidas"]);
+  if (emViagemDia(t) ? !d.abdomen : !d.peso || !d.abdomen) items.push([emViagemDia(t) ? "Registrar o abdômen de hoje" : "Registrar peso e abdômen de hoje", `+${R.medidasXp} XP`, "medidas", "Registrar", emViagemDia(t) ? "modo viagem: só a fita, sem balança" : ""]);
   if (condicaoPendente(addDays(t, -1))) items.push(["Registrar a Condição de ontem", `+${R.condicaoXp} XP`, "condicao/ontem", "Registrar", "vale só até hoje"]);
   if (condicaoPendente(t)) items.push(["Registrar a Condição de hoje", `+${R.condicaoXp} XP`, "condicao/hoje", "Registrar", "sono, celular na cama, energia e foco; vale até amanhã"]);
   const lastW = Object.keys(S.weekly).sort().pop();

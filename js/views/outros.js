@@ -4,7 +4,7 @@ import { S, day, save, photos } from "../store.js";
 import { today, esc, fmt, num, fmtDate, fmtShort, signed, shrinkImage, uid, daysBetween, $ } from "../util.js";
 import { header, panel, modal, closeModal, toast, showEvents, confirmBox, sysMessage } from "../ui.js";
 import { nativo } from "../native.js";
-import { weightOn } from "../game.js";
+import { weightOn, emViagemDia } from "../game.js";
 import { grant, R, inPenalty, daysToShop, pendingDebts, monthDebt, BONUS, campoXp, metaCampo, levelInfo, CAMPO, bonusWeek, cleanWeek, dietWeek, weekStart, weekEnd } from "../game.js";
 
 // ---- Mais -----------------------------------------------------------------------
@@ -59,7 +59,8 @@ views.medidas = arg => {
         <div class="field grow"><label for="da">Abdômen (cm)</label><input id="da" name="abdomen" inputmode="decimal" value="${d.abdomen ?? ""}"></div></div>
         <div class="field"><label for="dd">Data</label><input id="dd" type="date" name="data" value="${today()}" max="${today()}"></div>
         <button class="btn primary block">Salvar</button></form>
-        <p class="small muted">Meça sempre no mesmo horário, de preferência ao acordar. Registrar os dois hoje vale +${R.medidasXp} XP (e a Condição de ontem, mais +${R.condicaoXp}).</p>`)}
+        ${emViagemDia() ? `<p class="small">✈️ Modo viagem: sem balança, só a fita. O abdômen sozinho vale os +${R.medidasXp} XP do dia; o peso fica em branco (se achar uma balança, pode anotar).</p>`
+          : `<p class="small muted">Meça sempre no mesmo horário, de preferência ao acordar. Registrar os dois hoje vale +${R.medidasXp} XP (e a Condição de ontem, mais +${R.condicaoXp}).</p>`}`)}
       ${panel("Últimos registros", hist.length ? `<table class="t"><tr><th>Data</th><th>Peso</th><th>Abdômen</th></tr>
         ${hist.map(k => `<tr><td>${fmtDate(k)}</td><td class="num">${S.days[k].peso ? fmt(S.days[k].peso, 1) + " kg" : "—"}</td><td class="num">${S.days[k].abdomen ? fmt(S.days[k].abdomen, 1) + " cm" : "—"}</td></tr>`).join("")}</table>`
         : `<p class="muted">Nenhum registro ainda.</p>`)}</div>`;
@@ -84,7 +85,8 @@ actions.saveDaily = d => {
   if (peso !== null) rec.peso = peso; else delete rec.peso;
   if (abd !== null) rec.abdomen = abd; else delete rec.abdomen;
   const ev = [];
-  if (date === today() && rec.peso && rec.abdomen && !rec.medXp) { rec.medXp = true; ev.push(grant(R.medidasXp, 0, "Medidas do dia registradas")); }
+  // na viagem (sem balança), só o abdômen já vale
+  if (date === today() && (rec.peso || emViagemDia(date)) && rec.abdomen && !rec.medXp) { rec.medXp = true; ev.push(grant(R.medidasXp, 0, "Medidas do dia registradas")); }
   save(); refresh();
   ev.length ? showEvents("Registro salvo", ev) : toast("Medidas salvas.");
 };
