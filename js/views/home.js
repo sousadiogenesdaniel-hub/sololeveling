@@ -6,8 +6,8 @@ import { today, fmt, signed, addDays, daysBetween, WEEKDAYS, esc, fmtDate } from
 import { header, panel } from "../ui.js";
 import { mealsOf, totals, spent, gastoPartes, extrasKcal, emViagemDia, isRestDay, isObligated, inPenalty, pendingDebts, daysToShop, monthDebt, weightOn, weightGoal, cotaKcal, R, condicaoPendente } from "../game.js";
 import { workoutFor, currentTrack } from "../tracks.js";
-import { portaoAberto, TIPOS, PENA, NOMEADOS, NOM, nomeados } from "../portoes.js";
-import { podeFolga, HP, bonus } from "../premios.js";
+import { portaoAberto, TIPOS, PENA, NOMEADOS, nomeados } from "../portoes.js";
+import { podeFolga, HP } from "../premios.js";
 import { ATIV } from "./extras.js";
 import { bauPendente } from "../recompensas.js";
 import { abrirBauAnimado } from "./recompensas-ui.js";
@@ -122,7 +122,7 @@ function kcalCard() {
 // Lembretes: tudo o que ainda dá XP hoje (menos a missão, que tem o card próprio), cada um com o botão para o lugar
 // certo do app; depois, as pendências sem XP. Cada item: [texto, prêmio, rota, botão, detalhe]
 function reminders() {
-  const t = today(), d = S.days[t] || {}, items = [], xpAnel = xp => xp + (bonus().xpPct ? Math.max(1, Math.round(xp * bonus().xpPct / 100)) : 0);
+  const t = today(), d = S.days[t] || {}, items = [];
   if (emViagemDia(t) ? !d.abdomen : !d.peso || !d.abdomen) items.push([emViagemDia(t) ? "Registrar o abdômen de hoje" : "Registrar peso e abdômen de hoje", `+${R.medidasXp} XP`, "medidas", "Registrar", emViagemDia(t) ? "modo viagem: só a fita, sem balança" : ""]);
   if (condicaoPendente(addDays(t, -1))) items.push(["Registrar a Condição de ontem", `+${R.condicaoXp} XP`, "condicao/ontem", "Registrar", "vale só até hoje"]);
   if (condicaoPendente(t)) items.push(["Registrar a Condição de hoje", `+${R.condicaoXp} XP`, "condicao/hoje", "Registrar", "sono, celular na cama, energia e foco; vale até amanhã"]);
@@ -138,13 +138,13 @@ function reminders() {
   // dungeons abertas: o XP é fixo por tipo (mais o anel); o que varia é o baú ou o item
   const p = portaoAberto();
   if (p) { const T = TIPOS[p.tipo], pe = PENA[p.tipo];
-    items.push([p.status === "ativo" ? `${T.nome} em andamento` : `${T.nome} aberta (rank ${p.rank})`, `+${xpAnel(T.xp)} XP`, "portao", p.status === "ativo" ? "Voltar" : "Ver",
-      [`o resto é surpresa`, p.status === "aberto" && `fecha ${fmtDate(p.fecha, { day: "2-digit", month: "2-digit" })} à meia-noite`,
+    items.push([p.status === "ativo" ? `${T.nome} em andamento` : `${T.nome} aberta (rank ${p.rank})`, "prêmio surpresa", "portao", p.status === "ativo" ? "Voltar" : "Ver",
+      [p.status === "aberto" && `fecha ${fmtDate(p.fecha, { day: "2-digit", month: "2-digit" })} à meia-noite`,
         pe && `${p.tipo === "emergencia" ? "ignorar ou falhar" : "falhar"} custa ${-pe.xp} XP${pe.ouro ? ` e ${-pe.ouro} Ouro` : ""}`].filter(Boolean).join("; ")]); }
   for (const [k, N] of Object.entries(NOMEADOS)) { const g = nomeados()[k];
     if (!g || !(g.status === "aberto" || g.status === "ativo" || (g.status === "marcado" && g.dia === t))) continue;
-    items.push([g.status === "aberto" ? `${N.nome}: escolher o dia` : `${N.nome} hoje`, `+${xpAnel(NOM.xp)} XP`, "portao", g.status === "aberto" ? "Escolher" : "Ir",
-      `mais ${NOM.ouro} Ouro e prêmios${g.status === "aberto" ? `; escolha até ${fmtDate(g.prazo, { day: "2-digit", month: "2-digit" })}` : ""}`]); }
+    items.push([g.status === "aberto" ? `${N.nome}: escolher o dia` : `${N.nome} hoje`, "prêmio surpresa", "portao", g.status === "aberto" ? "Escolher" : "Ir",
+      g.status === "aberto" ? `escolha o dia até ${fmtDate(g.prazo, { day: "2-digit", month: "2-digit" })}` : "você não deve a missão hoje"]); }
   const lastPhoto = S.lastPhoto;
   if (!lastPhoto || daysBetween(lastPhoto, t) >= 7) items.push(["Fotos da semana pendentes", "", "fotos"]);
   if (!S.profile.home?.acc) items.push(["Cadastrar a localização da sua casa (para o ponto)", "", "perfil"]);
