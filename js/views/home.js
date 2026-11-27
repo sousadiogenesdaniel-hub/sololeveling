@@ -139,7 +139,7 @@ function reminders() {
   const p = portaoAberto();
   if (p) { const T = TIPOS[p.tipo], pe = PENA[p.tipo];
     items.push([p.status === "ativo" ? `${T.nome} em andamento` : `${T.nome} aberta (rank ${p.rank})`, `+${xpAnel(T.xp)} XP`, "portao", p.status === "ativo" ? "Voltar" : "Ver",
-      [`mais baú ou item`, p.status === "aberto" && `fecha ${fmtDate(p.fecha, { day: "2-digit", month: "2-digit" })} à meia-noite`,
+      [`o resto é surpresa`, p.status === "aberto" && `fecha ${fmtDate(p.fecha, { day: "2-digit", month: "2-digit" })} à meia-noite`,
         pe && `${p.tipo === "emergencia" ? "ignorar ou falhar" : "falhar"} custa ${-pe.xp} XP${pe.ouro ? ` e ${-pe.ouro} Ouro` : ""}`].filter(Boolean).join("; ")]); }
   for (const [k, N] of Object.entries(NOMEADOS)) { const g = nomeados()[k];
     if (!g || !(g.status === "aberto" || g.status === "ativo" || (g.status === "marcado" && g.dia === t))) continue;

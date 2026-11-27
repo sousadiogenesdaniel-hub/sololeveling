@@ -13,9 +13,6 @@ import { linhaEv, mostrarTitulos } from "./recompensas-ui.js";
 import { botaoCompartilhar } from "../cartao.js";
 
 const relogio = s => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
-const premiosTxt = { normal: "+100 XP, corpo de Elite (às vezes Cavaleiro), baú no mínimo Épico e 30% de chance de um item Comum do Arsenal",
-  vermelho: "+200 XP, corpo de Cavaleiro, baú Épico com mais chance de Lendário e 50% de chance de um item Raro ou Épico do Arsenal",
-  emergencia: "+100 XP, corpo de Soldado, baú no mínimo Raro e 40% de chance de um item Comum ou Raro do Arsenal" };
 
 function historico() {
   const n = (S.dungeons || []).length;
@@ -93,7 +90,7 @@ views.portao = () => {
   if (p.status === "aberto") {
     return `${header()}<div class="stack">${nomeadosHtml()}${panel(`${T.nome} · rank ${p.rank}`, `<p style="margin-top:0">Aberta até <b>${fmtDate(p.fecha)}, à meia-noite</b>. O desafio só aparece quando você entra.</p>
       <p class="small">Tempo limite: <b>${p.desafio.limite} min</b> a partir da entrada.</p>
-      <p class="small">Prêmios: ${premiosTxt[p.tipo]}.</p>
+      <p class="small">Prêmios: <b>+${T.xp} XP</b>, e o resto é surpresa: o Sistema só revela o que esta dungeon guarda quando você vencer.</p>
       ${p.tipo === "vermelho" ? `<p class="small bad">Depois de entrar, não tem volta: sair ou estourar o tempo conta como falha (${PENA.vermelho.xp} XP).</p>` : ""}
       ${p.tipo === "emergencia" ? `<p class="small warn">Obrigatória: ignorar até fechar, ou falhar, custa ${-PENA.emergencia.xp} XP e ${-PENA.emergencia.ouro} Ouro.</p>` : `<p class="small muted">Opcional: se não entrar, ela só fecha.</p>`}
       <p class="small muted">Faça aquecido, com água por perto. Não conta como a missão do dia.</p>
