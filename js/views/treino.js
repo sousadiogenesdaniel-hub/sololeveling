@@ -13,6 +13,7 @@ import { COMANDANTES, arteSombra, derrotarChefe } from "../sombras.js";
 import { telaMissaoConcluida, mostrarRecordes, mostrarClasseSePreciso } from "./recompensas-ui.js";
 import { botaoCompartilhar } from "../cartao.js";
 import { trilhaFx, serieFx } from "../fx.js";
+import { botaoDoente } from "./doenca.js";
 
 const INDOOR_MIN = 25;        // minutos mínimos do treino indoor
 const PUNCH_EXPIRES_H = 5;    // ponto de entrada vence depois disso
@@ -360,7 +361,7 @@ function todayCard() {
     <p class="small muted">${viagem() ? `Em viagem: bata o ponto de entrada em qualquer lugar a ${VIAGEM.km} km ou mais de casa` : `Para valer: bata o ponto de entrada ${activeSpots().length ? "no seu local de treino" : `a mais de ${fmt(minDist() / 1000, 1)} km de casa`}`} (GPS preciso), treine pelo menos ${minMin()} min e bata o ponto de saída no ${viagem() ? "mesmo lugar" : "local"}.</p>
     <button class="btn primary block" data-act="punchIn">Bater ponto: entrada</button>
     <button class="btn ghost block" style="margin-top:8px" data-act="checkRain">🌧 Chuva forte? Verificar clima</button>
-    ${escolha}`,
+    ${escolha}${botaoDoente()}`,
     "", `<span class="chip ${plan.leve ? "ok" : ""}">${plan.leve ? "Semana leve · " : ""}Etapa ${plan.stage}/${plan.stages}</span>`);
 }
 

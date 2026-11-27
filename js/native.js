@@ -22,7 +22,8 @@ export function nativeStatus() {
 // Último dia com missão concluída (qualquer trilha). Um dia de folga conta como cumprido para o Android não
 // achar que foi falta.
 function lastDone() {
-  return [...Object.keys(S.days).filter(d => S.days[d].workout?.done), ...(S.folgas || [])].sort().pop() || "";
+  // dia de doença comprovado também não é falta para o bloqueio (a falta dele não leva à Zona de Penalidade)
+  return [...Object.keys(S.days).filter(d => S.days[d].workout?.done), ...(S.folgas || []), ...(S.doencas || []).map(x => x.d)].sort().pop() || "";
 }
 
 // Informa ao Android o estado do jogo. Chamado a cada atualização da tela (é barato).

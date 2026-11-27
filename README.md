@@ -44,7 +44,14 @@ Não tem servidor nem conta. Todos os dados ficam no próprio aparelho (IndexedD
   abaixo do alvo ou sem marcar.
 - **A cada 7 treinos seguidos:** +50 Ouro.
 - **Faltou ao treino:** −150 XP, −50 Ouro e **Zona de Penalidade** (o app fica vermelho e a Loja tranca).
-- **Sair da Zona de Penalidade:** pagar a multa por PIX a cada pessoa do grupo (cadastradas em Penalidades),
+- **Doente de verdade** (febre, dor no corpo), sem treinar: com comprovante, o dia vale como falta (−150 XP, −50 Ouro,
+  HP e a sequência zera), mas **sem Zona de Penalidade** (sem multa e sem treino de redenção). Comprovante: foto do
+  atestado ou da dispensa médica, ou um vídeo curto (até 60 s) de um **Auditor do Sistema** dizendo o nome, a data e o
+  código do dia que o app mostra (muda todo dia, então vídeo antigo não serve). O app não reconhece rostos: a garantia
+  é o próprio Auditor, que abre mão da multa ao gravar. Vale para hoje (botão "Estou doente" na Missão) ou para ontem,
+  se a multa ainda não teve pagamento (no card da multa). O comprovante fica guardado. Resfriado leve: a missão
+  continua, mais leve (séries marcadas "abaixo do alvo").
+- **Sair da Zona de Penalidade:** pagar a multa por PIX a cada Auditor do Sistema (cadastrados em Penalidades),
   enviar o print de cada comprovante para o app ler (valor, data, hora e recebedor; o mesmo comprovante não vale
   duas vezes) e concluir um treino. Cada dia com multa pendente custa 30 XP. As imagens não são guardadas.
 - **Loja:** só abre de sexta a domingo. Uma semana perfeita (6 treinos = 600 de Ouro) paga exatamente uma pizza.

@@ -155,6 +155,27 @@ export function isObligated(date) {
   return !!desde && date >= desde && !isRestDay(date) && !todasConcluidas();
 }
 export const pendingDebts = () => S.debts.filter(d => d.status !== "validado");
+
+// ---- Doente: dia de doença comprovado ------------------------------------------------------
+// Doente de verdade (febre, dor no corpo), sem treinar: o dia vale como falta (XP, Ouro, HP e sequência), mas sem a
+// Zona de Penalidade (sem multa por PIX nem treino de redenção). Só com comprovante: foto do atestado ou da dispensa
+// médica, ou um vídeo curto de um Auditor do Sistema (quem receberia a multa) dizendo o código do dia. Vale para hoje
+// ou para ontem, se a multa de ontem ainda não teve pagamento.
+export const doenteEm = d => (S.doencas || []).find(x => x.d === d) || null;
+export function codigoDoenca(d) {
+  const c = (S.doencaCod ||= {});
+  for (const k of Object.keys(c)) if (k < addDays(today(), -2)) delete c[k];
+  return (c[d] ||= String(1000 + Math.floor(Math.random() * 9000)));
+}
+export function registrarDoenca(d, prova) {
+  if (doenteEm(d)) return null;
+  (S.doencas ||= []).push({ d, ...prova, em: Date.now() });
+  const debt = S.debts.find(x => x.date === d && x.status !== "validado" && !(x.pagamentos || []).length);
+  if (debt) { S.debts = S.debts.filter(x => x !== debt); if (!pendingDebts().length) S.game.needsWorkout = false; }
+  const quem = prova.tipo === "atestado" ? "atestado médico" : `vídeo do Auditor ${prova.auditor}`;
+  grant(0, 0, `Dia de doença comprovado em ${fmtDate(d)} (${quem}, código ${prova.codigo})${debt ? ": a multa saiu" : ""}`);
+  return { multaSaiu: !!debt };
+}
 export const inPenalty = () => S.game.needsWorkout || pendingDebts().length > 0;
 
 // ---- dívidas -------------------------------------------------------------------------------
@@ -270,9 +291,10 @@ export function processDays() {
     if (!rec.meals) rec.meals = JSON.parse(JSON.stringify(mealsOf(d))); // congela a dieta do dia (na viagem, o dia vazio)
     if (pendingDebts().length) report.push(grant(R.corrosaoXp, 0, `Dívida sem comprovante em ${fmtDate(d)}`, d));
     if (isObligated(d) && !rec.workout?.done) {
-      S.debts.push({ date: d, serial: makeSerial(d), status: "pendente", pagamentos: [] });
-      g.needsWorkout = true; g.streak = 0;
-      const ev = { ...grant(R.faltaXp, R.faltaOuro, `Missão diária FALHOU em ${fmtDate(d)}`, d), falta: true };
+      const doente = doenteEm(d); // doença comprovada: a falta vale, mas sem a Zona de Penalidade
+      if (!doente) { S.debts.push({ date: d, serial: makeSerial(d), status: "pendente", pagamentos: [] }); g.needsWorkout = true; }
+      g.streak = 0;
+      const ev = { ...grant(R.faltaXp, R.faltaOuro, doente ? `Missão não cumprida em ${fmtDate(d)}: doente, comprovado (sem Zona de Penalidade)` : `Missão diária FALHOU em ${fmtDate(d)}`, d), falta: true };
       if (typeof S.hp === "number") { const a = S.hp; S.hp = Math.max(0, a + R.faltaHp); ev.hp = S.hp - a; } // falta = dano no HP do Manto
       report.push(ev);
     }

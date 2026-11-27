@@ -2,17 +2,18 @@
 import { copyText } from "../native.js";
 import { views, actions, refresh } from "../core.js";
 import { S, save } from "../store.js";
-import { esc, fmt, fmtDate, today, uid, $ } from "../util.js";
+import { esc, fmt, fmtDate, today, uid, addDays, $ } from "../util.js";
 import { header, panel, toast, sysMessage, modal, closeModal, confirmBox } from "../ui.js";
 import { pendingDebts, monthDebt, inPenalty, grupo, debtState, debtMembers, addPayment, revalidateDebts, grant, multaAtual, R } from "../game.js";
 import { readText, parsePix, checkPix } from "../ocr.js";
+import { botaoDoente } from "./doenca.js";
 
 const brl = v => "R$ " + fmt(v, 2);
 
 function debtCard(d) {
   const st = debtState(d);
   if (!st.membros.length) {
-    return panel(`Falta de ${fmtDate(d.date)}`, `<p>Cadastre as pessoas do grupo (abaixo) para saber para quem pagar.</p>`, "alert", `<span class="chip bad">Pendente</span>`);
+    return panel(`Falta de ${fmtDate(d.date)}`, `<p>Cadastre os Auditores do Sistema (abaixo) para saber para quem pagar.</p>`, "alert", `<span class="chip bad">Pendente</span>`);
   }
   const membros = st.membros.map(m => {
     const g = grupo().find(x => x.id === m.id);
@@ -30,7 +31,8 @@ function debtCard(d) {
     <label class="btn primary block">Enviar comprovante PIX
       <input type="file" accept="image/*" class="hidden" data-chg="pixProof" data-serial="${d.serial}"></label>
     <p class="small muted" id="st-${d.serial}" role="status"></p>
-    ${lidos ? `<h3 style="margin-top:6px">Comprovantes aceitos</h3><ul class="list small">${lidos}</ul>` : ""}`, "alert", `<span class="chip bad">Pendente</span>`);
+    ${lidos ? `<h3 style="margin-top:6px">Comprovantes aceitos</h3><ul class="list small">${lidos}</ul>` : ""}
+    ${d.date === addDays(today(), -1) && !(d.pagamentos || []).length ? botaoDoente(d.date) : ""}`, "alert", `<span class="chip bad">Pendente</span>`);
 }
 
 views.penalidade = () => {
@@ -39,24 +41,24 @@ views.penalidade = () => {
   const status = !inPenalty()
     ? panel("Situação", `<p class="mid ok">Sem penalidades ativas</p><p class="muted small">Continue cumprindo as missões diárias.</p>`, "good")
     : panel("Zona de Penalidade", `<p>Para o Sistema voltar ao normal:</p><ul>
-        ${pend.length ? `<li>Pagar a multa por PIX a cada pessoa do grupo e enviar os comprovantes (${pend.length} falta${pend.length > 1 ? "s" : ""})</li>` : `<li class="ok">Multas pagas ✔</li>`}
+        ${pend.length ? `<li>Pagar a multa por PIX a cada Auditor do Sistema e enviar os comprovantes (${pend.length} falta${pend.length > 1 ? "s" : ""})</li>` : `<li class="ok">Multas pagas ✔</li>`}
         ${S.game.needsWorkout ? `<li>Concluir um treino (<a href="#/treino">ir para a missão</a>)</li>` : `<li class="ok">Treino de redenção cumprido ✔</li>`}</ul>
         <p class="small muted">Cada dia com multa pendente custa ${-R.corrosaoXp} XP.</p>`, "alert");
   const g = grupo();
-  const grupoPanel = panel("Pessoas do grupo", `
+  const grupoPanel = panel("Auditores do Sistema", `<p class="small muted" style="margin-top:0">Quem recebe a multa quando você falha. Um deles também pode atestar, em vídeo, que você está doente.</p>
     ${g.length ? `<ul class="list">${g.map(m => `<li><span class="grow"><b>${esc(m.nome)}</b><br>
       <span class="small muted">${m.chave ? "chave PIX: " + esc(m.chave) : "sem chave PIX cadastrada"}</span></span>
       <button class="btn sm ghost" data-act="editMember" data-id="${m.id}" aria-label="Editar ${esc(m.nome)}">✎</button></li>`).join("")}</ul>`
       : `<p class="warn small">Ninguém cadastrado ainda.</p>`}
     <p class="small muted">Cadastre o nome completo como aparece no comprovante do PIX (o Sistema usa o nome para saber quem recebeu). A chave PIX é opcional e só serve para o botão de copiar.</p>
-    <button class="btn block" data-act="editMember" data-id="">+ Adicionar pessoa</button>`, "", `<span class="small muted">${g.length}</span>`);
+    <button class="btn block" data-act="editMember" data-id="">+ Adicionar Auditor</button>`, "", `<span class="small muted">${g.length}</span>`);
   return `${header()}<div class="stack">${status}
     ${pend.map(debtCard).join("")}
     ${panel("Multas do mês", `<div class="grid3">
       <div class="tile"><div class="lbl">Faltas</div><div class="val num">${md.faltas}</div></div>
       <div class="tile"><div class="lbl">Total</div><div class="val num ${md.total ? "bad" : ""}">${brl(md.total)}</div></div>
       <div class="tile"><div class="lbl">Pago</div><div class="val num ok">${brl(md.pago)}</div></div></div>
-      <p class="small muted">${brl(multaAtual())} por falta para cada pessoa do grupo, pago na hora por PIX. O valor da multa fica no Perfil; mudar o valor ou as pessoas vale também para as multas ainda não pagas.</p>`)}
+      <p class="small muted">${brl(multaAtual())} por falta para cada Auditor do Sistema, pago na hora por PIX. O valor da multa fica no Perfil; mudar o valor ou os Auditores vale também para as multas ainda não pagas.</p>`)}
     ${grupoPanel}
     ${feitas.length ? panel("Multas pagas", `<ul class="list small">${feitas.map(d => `<li><span class="grow">${fmtDate(d.date)}</span>
       <span class="num">${brl(debtState(d).pago)}</span><span class="ok">✔</span></li>`).join("")}</ul>`) : ""}</div>`;
@@ -65,7 +67,7 @@ views.penalidade = () => {
 // ---- pessoas do grupo --------------------------------------------------------------
 actions.editMember = ({ id }) => {
   const m = grupo().find(x => x.id === id);
-  const o = modal(`<div class="ptitle"><h2>${m ? "Editar pessoa" : "Nova pessoa"}</h2></div>
+  const o = modal(`<div class="ptitle"><h2>${m ? "Editar Auditor" : "Novo Auditor do Sistema"}</h2></div>
     <form id="mf"><div class="field"><label for="mn">Nome completo (como aparece no PIX)</label><input id="mn" name="nome" required maxlength="60" value="${esc(m?.nome || "")}"></div>
       <div class="field"><label for="mk">Chave PIX (opcional)</label><input id="mk" name="chave" maxlength="80" value="${esc(m?.chave || "")}" autocomplete="off"></div>
       <div class="row">${m ? `<button type="button" class="btn danger" id="mdel">Remover</button>` : ""}<button class="btn primary grow">Salvar</button></div></form>`);
@@ -77,7 +79,7 @@ actions.editMember = ({ id }) => {
     revalidateDebts(); save(); closeModal(); refresh();
   };
   if (m) $("#mdel", o).onclick = async () => {
-    if (!await confirmBox("Remover pessoa", `Remover ${m.nome}? As multas pendentes deixam de incluir essa pessoa; as já pagas ficam como estão.`, "Remover")) return;
+    if (!await confirmBox("Remover Auditor", `Remover ${m.nome}? As multas pendentes deixam de incluir esse Auditor; as já pagas ficam como estão.`, "Remover")) return;
     if (pendingDebts().length) grant(0, 0, `${m.nome} removido do grupo com penalidade pendente`);
     S.grupo = grupo().filter(x => x.id !== id); revalidateDebts(); save(); refresh();
   };
