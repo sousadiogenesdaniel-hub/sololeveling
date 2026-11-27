@@ -5,7 +5,7 @@ import { today, addDays, daysBetween, esc, fmt, fmtTime, fmtDate, getPosition, g
 import { header, panel, toast, sysMessage, showEvents, modal, closeModal, confirmBox, aviso } from "../ui.js";
 import { panel as panelBase } from "../ui.js";
 import { completeWorkout, passTest, isRestDay, workoutKcal, grant, R, rankDe } from "../game.js";
-import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, testUnlocked, testStatus, TEST_COOLDOWN, JANELA_2A, trackFinished, unitLabel, SESSIONS_PER_STAGE, testKey, setPR,
+import { TRACKS, trackById, currentTrack, currentPhase, progress, workoutFor, precisaAparelho, testUnlocked, testStatus, TEST_COOLDOWN, JANELA_2A, trackFinished, unitLabel, SESSIONS_PER_STAGE, testKey, setPR,
   ativas, multi, setFoco, trilhaSugerida, pesaPernas } from "../tracks.js";
 import { statusList, avaliacaoLiberada, avaliacaoForm, provasHoje, avaliouHoje } from "./avaliacao.js";
 import { posMissao } from "../recompensas.js";
@@ -54,7 +54,7 @@ function viagemCard() {
       <form data-act="estenderViagem" class="row" style="gap:8px"><input id="vg-dias" name="dias" inputmode="numeric" placeholder="dias" style="max-width:90px" aria-label="Dias a mais">
       <button class="btn primary grow">Confirmar</button></form>`
       : `<p class="small muted">${v.ate ? `Estendida até ${fmtDate(v.ate)}.` : `Até ${VIAGEM.dias} dias sem precisar avisar nada.`} O modo acaba sozinho quando você bater o ponto perto de casa.</p>`}
-    <p class="small">Sem barras por perto? Duas cadeiras firmes servem para os mergulhos e uma mesa resistente para as remadas (como nos dias de chuva).</p>
+    <p class="small">Sem barras por perto? Na missão, toque em <b>Sem aparelhos hoje</b>: barra, paralela e banco viram exercícios no chão e com a mochila.</p>
     <p class="small muted" style="margin-bottom:0">O dia de estrada é um dia normal: sem treino, é falta. Se tiver 100 HP, usar a folga fica a seu critério.</p>
     <button class="btn ghost sm block" style="margin-top:8px" data-act="encerrarViagem">Já voltei: encerrar o modo viagem</button>`, "", `<span class="chip warn">✈️ Viagem</span>`);
 }
@@ -223,9 +223,32 @@ actions.submitTest = data => {
   refresh();
 };
 
+// "Sem aparelhos hoje": na viagem ou em dia de chuva forte, troca barra, paralela e banco por chão e mochila
+const podeSemAparelhos = (cur = S.days[today()]?.workout) => !!viagem() || !!S.days[today()]?.rain?.heavy || !!cur?.indoor;
+function botaoSemAparelhos(plan, cur = null) {
+  if (!plan || plan.modo || !podeSemAparelhos(cur)) return "";
+  if (plan.semAparelhos) {
+    const n = plan.itens.filter(it => it.orig).length;
+    return `<p class="small ok" style="margin-bottom:4px">🎒 Sem aparelhos: ${n} exercício${n === 1 ? "" : "s"} trocado${n === 1 ? "" : "s"} por chão e mochila. A missão vale normal; o Teste de Rank e a Avaliação continuam com os aparelhos.</p>
+      <button class="btn ghost sm block" data-act="semAparelhos" data-on="0">Voltar aos aparelhos</button>`;
+  }
+  const n = plan.itens.filter(precisaAparelho).length;
+  return n ? `<button class="btn block" style="margin-top:8px" data-act="semAparelhos" data-on="1">🎒 Sem aparelhos hoje (só chão e mochila)</button>
+    <p class="small muted" style="margin:4px 0 0">Troca ${n} exercício${n === 1 ? "" : "s"} de barra, paralela ou banco. Cadeira e mesa ficam de fora: podem quebrar.</p>` : "";
+}
+actions.semAparelhos = ({ on }) => {
+  const t = today(), w = S.days[t]?.workout;
+  if (w?.done) return;
+  if (+on) day(t).semAparelhos = true; else delete day(t).semAparelhos;
+  if (w?.in && !w.plano?.modo) w.plano = workoutFor(t, !!w.indoor); // em andamento: as séries marcadas ficam
+  save(); refresh();
+  toast(+on ? "Sem aparelhos: exercícios trocados por chão e mochila." : "De volta aos aparelhos.");
+};
+
 function exerciseList(w, plan, active) {
   return `<ul class="list">${plan.itens.map((it, e) => `<li style="display:block">
     <div class="row between"><b>${esc(it.nome)}</b><span class="chip">${it.series} × ${unitLabel(it.alvo, it.un)}</span></div>
+    ${it.orig ? `<div class="small" style="color:var(--glow)">🎒 No lugar de: ${esc(it.orig)}</div>` : ""}
     <div class="small muted">${esc(it.dica)}</div>
     ${it.calib ? `<div class="small glow">⚡ Ajustado ao seu máximo (${it.calib.v}): ${it.calib.pct}%</div>` : ""}
     <div class="sets">${Array.from({ length: it.series }, (_, i) => `<button class="set ${w?.sets?.[e]?.[i] === true ? "on" : w?.sets?.[e]?.[i] === "low" ? "low" : ""}"
@@ -284,7 +307,7 @@ function todayCard() {
   const t = today(), w = S.days[t]?.workout;
   if (w?.done) {
     return panel("Missão de hoje", `<p class="mid ok">✔ Missão concluída</p>
-      <p>${esc(w.plano.titulo)}${w.indoor ? " (indoor)" : ""}</p>
+      <p>${esc(w.plano.titulo)}${w.indoor ? " (indoor)" : ""}${w.plano.semAparelhos ? " · sem aparelhos" : ""}</p>
       <div class="grid3">
         <div class="tile"><div class="lbl">Duração</div><div class="val num">${w.durMin} min</div></div>
         <div class="tile"><div class="lbl">Gasto</div><div class="val num">~${w.kcal} kcal</div></div>
@@ -316,6 +339,7 @@ function todayCard() {
       <p class="center small muted">${cur.indoor ? "Dungeon Indoor" : `Entrada às ${fmtTime(cur.in.t)} · ${cur.in.spot ? esc(cur.in.spot) : fmt(cur.in.dist / 1000, 1) + " km de casa"}`} · mínimo ${need} min</p>
       <p class="small muted center">Toque 1× na série = no alvo · 2× = abaixo do alvo (a carga não sobe) · 3× = desmarca</p>
       ${exerciseList(cur, plan, true)}
+      ${botaoSemAparelhos(plan, cur)}
       ${cur.indoor
         ? `<label class="btn primary block" style="margin-top:12px">Concluir: tirar selfie de prova
             <input type="file" accept="image/*" capture="user" class="hidden" data-chg="finishIndoor"></label>`
@@ -332,6 +356,7 @@ function todayCard() {
   const leve = plan.leve ? `<p class="small ok">Semana leve: volume 30% menor para o corpo se recuperar. Faz parte do plano.</p>` : "";
   return panel(plan.titulo, `${redencao}${leve}
     ${exerciseList(null, plan, false)}
+    ${botaoSemAparelhos(plan)}
     <p class="small muted">${viagem() ? `Em viagem: bata o ponto de entrada em qualquer lugar a ${VIAGEM.km} km ou mais de casa` : `Para valer: bata o ponto de entrada ${activeSpots().length ? "no seu local de treino" : `a mais de ${fmt(minDist() / 1000, 1)} km de casa`}`} (GPS preciso), treine pelo menos ${minMin()} min e bata o ponto de saída no ${viagem() ? "mesmo lugar" : "local"}.</p>
     <button class="btn primary block" data-act="punchIn">Bater ponto: entrada</button>
     <button class="btn ghost block" style="margin-top:8px" data-act="checkRain">🌧 Chuva forte? Verificar clima</button>
@@ -540,9 +565,10 @@ actions.checkRain = async () => {
     <p>${d.rain.foto ? "Chuva forte confirmada pela sua foto." : `Chuva forte confirmada (${fmt(d.rain.mm, 1)} mm/h, ${d.rain.horas} h de chuva previstas hoje).`} Você pode cumprir a missão ${viagem() ? "onde está hospedado" : "em casa"}.</p>
     <ul><li>Treino: <b>${esc(plan.titulo)}</b></li><li>Mínimo de ${INDOOR_MIN} min com o cronômetro do app</li>
     <li>Todas as séries marcadas</li><li>Selfie de prova no final</li></ul>
-    <p class="small muted">Sem barras em casa? Use duas cadeiras firmes para mergulhos e uma mesa resistente para as remadas.</p>
+    ${plan.itens.some(precisaAparelho) && !plan.semAparelhos ? `<p class="small muted">Sem barras ${viagem() ? "aí" : "em casa"}? Entre sem aparelhos: barra, paralela e banco viram exercícios no chão e com a mochila.</p>` : ""}
     <div class="row"><button class="btn ghost grow" data-close>Agora não</button>
-    <button class="btn primary grow" data-act="startIndoor">Entrar na dungeon</button></div>`);
+    <button class="btn primary grow" data-act="startIndoor">Entrar na dungeon</button></div>
+    ${plan.itens.some(precisaAparelho) && !plan.semAparelhos ? `<button class="btn block" style="margin-top:8px" data-act="startIndoor" data-sem="1">🎒 Entrar sem aparelhos</button>` : ""}`);
 };
 
 actions.chuvaFoto = async (_, el) => {
@@ -557,7 +583,8 @@ actions.chuvaFoto = async (_, el) => {
   actions.checkRain();
 };
 
-actions.startIndoor = () => {
+actions.startIndoor = ({ sem } = {}) => {
+  if (sem) day().semAparelhos = true;
   day().workout = { trackId: S.track.id, plano: workoutFor(today(), true), in: { t: Date.now() }, sets: {}, indoor: true };
   save(); closeModal(); refresh();
 };

@@ -238,6 +238,13 @@ restaurante); o Sistema confere a meta no dia seguinte como sempre (dia sem nada
 só com a fita: o abdômen sozinho vale os +5 XP do dia (sem balança, o peso fica em branco), e as semanais seguem
 normais. A meta automática de calorias fica pausada. Ao voltar (o modo acaba), tudo volta ao normal.
 
+**Sem aparelhos hoje** (na viagem ou em dia de chuva forte, antes ou durante o treino): troca o que precisa de barra,
+paralela ou banco por exercícios no chão ou com a mochila carregada, que trabalham os mesmos músculos (mergulho →
+flexão diamante; elevação de joelhos/pernas → deitado; L-sit e front lever → prancha oca; remada australiana e barra →
+remada curvada com a mochila; banco → versão no chão ou afundo). As séries ficam iguais e o alvo sobe onde o substituto
+é mais fácil; cada um mostra "no lugar de". Cadeira e mesa ficam de fora (podem quebrar). A missão vale normal (XP,
+sequência e etapa); o Teste de Rank e a Avaliação continuam pedindo os aparelhos.
+
 ## Como publicar e instalar no celular
 
 O app é só arquivos estáticos, sem etapa de build. O GPS exige HTTPS, então ele precisa estar hospedado.

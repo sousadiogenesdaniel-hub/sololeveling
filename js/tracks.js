@@ -563,8 +563,57 @@ function calibrate(it, k, leve) {
   return alvo > it.alvo ? { ...it, alvo, calib: { v, pct: Math.round(pct * 100) } } : it;
 }
 
+// ---- Sem aparelhos (viagem ou chuva) ----------------------------------------------------------
+// Troca o que precisa de barra, paralela ou banco por um exercício no chão ou com a mochila carregada, que trabalha os
+// mesmos músculos. As séries ficam iguais; o alvo multiplica onde o substituto é mais fácil (deitado em vez de
+// pendurado, prancha oca no lugar do L-sit). Cadeira e mesa ficam de fora: com o peso do corpo em cima, podem quebrar.
+// O Teste de Rank e a Avaliação continuam pedindo o exercício de verdade.
+const MOCHILA = "Encha a mochila (água, roupa, coturno). Tronco inclinado à frente, costas retas, puxe até a barriga e desça devagar.";
+const S_DIAMANTE = ["Flexão diamante", 1, "Mãos juntas embaixo do peito, cotovelos rentes ao corpo: o foco vai para o tríceps."];
+const S_JOELHOS = ["Elevação de joelhos deitado", 1.5, "De barriga para cima, mãos ao lado do corpo: traga os joelhos ao peito tirando o quadril do chão e desça devagar."];
+const S_PERNAS = ["Elevação de pernas retas deitado", 1.5, "De barriga para cima, pernas esticadas: suba até 90° e desça devagar, sem encostar os pés no chão."];
+const S_OCA = ["Prancha oca", 2, "Deitado de barriga para cima, lombar colada no chão, braços e pernas estendidos e fora do chão."];
+const S_REMADA = ["Remada curvada com a mochila", 1.5, MOCHILA];
+export const SEM_APARELHO = {
+  "Mergulho nas paralelas": S_DIAMANTE, "Série longa de mergulhos": ["Série longa de flexões diamante", 1, S_DIAMANTE[2]],
+  "Elevação de joelhos nas paralelas": S_JOELHOS, "Elevação de joelhos na barra": S_JOELHOS,
+  "Elevação de pernas retas nas paralelas": S_PERNAS, "Elevação de pernas retas na barra": S_PERNAS,
+  "L-sit nas paralelas": S_OCA, "L-sit nas paralelas (comece com joelhos dobrados)": ["Prancha oca (joelhos dobrados se precisar)", 2, S_OCA[2]],
+  "Tuck front lever na barra": S_OCA, "Skin the cat na barra": ["Abdominal canivete", 1, "Deitado, suba braços e pernas ao mesmo tempo e toque as mãos nos pés."],
+  "Remada australiana nas paralelas": S_REMADA, "Remada australiana": S_REMADA, "Remada australiana pegada supinada": S_REMADA,
+  "Remada australiana pegada aberta, pés no banco": S_REMADA, "Remada australiana com os pés no banco": S_REMADA,
+  "Remada australiana com pausa de 2 s": ["Remada com a mochila, pausa de 2 s em cima", 1.5, MOCHILA], "Remada com pausa de 2 s no topo": ["Remada com a mochila, pausa de 2 s em cima", 1.5, MOCHILA],
+  "Série longa de remadas australianas": ["Série longa de remadas com a mochila", 1.5, MOCHILA],
+  "Remada australiana arqueiro (cada lado)": ["Remada com a mochila com um braço (cada lado)", 1.5, MOCHILA],
+  "Barra fixa": ["Remada curvada com a mochila pesada", 2, MOCHILA], "Barra supinada (chin-up)": ["Remada com a mochila, pegada supinada", 2, MOCHILA],
+  "Barra com pausa de 2 s no topo": ["Remada com a mochila, pausa de 2 s em cima", 2, MOCHILA], "Barra negativa (desça em 5 s)": ["Remada com a mochila, descida em 5 s", 2, MOCHILA],
+  "Barra arqueiro (cada lado)": ["Remada com a mochila com um braço (cada lado)", 2, MOCHILA], "Série longa de barras": ["Série longa de remadas com a mochila", 2, MOCHILA],
+  "Suspensão na barra": ["Superman com pausa", 1, "Deitado de bruços, braços e pernas estendidos e fora do chão, olhando para o chão."],
+  "Encolhimento escapular na barra": ["Superman apertando as escápulas", 1.5, "De bruços, braços à frente: puxe os cotovelos para trás apertando as escápulas, segure 1 s."],
+  "Flexão pike com os pés no banco": ["Flexão pike", 1.3, "Quadril bem alto, cabeça desce entre as mãos."],
+  "Flexão diamante com os pés no banco": ["Flexão diamante", 1.3, S_DIAMANTE[2]],
+  "Flexão com os pés no banco": ["Flexão de braço, descida em 3 s", 1, "Desça contando 3 s, suba normal."],
+  "Flexão com as mãos no banco": ["Flexão de braço", 0.8, "No chão é mais difícil que com as mãos no banco: se precisar, apoie os joelhos nas últimas."],
+  "Agachamento búlgaro no banco (cada perna)": ["Afundo para trás (cada perna)", 1.3, "Passo longo para trás, joelho de trás quase no chão, tronco reto."],
+  "Subida no banco (cada perna)": ["Afundo para trás (cada perna)", 1, "Ou suba num degrau de escada."],
+  "Ponte de glúteo unilateral, pé no banco": ["Ponte de glúteo unilateral", 1.3, "Pé no chão, a outra perna esticada; suba o quadril e aperte o glúteo."],
+};
+export const precisaAparelho = it => !!SEM_APARELHO[it.nome];
+export function semAparelhos(plano) {
+  return { ...plano, semAparelhos: true, itens: plano.itens.map(it => {
+    const s = SEM_APARELHO[it.nome]; if (!s) return it;
+    const [nome, x, dica] = s, alvo = it.un === "km" ? it.alvo : Math.max(1, Math.round(it.alvo * x));
+    return { ...it, nome, alvo, dica, orig: it.nome, calib: undefined };
+  }) };
+}
+
 // Treino prescrito para a data, na etapa atual. { titulo, itens: [{nome, series, alvo, un, dica}] }
+// No dia marcado "sem aparelhos" (viagem ou chuva), os exercícios de barra, paralela e banco vêm trocados.
 export function workoutFor(date, indoor = false) {
+  const plano = workoutBase(date, indoor);
+  return plano && S.days[date]?.semAparelhos ? semAparelhos(plano) : plano;
+}
+function workoutBase(date, indoor = false) {
   const t = currentTrack(), ph = currentPhase(); if (!t || !ph) return null;
   const p = progress();
   const stage = Math.min(p.week, ph.stages);
